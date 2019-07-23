@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "outDir": "./ts-build",
+        "allowJs": true,
+        "target": "es5",
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "allowUnreachableCode": false,
+        "allowUnusedLabels": false
+    },
+    "include": [
+        "./src/**/*"
+    ]
+}

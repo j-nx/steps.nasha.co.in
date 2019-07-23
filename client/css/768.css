@@ -1,0 +1,79 @@
+/*		Tablet Layout: 768px.
+		Gutters: 24px.
+		Outer margins: 28px.
+		Inherits styles from: Default Layout.
+-----------------------------------------------------------------
+cols    1     2      3      4      5      6      7      8
+px      68    160    252    344    436    528    620    712    */
+
+html,
+body {
+
+}
+
+#main {
+    height: auto;
+}
+
+.divOutlinerContainer {
+    width: 60%;/*75%;*/
+    border-right: 1px dotted #e2e2e2;
+}
+
+.hello-screen {
+    background: none;
+    width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    left: 0;
+    right: 0;
+    top: 40px;
+}
+
+.hello-screen .content {
+    height: auto;
+    border: 1px solid #515151;
+}
+
+.hello-screen .logo {
+    height: auto;
+    position: static;
+}
+
+.hello-screen .description {
+    padding: 10px 25px;
+    font-size: 97%;
+    height: auto;
+}
+
+.hello-screen .svg3336 {
+    width: auto;
+    height: 100px;
+    padding: 30px 30px 20px 30px;
+}
+
+.notesListContainer {
+    right: 12px;
+    bottom: 60px;
+    width: 300px;
+    height: 100%;
+    max-height: 50%;
+    border: 1px solid #C7C7C7;
+    top: auto;
+}
+
+.header {
+    /* Width to Match outliner */
+    margin: 0 auto;
+}
+
+.try-it {
+    margin-bottom: 0px;
+}
+
+.disabledpopup {
+    height: auto;
+    top: 8%;
+    width: 250px;
+    padding: 10px;
+}

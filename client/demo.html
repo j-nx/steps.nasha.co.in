@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html ng-app="nsx" manifest="manifest.appcache">
+
+<head>
+	<title>Steps</title>
+	<style>
+		html,
+		body {
+			height: 100%;
+			width: 100%;
+			padding: 0;
+			margin: 0;
+			background-color: white;
+		}
+		
+		#splash,
+		#splash-logo {
+			-webkit-transition: opacity 1s ease-out, visibility 1s ease-out;
+			-moz-transition: opacity 1s ease-out, visibility 1s ease-out;
+			-ms-transition: opacity 1s ease-out, visibility 1s ease-out;
+			-o-transition: opacity 1s ease-out, visibility 1s ease-out;
+			transition: opacity 1s ease-out, visibility 1s ease-out;
+		}
+		
+		#splash {
+			width: 100%;
+			height: 100%;
+			z-index: 9999;
+			position: absolute;
+			background: #926E8A;
+			background: -webkit-radial-gradient(circle, #AA8DA4 10%, #9F7A97 27%, #926E8A 50%);
+			background: -o-radial-gradient(circle, #AA8DA4 10%, #9F7A97 27%, #926E8A 50%);
+			background: -moz-radial-gradient(circle, #AA8DA4 10%, #9F7A97 27%, #926E8A 50%);
+			background: radial-gradient(circle, #AA8DA4 10%, #9F7A97 27%, #926E8A 50%);
+		}
+		
+		#splash-logo {
+			width: 200px;
+			height: 115.5px;
+			margin-left: -100px;
+			left: 50%;
+			position: relative;
+			top: 50%;
+			transform: translateY(-50%);
+			fill: #D1D1D1;
+		}
+		
+		#splash.hide-splash,
+		#splash-logo.hide-splash {
+			opacity: 0;
+			visibility: hidden;
+		}
+	</style>
+
+	<link rel="icon" href="favicon.ico">
+
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+</head>
+
+<body>
+
+	<div id="splash">
+		<svg id="splash-logo" xmlns="http://www.w3.org/2000/svg" version="1" viewBox="0 0 202.84024 116.87118">
+			<path d="M169.992 2.307c-3.6 1.2-9.3 4.1-12.8 6.5-6.3 4.3-8.2 4.4-3.7.2 1.4-1.3 2.5-2.7 2.5-3.2 0-.4-3.1-.8-6.9-.8-17.5 0-34.3 10.7-40.9 26-2.7 6.4-5.5 27.5-4.2 32.1 1.1 3.8 7.2 10.9 9.4 10.9.7 0 2.5-1.3 4-2.9 5.9-6.1 9.3-4.2 5.7 3.2-2.3 4.8-2.6 6.7-1.1 6.7 2.4 0 8.7-4.1 12.5-8 2.2-2.3 5.1-4.7 6.5-5.4 6.4-3.3 13.9-2.6 19.2 1.9 2.5 2.1 3.8 2.5 6.2 2.1 4.6-.9 12.1-6.2 17.7-12.5 10.3-11.4 19.5-36.3 18.7-50.5-.3-4.5-.6-5.3-3.3-6.6-5.1-2.5-21.6-2.4-29.5.3zm-81.7 78.9c-.4.7-.7 3.8-.7 6.8.2 11.7 9.2 22.3 23.1 27.1 7.2 2.4 8.3 2.4 8.3-.3 0-1.2 1-3.2 2.1-4.5 2.6-2.6 1.9-4-4-7.5-5.2-3.2-18.2-14-22.3-18.7-3.7-4.3-5.2-4.9-6.5-2.9zm-4.5 23.7l-3.3 2.9 2.3 2.4c1.2 1.4 2.2 3.2 2.2 4.1 0 2.6 2.3 3 6.6 1.2 6.9-2.9 7-3.3 1.7-8.7-2.6-2.6-5.1-4.8-5.5-4.8-.4 0-2.2 1.3-4 2.9z" />
+			<path d="M110.042 94.895c-6.826-5.525-11.856-10.35-19.246-18.46-7.544-8.278-10.064-10.356-11.77-9.702-1.332.512-1.084 2.133 1.097 7.167 2.295 5.295 2.4 6.07.83 6.07-2.267 0-6.832-2.914-11.6-7.406-9.336-8.792-16.613-9.984-25.46-4.174-4.292 2.82-5.295 2.98-9.245 1.478-5.747-2.184-14.42-9.46-19.85-16.65-2.61-3.455-6.665-11.444-9.43-18.57C2.35 26.854-.8 9.078.173 5.314 1.193 1.377 10.705-.773 22.645.237 31.332.97 39.68 4.19 47.293 9.74c2.167 1.58 4.136 2.872 4.376 2.872 1.14 0 .19-2.008-2.128-4.483-3.178-3.4-3-3.48 6.594-2.838 7.824.523 11.385 1.423 17.19 4.34C88.17 17.092 96.18 28.61 97.646 44.59c.592 6.466 2.485 16.433 3.777 19.886.98 2.62 2.43 4.493 7.794 10.062 7.283 7.563 7.98 8.88 7.977 15.114 0 3.934-1.322 7.45-2.912 7.744-.512.096-2.423-1.033-4.245-2.51z" />
+		</svg>
+	</div>
+
+	<!-- Out side of critical path -->
+
+	<!-- build:remove -->
+	<link rel="stylesheet" href="css/concord.css" type="text/css" media="all" />
+	<link rel="stylesheet" href="css/768.css" type="text/css" media="only screen and (min-width: 540px)" />
+	<!-- /build -->
+
+	<!-- Get CSS https://developers.google.com/speed/docs/insights/OptimizeCSSDelivery-->
+	<!-- build:template
+    <script>
+        var cb = function () {
+            var l = document.createElement('link');
+            l.rel = 'stylesheet';
+            l.href = 'css/style.min.css';
+            var h = document.getElementsByTagName('head')[0];
+            h.parentNode.insertBefore(l, h);
+        };
+        var raf = requestAnimationFrame || mozRequestAnimationFrame ||
+            webkitRequestAnimationFrame || msRequestAnimationFrame;
+        if (raf) raf(cb);
+        else window.addEventListener('load', cb);
+    </script>
+    <link rel="stylesheet" href="css/768.min.css" type="text/css" media="only screen and (min-width: 540px)" />
+    <!-- /build -->
+
+
+
+	<!-- Scripts -->
+	<!-- build:remove -->
+    <script src="src/underscore-1.8.3.min.js"></script>
+    <script src="src/angular-1.5.0.min.js"></script>
+    <script src="src/angular-animate.1.5.0.min.js"></script>
+    <script src="src/jquery-1.9.1.min.js"></script>
+    <script src="src/jquery.base64.min.js"></script>
+    <script src="src/main.js"></script>
+    <script src="src/concord.js"></script>
+    <script src="src/concordUtils.js"></script>
+    <script src="src/notes/notes.js"></script>
+	<script src="src/notes/nsxapi.js"></script>
+	<script src="src/lib/gapi.js"></script>
+    <script src="src/velocity/velocity.1.5.0.min.js"></script>
+    <script src="src/velocity/velocity.ui.1.5.0.min.js"></script>
+    <script src="src/velocity/velocity.ui.angular.min.js"></script>
+	<!-- /build -->
+
+	<!-- build:template
+    <script src="script.min.js" ></script>
+    /build -->
+
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/3.2.1/css/font-awesome.min.css" rel="stylesheet">
+	<link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+
+	<!-- Startup -->
+	<script>
+		//DO NOT REMOVE
+		/*$(document).click(function () {
+			console.log(opOutlineToXml(prefz.authorName, prefz.authorEmail));
+		});*/
+	</script>
+
+
+	<!-- APP MAIN -->
+	<div id="main" ng-controller="MainCtrl" ng-click="hideDialogs($event)">
+		<div class="mainContainer">
+			<div class="header drop-shadow">
+				<!--svg3336 -->
+				<svg class="svg3336" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 729.53137 116.87118" version="1">
+					<path d="M267.113 2.007c-5.2 2.3-5.3 3.2-2.3 19.5 1.8 10 3.1 13.7 9.8 27.4 3.1 6.2 13.1 16.4 19.5 19.9 6.6 3.6 9.4 3.6 13.2.3 6.3-5.7 17.7-4.4 23.6 2.6 3.4 4 8.9 8 12.2 8.8 3.3.9 3.5-.5.7-6-1.1-2.2-2-4.8-2-5.8 0-2.9 3.9-1.2 7.5 3.1 6.1 7.4 13.2 14.7 20.4 20.9 7.4 6.3 7.5 6.3 9.4 4.4 2.4-2.4 2.6-10.4.3-14.9-.9-1.7-4-5.2-7-7.7-3-2.6-6.1-6.3-7-8.3-1.7-4-3.5-13.5-4.3-22.2-.6-7.4-1.9-11.4-6-18.2-4.2-7.1-11-12.9-19.9-16.9-5.5-2.5-8.7-3.2-16.1-3.6-5.1-.3-9.3-.3-9.3.2 0 .4 1.4 2 3.1 3.6 4.1 3.8 3 5-1.2 1.5-4.1-3.5-11-7-17.8-9-7.8-2.3-21.4-2.1-26.8.4zm78.9 36.7c1 .9 1.8 2.1 1.8 2.7 0 .6-.5.5-1.2-.2s-3.4-1.2-6.1-1.2c-4.3 0-4.8-.2-3.7-1.5 1.7-2 6.9-1.9 9.2.2z" />
+					<path d="M432.813 2.307c-3.6 1.2-9.3 4.1-12.8 6.5-6.3 4.3-8.2 4.4-3.7.2 1.4-1.3 2.5-2.7 2.5-3.2 0-.4-3.1-.8-6.9-.8-17.5 0-34.3 10.7-40.9 26-2.7 6.4-5.5 27.5-4.2 32.1 1.1 3.8 7.2 10.9 9.4 10.9.7 0 2.5-1.3 4-2.9 5.9-6.1 9.3-4.2 5.7 3.2-2.3 4.8-2.6 6.7-1.1 6.7 2.4 0 8.7-4.1 12.5-8 2.2-2.3 5.1-4.7 6.5-5.4 6.4-3.3 13.9-2.6 19.2 1.9 2.5 2.1 3.8 2.5 6.2 2.1 4.6-.9 12.1-6.2 17.7-12.5 10.3-11.4 19.5-36.3 18.7-50.5-.3-4.5-.6-5.3-3.3-6.6-5.1-2.5-21.6-2.4-29.5.3zM351.113 81.207c-.4.7-.7 3.8-.7 6.8.2 11.7 9.2 22.3 23.1 27.1 7.2 2.4 8.3 2.4 8.3-.3 0-1.2 1-3.2 2.1-4.5 2.6-2.6 1.9-4-4-7.5-5.2-3.2-18.2-14-22.3-18.7-3.7-4.3-5.2-4.9-6.5-2.9zM346.613 104.907l-3.3 2.9 2.3 2.4c1.2 1.4 2.2 3.2 2.2 4.1 0 2.6 2.3 3 6.6 1.2 6.9-2.9 7-3.3 1.7-8.7-2.6-2.6-5.1-4.8-5.5-4.8-.4 0-2.2 1.3-4 2.9z" />
+					<path d="M373.386 95.315c-6.826-5.525-11.857-10.35-19.246-18.46-7.543-8.278-10.063-10.356-11.768-9.702-1.333.512-1.085 2.133 1.096 7.167 2.295 5.295 2.4 6.07.83 6.07-2.267 0-6.832-2.914-11.6-7.406-9.335-8.792-16.613-9.985-25.46-4.174-4.292 2.82-5.295 2.98-9.245 1.478-5.747-2.184-14.42-9.46-19.85-16.65-2.61-3.455-6.665-11.444-9.43-18.57-3.022-7.793-6.172-25.57-5.197-29.333 1.02-3.938 10.533-6.088 22.473-5.078 8.686.734 17.035 3.953 24.647 9.503 2.167 1.58 4.136 2.872 4.376 2.872 1.143 0 .192-2.008-2.123-4.483-3.177-3.398-2.998-3.475 6.595-2.833 7.824.523 11.386 1.423 17.19 4.34 14.844 7.46 22.853 18.974 24.318 34.956.592 6.466 2.486 16.433 3.778 19.886.982 2.62 2.432 4.493 7.795 10.062 7.284 7.566 7.98 8.883 7.978 15.117 0 3.934-1.322 7.45-2.912 7.744-.51.096-2.422-1.033-4.244-2.51z" />
+					<path style="-inkscape-font-specification:'Vintage Decorative Signs 4, '" d="M3.992 37.094h.21q.578 0 2.94 6.616h1.052q0 2.688-2.522 3.308-2.31-1.654-2.31-6.616.315-3.308.63-3.308zm6.092 0h.21q.526 0 2.942 6.616 2.048 3.308 3.99 3.308h112.82q3.1 0 6.303-9.924h.42v.827q-.684 9.925-3.782 9.925v.828q2.94 0 3.99 9.924l-.21.828h-.42q-3.203-9.925-5.67-9.925h-114.5q-2.102 0-5.884 10.752l-.21-2.482q0-4.755 3.362-9.097l.21.827h.42v-1.655q-3.992-2.48-3.992-10.75zm132.148 0h.84q.473 0 .63 4.135-.63 5.788-2.94 5.788-1.892-.827-1.892-3.308 1.733 0 3.362-6.616zM1.472 43.71q1.522 0 3.99 5.79h1.26q1.367-4.55 3.362-4.963l.84 3.308v.828q-.104 1.654-1.05 3.308l-1.26-.826q-1.944 1.24-4.202 9.098-1.05-1.448-1.05-4.963.42-4.963 1.68-4.963V49.5h-.42l-2.94 3.308Q0 51.774 0 49.5v-2.482q.368-3.308 1.47-3.308zm144.12 0q1.472 1.034 1.472 3.308 0 5.79-1.68 5.79L141.81 49.5v-1.655l3.783-4.135zm-8.613.827q.945 0 3.78 4.963 2.68 0 2.942 6.616l-.84 4.136q-3.046-8.27-3.782-8.27v-.828l.84-.827V49.5h-.84v1.654l-.21-.827-1.68 1.654q-1.05-1.033-1.05-2.48v-1.655l.84-3.308zM1.26 46.19l-.42 2.483.42 1.654 1.47-.827h.842v-1.655l-2.31-1.654zm142.232 1.655V49.5h.21l2.1.827.21-.827v-1.655l-.42-1.654-2.1 1.655zM8.404 49.5h1.47l.42-1.655-.21-.827h-.42q-1.26.414-1.26 2.482zm128.365-.827l.21.827h1.68v-1.655l-1.47-.827-.42 1.655zM7.142 49.5v.827l.84.827.21-.827v-1.654l-1.05.827z" font-size="213.425" font-family="Vintage Decorative Signs 4" letter-spacing="0" word-spacing="0" />
+					<text y="203.959" x="549.354" style="line-height:125%" font-size="32" font-family="sans-serif" letter-spacing="0" word-spacing="0" />
+					<path d="M164.032 27.428l-3.185.64c-5.096 2.285-7.645 6.324-7.645 12.12 0 2.445.744 5.635 2.23 9.57 1.91 2.55 2.867 4.252 2.867 5.103 1.91 5.85 5.095 10.102 9.554 12.76 5.36 2.34 10.033 3.51 14.014 3.51 2.39 0 5.68-.533 9.873-1.596 5.522-1.116 15.82-6.326 30.897-15.63l12.74-8.93c7.483-4.892 13.748-7.338 18.79-7.338h2.23c4.46.744 6.688 3.19 6.688 7.337v.638c0 3.19-2.124 5.317-6.37 6.38-3.185-.744-4.777-1.594-4.777-2.55v-.64c1.274-.32 2.017-.85 2.23-1.594v-.64l-1.275-1.274c-.796 0-1.645.424-2.547 1.275 0 .85-.213 1.276-.638 1.276.744 4.253 2.76 6.38 6.052 6.38h1.592c2.275 0 4.604-1.904 6.985-5.706.01-.066.04-.14.11-.22h.002c.055-.064.104-.137.165-.197.005-.036.018-.07.027-.104.017-.065.03-.095.06-.134l.007-.045.008-.042.003-.035c0-.005-.003-.01 0-.014.026-.04.056-.08.085-.12.005-.056.003-.09.023-.15-.013-.04-.012-.088-.013-.133-.036-.063.05-.118.052-.18 0-.004 0-.007-.002-.01h-.005c.007-.036.017-.07.025-.107-.002.003 0 .003-.003.006.003-.01.01-.036.008-.026 0 .007-.003.013-.005.02.05-.095.063-.107.09-.186.028-.07-.003-.008-.002-.013.007-.034.016-.067.025-.1v-.003l.082-.124c-.02-.092.004-.193.04-.275-.004.002-.014.008-.01-.008.016-.102.032-.143.058-.186l.005-.37c-.012-.287-.08-.57-.086-.858-.003-.15.016-.296.034-.442-.005-.015-.01-.024-.016-.035-.04-.15-.047-.15-.037-.29l.003-.03c-.04-.098-.045-.175-.04-.29.024-.138.012-.076.008-.026l.002-.02c-.005-.068-.013-.124-.023-.193-.01-.064-.01-.12-.003-.17-.105-.086-.135-.145-.166-.235-.038-.044-.055-.083-.095-.206-.002-.006 0-.04.01-.038-.008-.02-.02-.04-.025-.062-.02-.03-.04-.06-.056-.094-.023-.05-.022-.115-.025-.173-.05-.032-.067-.04-.076-.108-.005-.022-.016-.044-.02-.067-.005-.028-.007-.057-.01-.086-.03-.032-.057-.067-.086-.1l.012.024c-.01-.014-.04-.054-.028-.042l.016.02c-.017-.033-.032-.066-.05-.098l-.01-.008-.002-.002-.028-.02c-.08-.11-.095-.164-.142-.266l-.002-.002-.01-.02c-.003-.007.013.033.007.026-.012-.012-.016-.03-.025-.045-.005-.02-.02-.055-.03-.084-.325-.174-.69-.788-1.09-1.857-2.07-2.764-4.617-4.146-7.642-4.146h-1.593c-6.476 0-16.455 4.253-29.94 12.76-14.172 8.93-21.92 13.397-23.25 13.397-4.458 2.818-11.36 4.837-20.702 6.06h-2.548c-2.548-.107-3.822-.425-3.822-.957-3.875 0-7.697-2.87-11.466-8.612v-.32l.954-.318.638.638c4.193 2.552 8.652 3.828 13.376 3.828 7.75 0 18.473-4.36 32.17-13.078 10.138-6.858 18.42-10.58 24.843-11.166l4.46.64h1.273l.32-.32c-1.434-1.277-3.982-1.913-7.645-1.913-7.06 0-15.448 2.975-25.162 8.93-12.952 9.144-23.143 13.715-30.575 13.715l-4.458-.318c-8.07-2.552-12.104-4.997-12.104-7.336l.638-.638 3.822 3.51c5.096 2.338 9.024 3.508 11.784 3.508 4.194 0 9.713-1.702 16.56-5.104 12.53-8.028 21.66-13.238 27.393-15.63 5.468-1.116 8.227-1.86 8.28-2.233l-1.592-.318h-2.866c-6.794.797-15.394 4.73-25.798 11.8-8.6 5.53-15.396 8.295-20.386 8.295h-3.184c-2.336 0-5.31-.85-8.92-2.552-3.608-2.552-5.413-4.36-5.413-5.423.743-2.87 2.228-5.636 4.458-8.294 3.928-3.19 7.114-4.783 9.556-4.783h5.097c5.733 1.7 8.6 4.466 8.6 8.293v1.915c-1.91 4.04-4.248 6.06-7.008 6.06h-1.593l-2.55-.957-.635.64c.85 1.062 1.804 1.592 2.866 1.592h4.778c4.247-1.754 6.37-4.625 6.37-8.612 0-2.977-1.593-5.954-4.778-8.93-2.654-1.49-5.095-2.234-7.325-2.234h-2.867c-1.91 0-4.565.744-7.963 2.233-3.875 2.392-6.74 5.69-8.598 9.89-.425 0-.638-.427-.638-1.278h-.956v1.913c.638.798.957 1.542.957 2.233v1.914l-.318.32h-.32l-.32-.32c-1.06-1.435-1.804-3.986-2.228-7.655l.637-4.467c1.273-2.764 2.23-4.147 2.866-4.147 0-1.22 2.442-2.284 7.325-3.188l2.868.638h.318l-.318-.32.318-.318c-.266-.85-1.22-1.276-2.866-1.276h-2.23zm103.512 4.058c.036.107.065.217.088.33 0-.083.005-.164.005-.248l-.092-.082zm-6.825.348c-.025.012-.05.02-.076.03 0 .01.007.047.008.05l.01.045c.01-.026.025-.057.037-.082l-.003-.002c.002-.003.005-.004.006-.008l.015-.035zm112.53.067c.01.055.016.12.026.175l.3.275c-.107-.154-.216-.303-.327-.45zM260.27 35.16c.03.02.067.04.097.06l.013-.038-.11-.023zm10.285 1.446c-.047 0 .082.05.128.06.06.012.12.025.18.032l-.083-.033c-.075-.02-.147-.058-.225-.06zm-5.783 5.028l-.012.02c.012.014.023.03.035.046 0-.006-.003-.012-.005-.018-.065-.255-.028-.106-.006-.036l-.012-.012zm-.575.106c.007.035.012.072.037.096.015.015.038.034.06.05 0 0 .004.004.005.003.014-.036.014-.077.02-.115-.04-.005-.08-.015-.123-.034zm.655 1.44c.02.04.04.084.047.052-.026-.022-.032-.036-.047-.05zm.305 1.03c-.007.01-.02.033-.016.06.004-.02.012-.04.016-.06zm.006 2.26c.006-.01-.026.012-.036.02-.013.01-.02.026-.033.04-.03.09-.013.03.02.017.015-.026.034-.05.05-.075zm-.294 1.04c-.007.004-.015.007-.02.013-.008.01-.01.025-.016.038.013-.016.024-.034.036-.05zm-.176.393l-.002.002-.008.064.01-.067zm.287.55l-.037.028h.023c.004-.004.003-.005.008-.012l.005-.014zm-.006.022l-.005.006h.003c0-.002 0-.003.002-.005zm103.24.554c-.02.003-.043.003-.062.007-.093.02-.132.037-.278.075 0 0 0 .002.002.003.117-.03.23-.057.338-.086zM268.5 50.764l-.01.025c.04.017.05.014.054.008l.003-.006c-.014-.01-.033-.017-.048-.026zm72.1 16.325c-.31.102-.696.225-.915.305-.253.092.534-.107.777-.224.048-.022.09-.054.14-.08zM565.5 27.76l3.184.638c5.096 2.286 7.645 6.326 7.645 12.12 0 2.446-.744 5.637-2.23 9.57-1.91 2.553-2.868 4.253-2.868 5.104-1.91 5.848-5.095 10.1-9.554 12.76-5.362 2.34-10.033 3.51-14.014 3.51-2.39 0-5.68-.533-9.874-1.596-5.52-1.117-15.82-6.326-30.895-15.63l-12.74-8.93c-7.484-4.893-13.748-7.34-18.79-7.34h-2.23c-4.46.745-6.69 3.192-6.69 7.34v.636c0 3.19 2.125 5.317 6.372 6.38 3.185-.744 4.776-1.595 4.776-2.552v-.64c-1.274-.318-2.017-.848-2.23-1.593v-.64l1.276-1.274c.795 0 1.643.425 2.545 1.275 0 .85.213 1.277.638 1.277-.743 4.253-2.76 6.38-6.052 6.38h-1.59c-2.276 0-4.605-1.904-6.985-5.707-.01-.066-.04-.14-.11-.22h-.003c-.055-.063-.104-.136-.166-.197-.005-.034-.017-.067-.026-.102-.017-.066-.032-.095-.06-.134l-.007-.046-.01-.042-.002-.034c0-.005.005-.01.003-.014l-.086-.12c-.006-.057-.003-.09-.024-.15.013-.042.012-.09.013-.133.037-.063-.05-.118-.052-.18 0-.004 0-.007.002-.01 0-.002.005 0 .005 0-.006-.037-.015-.072-.024-.107l.003.006c-.004-.01-.01-.036-.01-.027l.006.02c-.05-.094-.063-.107-.09-.186-.027-.07.004-.007.003-.01l-.026-.103v-.002l-.083-.123c.02-.093-.003-.194-.04-.275.005.002.016.008.013-.008-.018-.103-.034-.145-.06-.187 0-.124-.002-.248-.004-.372.01-.286.08-.57.085-.857.003-.15-.016-.296-.035-.442.006-.013.01-.022.017-.033.04-.15.048-.15.038-.29l-.003-.03c.038-.1.045-.175.04-.29-.025-.138-.013-.076-.01-.026.002.007 0-.012 0-.018.004-.07.013-.124.023-.194.01-.063.01-.12.003-.17.104-.086.135-.144.165-.234.038-.044.056-.083.096-.207 0-.006 0-.04-.01-.037.007-.02.018-.042.023-.063.02-.03.04-.06.056-.093.023-.05.022-.116.024-.174.05-.03.068-.04.077-.106.007-.022.017-.044.02-.067.006-.03.008-.058.01-.086.03-.03.058-.065.088-.098l-.013.024c.01-.014.04-.054.028-.042l-.015.018.048-.096c.004-.003.008-.005.01-.008l.003-.002c.007-.006.024-.016.027-.02.08-.11.096-.164.143-.266l.002-.002.01-.02c.003-.007-.013.032-.007.026.01-.013.016-.03.025-.045.005-.02.018-.057.03-.086.325-.174.688-.788 1.088-1.856 2.07-2.765 4.618-4.147 7.644-4.147h1.592c6.476 0 16.456 4.254 29.94 12.76 14.173 8.932 21.922 13.4 23.25 13.4 4.458 2.817 11.36 4.835 20.703 6.058h2.548c2.548-.106 3.822-.424 3.822-.956 3.875 0 7.697-2.87 11.465-8.612v-.32l-.954-.318-.638.638c-4.193 2.55-8.652 3.828-13.376 3.828-7.75 0-18.474-4.36-32.17-13.078-10.138-6.86-18.42-10.58-24.843-11.166l-4.458.64h-1.274l-.318-.32c1.433-1.277 3.98-1.914 7.643-1.914 7.06 0 15.45 2.977 25.163 8.93 12.95 9.146 23.14 13.717 30.573 13.717l4.458-.32c8.07-2.55 12.104-4.995 12.104-7.335l-.638-.64-3.822 3.51c-5.096 2.34-9.024 3.51-11.784 3.51-4.194 0-9.713-1.702-16.56-5.105-12.53-8.027-21.66-13.237-27.393-15.63-5.468-1.116-8.227-1.86-8.28-2.232l1.592-.32h2.866c6.795.8 15.394 4.732 25.798 11.803 8.6 5.53 15.396 8.293 20.386 8.293h3.184c2.336 0 5.31-.85 8.92-2.55 3.608-2.552 5.413-4.36 5.413-5.424-.743-2.87-2.228-5.635-4.458-8.293-3.928-3.19-7.114-4.785-9.556-4.785h-5.097c-5.733 1.702-8.6 4.466-8.6 8.294v1.914c1.91 4.04 4.248 6.06 7.008 6.06h1.593l2.55-.957.635.638c-.85 1.064-1.804 1.594-2.866 1.594h-4.778c-4.247-1.754-6.37-4.625-6.37-8.612 0-2.978 1.593-5.955 4.778-8.932 2.654-1.488 5.095-2.233 7.325-2.233h2.867c1.91 0 4.565.745 7.963 2.233 3.875 2.393 6.74 5.69 8.598 9.89.425 0 .638-.427.638-1.277h.956v1.915c-.638.797-.957 1.542-.957 2.233v1.914l.318.318h.32l.32-.318c1.06-1.436 1.804-3.987 2.228-7.655l-.637-4.467c-1.273-2.765-2.23-4.147-2.866-4.147 0-1.223-2.442-2.285-7.325-3.19l-2.868.638h-.318l.318-.317-.318-.32c.266-.85 1.22-1.276 2.866-1.276h2.23zm-103.513 4.057c-.035.107-.065.217-.087.33 0-.082-.006-.163-.005-.247l.092-.083zm6.825.35c.025.01.05.017.075.028l-.008.052-.01.044-.037-.08.002-.003c-.002-.003-.005-.004-.006-.008-.006-.01-.012-.024-.017-.035zm-112.53.066c-.01.053-.017.117-.026.173-.1.092-.2.184-.302.275.108-.152.218-.3.328-.447zM469.26 35.49c-.03.02-.067.04-.098.06-.005-.01-.01-.024-.014-.036l.11-.023zm-10.285 1.447c.047 0-.083.05-.13.06-.058.013-.12.025-.18.033l.085-.033c.075-.02.147-.06.225-.06zm5.782 5.03l.013.02c-.012.013-.024.03-.036.044.002-.005.002-.01.005-.016.065-.256.027-.107.005-.036l.012-.013zm.575.105c-.008.035-.013.072-.037.095l-.06.052c-.002-.002-.005.002-.006 0-.015-.034-.014-.075-.02-.113.04-.005.08-.015.122-.035zm-.656 1.44c-.018.04-.04.083-.047.052.026-.023.032-.036.046-.052zm-.305 1.03c.008.01.02.032.017.06-.004-.02-.01-.04-.016-.06zm-.005 2.26c-.006-.01.026.01.036.02.015.01.023.026.034.04.032.088.014.03-.02.016-.015-.025-.034-.05-.05-.075zm.294 1.04c.005.004.014.007.02.013.007.01.01.025.015.037l-.036-.05zm.176.392l.002.002.008.064-.01-.065zm-.288.552l.038.026h-.024l-.01-.012c0-.006-.002-.008-.004-.014zm.006.02l.005.006h-.004c0-.003 0-.004-.002-.006zm-103.24.555c.02.005.043.005.062.01.094.02.133.035.278.074 0 0 0 .002-.002.003l-.34-.086zm99.718 1.737l.008.025c-.038.016-.05.014-.053.008l-.003-.006c.014-.012.033-.017.05-.027zm-72.1 16.325c.31.102.696.225.914.304.253.092-.534-.106-.776-.223-.05-.023-.092-.056-.14-.08z" style="line-height:125%" font-size="36.266" font-family="sans-serif" letter-spacing="0" word-spacing="0" />
+					<path style="line-height:125%;-inkscape-font-specification:'Vintage Decorative Signs 4, '" d="M586.252 37.174h.21q.577 0 2.94 6.617h1.05q0 2.69-2.52 3.31-2.31-1.655-2.31-6.617.314-3.31.63-3.31zm6.092 0h.21q.525 0 2.942 6.617 2.048 3.31 3.99 3.31h112.82q3.1 0 6.303-9.926h.42V38q-.684 9.926-3.783 9.926v.827q2.942 0 3.992 9.925l-.21.827h-.42q-3.205-9.925-5.674-9.925h-114.5q-2.1 0-5.882 10.752l-.21-2.48q0-4.756 3.362-9.1l.21.828h.42v-1.654q-3.992-2.48-3.992-10.752zm132.147 0h.842q.472 0 .63 4.136-.63 5.79-2.94 5.79-1.892-.828-1.892-3.31 1.733 0 3.36-6.616zM583.73 43.79q1.524 0 3.992 5.79h1.26q1.366-4.548 3.362-4.962l.84 3.308v.827q-.105 1.655-1.05 3.31l-1.26-.828q-1.944 1.24-4.202 9.097-1.05-1.447-1.05-4.962.42-4.962 1.68-4.962v-.828h-.42l-2.94 3.31q-1.682-1.035-1.682-3.31V47.1q.367-3.31 1.47-3.31zm144.123 0q1.47 1.035 1.47 3.31 0 5.79-1.68 5.79l-3.572-3.31v-1.654l3.783-4.135zm-8.614.828q.945 0 3.78 4.962 2.68 0 2.942 6.617l-.84 4.135q-3.047-8.27-3.782-8.27v-.827l.84-.827v-.828h-.84v1.655l-.21-.827-1.68 1.654q-1.05-1.034-1.05-2.482v-1.654l.84-3.308zm-135.72 1.654l-.42 2.48.42 1.656 1.47-.828h.84v-1.654l-2.31-1.654zm142.232 1.654v1.654h.21l2.1.828.21-.828v-1.654l-.42-1.654-2.1 1.654zm-135.09 1.654h1.472l.42-1.654-.21-.827h-.42q-1.26.413-1.26 2.48zm128.367-.827l.21.827h1.68v-1.654l-1.47-.827-.42 1.653zm-129.627.827v.828l.84.827.21-.827v-1.655l-1.05.827z" font-size="213.425" font-family="Vintage Decorative Signs 4" letter-spacing="0" word-spacing="0" />
+				</svg>
+			</div>
+			<div class="divOutlinerContainer word-break">
+				<div id="outliner">
+				</div>
+			</div>
+
+			<!-- DEMO CODE ONLY -->
+			<style>
+				.demoInfo {
+					width: 80%;
+					/* padding: 10px; */
+					/* background: #E3E3E3; */
+					margin-left: auto;
+					margin-right: auto;
+				}
+				
+				.template {
+					width: 80%;
+					height: auto;
+					background: #978BA2;
+					color: aliceblue;
+					cursor: pointer;
+					margin: auto auto 10px auto;
+					max-width: 700px;
+				}
+				
+				.template-text {
+					padding: 10px;
+				}
+				
+				.template-selected {
+					background: #6E5586;
+				}
+				
+				#outliner {
+					max-height: 310px;
+					overflow-y: auto;
+				}
+				
+				.button-return {
+					width: 40%;
+				}
+				
+				.divOutlinerContainer {
+					margin-bottom: 25px;
+					min-height: auto;
+				}
+			</style>
+			<div class="demoInfo">
+				<div ng-controller="DemoCtrl">
+					<div>
+						<div class="button" ng-show="mobile">
+							<i class="icon-desktop"></i>
+							<br />The demo is currently in read only mode for handheld device browsers.
+						</div>
+					</div>
+					<div ng-repeat="template in templates" class="template" ng-class="{'template-selected': template.title == selected}">
+						<div ng-click="launchOpml(template)" class="template-text">
+							<b>{{template.title}}</b>
+							<br /> {{template.description}}
+						</div>
+					</div>
+					<div onclick="goBack()">
+						<div class="button button-return">
+							<i class="icon-reply"></i> Return to App
+						</div>
+					</div>
+					<script>
+						var prefz = {
+							"readonly": $.browser.mobile,
+							"outlineFontSize": 15,
+							"iconSize": 8,
+							"paddingLeft": 16,
+							"nodeLineHeight": 20,
+							"authorName": "DEMO",
+							"authorEmail": "jnx@nasha.co.in"
+						};
+
+						myApp.controller('DemoCtrl', ['$scope', function ($scope) {
+							$scope.templates = [];
+							$scope.selected = "";
+							$scope.mobile = $.browser.mobile;
+							var outliner = $("#outliner").concord({
+								"prefs": prefz,
+								"callbacks": {
+									"opKeystroke": opKeystrokeCallback
+								}
+							});
+
+							{
+								if ($.browser.mobile == false)
+									$scope.templates.push(createTemplate("Tutorial", "A simple walkthrough of some of the features of this app. ", '<?xml version="1.0"?><opml version="2.0"><head><title>Untitled</title><ownerName>DEMO</ownerName><ownerEmail>jnx@nasha.co.in</ownerEmail><dateModified>Sun, 08 May 2016 18:49:28 GMT</dateModified><expansionState>1,3,7</expansionState></head><body><outline text="Tutorial"><outline text="Let\'s try out some features by using a few shortcuts"/><outline text="Indent this tab by pressing the tab button"><outline text="Un-indent this one by using shift + tab "/></outline><outline text="Expand this note by hitting control + space "><outline text="Folded content is now visible!"><outline text="(yay!)"/></outline><outline text="Expand all by using alt + down"><outline text="So "><outline text="many"><outline text="notes"/></outline></outline></outline></outline><outline text="Mark Complete, Press control + enter"/><outline text="Mouse Actions"><outline text="Expand or collapse the note by clicking the bullet"><outline text="Boo!"/></outline><outline text="You can select the notes by mouse clicking the bullet "/></outline><outline text="Moving notes"><outline text="You can move the notes within or out of a section"/><outline text="Keyboard: Use the shift + alt + up/down arrow to move the note"/><outline text="Mouse: Move the selected notes by selecting and then dragging them to where you want to move them to."/></outline><outline text="You can select multiple notes using shift + up/down"><outline text="This way you can edit multiple notes together."/><outline text="Try selecting multiple and moving them together (Shift + alt + up)"/></outline><outline text="Splitting and Merging"><outline text="Press enter anywhere inside this note to split it. "/><outline text="Backspace to merge it with the previous note "/></outline><outline text="Ready to dive in? Go back and login."><outline text="FYI The shortcuts are easily available to reference as an overlay. "/></outline></outline></body></opml>'));
+
+								$scope.templates.push(createTemplate("Work", "An example of how one may use this at work.", '<?xml version="1.0"?><opml version="2.0"><head><title>Untitled</title><ownerName>DJ</ownerName><ownerEmail>jnx@nasha.co.in</ownerEmail><dateModified>Wed, 02 Mar 2016 14:37:56 GMT</dateModified><expansionState>1,2,4,5,9</expansionState></head><body><outline text="Work"><outline text="This Week"><outline text="Support Issues"><outline text="Login Freeze Investigate"/><outline text="No Data - No action for now"/></outline><outline text="Stories"><outline text="External Integration"><outline text="Info"><outline text="Login details: u/p"/></outline><outline text="Implement sending parameters and verify with unit tests and logging"/><outline text="Test if sending fails properly"/></outline></outline></outline><outline text="Ongoing"><outline text="Setup Belvedere for catching log errors"/></outline></outline></body></opml>'));
+
+
+								$scope.templates.push(createTemplate("Albums of the Year 2015", "A selection of the 10 best albums of the year.", '<?xml version="1.0"?><opml version="2.0"><head><title>Untitled</title><ownerName>DJ</ownerName><ownerEmail>jnx@nasha.co.in</ownerEmail><dateModified>Thu, 03 Mar 2016 20:03:05 GMT</dateModified><expansionState>1</expansionState></head><body><outline text="Best Albums of 2015 as rated by: (In descending order)"><outline text="Pitchfork"><outline text="Kanye West - Life of Pablo"/><outline text="Anderson .Paak - Malibu"/><outline text="Kevin Gates - Islah"/><outline text="David Bowie - Blackstar"/><outline text="PORCHES. - Pool"/><outline text="Krallice - Hyperion"/><outline text="Black Tusk - Pillars of Ash"/><outline text="Mr. Fingers - Mr. Fingers"/><outline text="School of Seven Bells - SVIIB"/><outline text="Anna Homler &amp; Steve Moshier - Breadwoman &amp; Other Tales"/></outline><outline text="NME"><outline text="The 1975 - I Like It When You Sleep, for You Are So Beautiful Yet So Unaware of It"/><outline text="Kanye West - The Life of Pablo"/><outline text="Foxes - All I Need"/><outline text="Field Music - commontime"/><outline text="DIIV - Is the Is Are"/><outline text="Sunflower Bean - Human Ceremony"/><outline text="Young Thug - I\'m Up"/><outline text="Bloc Party - HYMNS"/><outline text="Sia - This Is Acting"/><outline text="Suede - Night Thoughts"/></outline><outline text="Resident Advisor"><outline text="Floating Points - Elaenia "/><outline text="Levon Vincent - Levon Vincent "/><outline text="JLin - Dark Energy "/><outline text="LNRDCROY - Much Less Normal"/><outline text="Björk - Vulnicura"/><outline text="Suzanne Kraft - Talk From Home"/><outline text="Julia Holter-  Have you in my wilderness"/><outline text="Boof - The Hyrdangeas Whisper"/><outline text="DJ Sotofett - Drippin\' For A Tripp"/><outline text="Hunee - Hunch Music"/></outline><outline text="Boomkat"><outline text="PRURIENT — Frozen Niagara Falls"/><outline text="Jlin — Dark Energy"/><outline text="Mark Fell &amp; Gábor Lázár — The Neurobiology of Moral Decision Making "/><outline text="Oneohtrix Point Never — Garden of Delete"/><outline text="Theo Burt — Gloss"/><outline text="Kara-lis Coverdale &amp; LXV — Sirens "/><outline text="Jenny Hval — Apocalypse, girl "/><outline text="STEPHEN O\'MALLEY — Gruidés"/><outline text="Eleh / Tara Jane O\'Neil — Split"/><outline text="Jefre Cantu–Ledesma — A Year With 13 Moons"/></outline><outline text="Bleep"><outline text="Flako - Natureboy"/><outline text="Holly Herndon – Platform"/><outline text="Oneohtrix Point Never – Garden of Delete"/><outline text="Björk – Vulnicura"/><outline text="Kode9 - Nothing"/><outline text="Floating Points - Elaenia"/><outline text="Romare - Projections"/><outline text="Kerrier District - 4"/><outline text="Julia Holter – Have You In My Wilderness"/><outline text="Kelpe – The Curved Line"/></outline><outline text="The Quietus "><outline text="Jlin - Dark Energy"/><outline text="Stara Rzeka - Zamknely sie oczy ziemi"/><outline text="Mbongwana Star - From Kinshasa"/><outline text="Carter Tutti Void - f (x)"/><outline text="Matana Roberts - Coin Coin Chapter Three: River Run Thee"/><outline text="East India Youth - Culture of Volume"/><outline text="EEK - Kahraba"/><outline text="Oneohtrix Point Never - Garden of Delete"/><outline text="New Order - Music Complete"/><outline text="Holly Herndon - Platform"/></outline></outline></body></opml>'));
+							}
+							
+							startup(outliner);
+
+							$scope.launchOpml = function (n) {
+								$scope.selected = n.title;
+								opXmlToOutline(n.opml);
+							};
+
+							$scope.launchOpml($scope.templates[0]);
+							hideSplash();
+                        }]);
+
+						function createTemplate(t, d, o) {
+							return {
+								title: t,
+								description: d,
+								opml: o
+							}
+						}
+
+						function goBack() {
+							window.history.back();
+						}
+					</script>
+				</div>
+				<!-- END -->
+			</div>
+
+		</div>
+
+		<script>
+			(function (i, s, o, g, r, a, m) {
+				i['GoogleAnalyticsObject'] = r;
+				i[r] = i[r] || function () {
+					(i[r].q = i[r].q || []).push(arguments)
+				}, i[r].l = 1 * new Date();
+				a = s.createElement(o),
+					m = s.getElementsByTagName(o)[0];
+				a.async = 1;
+				a.src = g;
+				m.parentNode.insertBefore(a, m)
+			})(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+			ga('create', 'UA-74050978-1', 'auto');
+			ga('send', 'pageview');
+		</script>
+	</div>
+</body>
+
+</html>

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html ng-app="nsx">
+
+<head>
+    <title>Steps</title>
+    <style>
+        html,
+        body {
+            height: 100%;
+            width: 100%;
+            padding: 0;
+            margin: 0;
+            background-color: white;
+        }
+        
+        #splash,
+        #splash-logo {
+            -webkit-transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
+            -moz-transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
+            -ms-transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
+            -o-transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
+            transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
+        }
+        
+        #splash {
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            position: absolute;
+            background: #926E8A;
+            background: -webkit-radial-gradient(circle, #AA8DA4 10%, #9F7A97 27%, #926E8A 50%);
+            background: -o-radial-gradient(circle, #AA8DA4 10%, #9F7A97 27%, #926E8A 50%);
+            background: -moz-radial-gradient(circle, #AA8DA4 10%, #9F7A97 27%, #926E8A 50%);
+            background: radial-gradient(circle, #AA8DA4 10%, #9F7A97 27%, #926E8A 50%);
+        }
+        
+        #splash-logo {
+            width: 200px;
+            height: 115.5px;
+            margin-left: -100px;
+            left: 50%;
+            position: relative;
+            top: 50%;
+            transform: translateY(-50%);
+            fill: #D1D1D1;
+        }
+        
+        #splash.hide-splash,
+        #splash-logo.hide-splash {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        #appBlock {
+            margin-left: auto;
+            margin-right: auto;
+            left: 0;
+            right: 0;
+            vertical-align: middle;
+            position: fixed;
+            text-align: center;
+            border-radius: 4px;
+            padding: 10px;
+            width: 300px;
+            top: 50px;
+            color: antiquewhite;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #385471;
+            border: 1px solid #A49B91;
+            display: none;
+            z-index: 9999;
+        }
+
+    </style>
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Steps">
+    <meta name="apple-mobile-web-app-title" content="Steps">
+    <meta name="msapplication-starturl" content="/">
+    <meta name="theme-color" content="#ffffff">
+
+    <link rel="icon" type="image/png" sizes="192x192" href="images/steps-icon.png">
+    <link rel="apple-touch-icon" type="image/png" sizes="192x192" href="images/steps-icon.png">
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+</head>
+
+<body>
+
+    <div id="splash">
+        
+        <div id="appBlock">
+            This browser is currently not supported.
+            <br /> Please use Chrome or Firefox.
+        </div>
+        <svg id="splash-logo" xmlns="http://www.w3.org/2000/svg" version="1" viewBox="0 0 202.84024 116.87118">
+			<path d="M169.992 2.307c-3.6 1.2-9.3 4.1-12.8 6.5-6.3 4.3-8.2 4.4-3.7.2 1.4-1.3 2.5-2.7 2.5-3.2 0-.4-3.1-.8-6.9-.8-17.5 0-34.3 10.7-40.9 26-2.7 6.4-5.5 27.5-4.2 32.1 1.1 3.8 7.2 10.9 9.4 10.9.7 0 2.5-1.3 4-2.9 5.9-6.1 9.3-4.2 5.7 3.2-2.3 4.8-2.6 6.7-1.1 6.7 2.4 0 8.7-4.1 12.5-8 2.2-2.3 5.1-4.7 6.5-5.4 6.4-3.3 13.9-2.6 19.2 1.9 2.5 2.1 3.8 2.5 6.2 2.1 4.6-.9 12.1-6.2 17.7-12.5 10.3-11.4 19.5-36.3 18.7-50.5-.3-4.5-.6-5.3-3.3-6.6-5.1-2.5-21.6-2.4-29.5.3zm-81.7 78.9c-.4.7-.7 3.8-.7 6.8.2 11.7 9.2 22.3 23.1 27.1 7.2 2.4 8.3 2.4 8.3-.3 0-1.2 1-3.2 2.1-4.5 2.6-2.6 1.9-4-4-7.5-5.2-3.2-18.2-14-22.3-18.7-3.7-4.3-5.2-4.9-6.5-2.9zm-4.5 23.7l-3.3 2.9 2.3 2.4c1.2 1.4 2.2 3.2 2.2 4.1 0 2.6 2.3 3 6.6 1.2 6.9-2.9 7-3.3 1.7-8.7-2.6-2.6-5.1-4.8-5.5-4.8-.4 0-2.2 1.3-4 2.9z" />
+			<path d="M110.042 94.895c-6.826-5.525-11.856-10.35-19.246-18.46-7.544-8.278-10.064-10.356-11.77-9.702-1.332.512-1.084 2.133 1.097 7.167 2.295 5.295 2.4 6.07.83 6.07-2.267 0-6.832-2.914-11.6-7.406-9.336-8.792-16.613-9.984-25.46-4.174-4.292 2.82-5.295 2.98-9.245 1.478-5.747-2.184-14.42-9.46-19.85-16.65-2.61-3.455-6.665-11.444-9.43-18.57C2.35 26.854-.8 9.078.173 5.314 1.193 1.377 10.705-.773 22.645.237 31.332.97 39.68 4.19 47.293 9.74c2.167 1.58 4.136 2.872 4.376 2.872 1.14 0 .19-2.008-2.128-4.483-3.178-3.4-3-3.48 6.594-2.838 7.824.523 11.385 1.423 17.19 4.34C88.17 17.092 96.18 28.61 97.646 44.59c.592 6.466 2.485 16.433 3.777 19.886.98 2.62 2.43 4.493 7.794 10.062 7.283 7.563 7.98 8.88 7.977 15.114 0 3.934-1.322 7.45-2.912 7.744-.512.096-2.423-1.033-4.245-2.51z" />
+		</svg>
+    </div>
+
+
+    <script src="config.js"></script>
+    <script src="src/bowser.min.js"></script>
+
+    <!-- Out side of critical path -->
+
+    <!-- build:remove -->
+    <link rel="stylesheet" href="css/concord.css" type="text/css" media="all" />
+    <link rel="stylesheet" href="css/768.css" type="text/css" media="only screen and (min-width: 540px)" />
+    <!-- /build -->
+
+    <!-- Get CSS https://developers.google.com/speed/docs/insights/OptimizeCSSDelivery-->
+    <!-- build:template
+    <script>
+        var cb = function () {
+            var l = document.createElement('link');
+            l.rel = 'stylesheet';
+            l.href = 'css/style.min.css';
+            var h = document.getElementsByTagName('head')[0];
+            h.parentNode.insertBefore(l, h);
+        };
+        var raf = requestAnimationFrame || mozRequestAnimationFrame ||
+            webkitRequestAnimationFrame || msRequestAnimationFrame;
+        if (raf) raf(cb);
+        else window.addEventListener('load', cb);
+    </script>
+    <link rel="stylesheet" href="css/768.min.css" type="text/css" media="only screen and (min-width: 540px)" />
+    <!-- /build -->
+
+
+
+    <!-- Scripts -->
+    <!-- build:remove -->
+    <script src="src/lib/underscore-1.8.3.min.js"></script>
+    <script src="src/lib/angular-1.5.0.min.js"></script>
+    <script src="src/lib/angular-animate.1.5.0.min.js"></script>
+    <script src="src/lib/jquery-1.9.1.min.js"></script>
+    <script src="src/lib/jquery.base64.min.js"></script>
+    <script src="src/lib/gapi.js"></script>
+    <script src="src/lib/velocity/velocity.1.5.0.min.js"></script>
+    <script src="src/lib/velocity/velocity.ui.1.5.0.min.js"></script>
+    <script src="src/lib/velocity/velocity.ui.angular.min.js"></script>
+    <script src="src/main.js"></script>
+    <script src="src/concord.js"></script>
+    <script src="src/concordUtils.js"></script>
+    <script src="src/notes/notes.js"></script>
+    <script src="src/notes/api.js"></script>
+    <script src="config.js"></script>
+    <script>
+        var DEBUG = false;
+
+    </script>
+    <!-- /build -->
+
+    <!-- build:template
+    <script src="script.min.js" ></script>
+    /build -->
+
+    <link href="css/fonts/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <link href='css/fonts/fira-sans/css/fira-sans.css' rel='stylesheet' type='text/css'>
+    <!-- Startup -->
+    <script>
+        window.onload = function() {
+            if (BrowserValid() == false) return;
+            document.body.setAttribute('spellcheck', false);
+
+            var outliner = $("#outliner").concord({
+                "prefs": appPrefs,
+                "callbacks": {
+                    "opKeystroke": opKeystrokeCallback
+                }
+            });
+
+            startup(outliner);
+
+        };
+
+        function BrowserValid() {
+            if (!bowser) return false;
+            if (bowser.chrome || bowser.firefox || bowser.safari || bowser.ios) return true;
+            document.getElementById("appBlock").style.display = "inline";
+            return false;
+        };
+
+    </script>
+
+    <!-- APP MAIN -->
+
+    <div id="main" ng-controller="MainCtrl" ng-click="hideDialogs($event)">
+        <div class="mainContainer">
+            <div class="header drop-shadow">
+                <!--svg3336 -->
+                <img class="svg3336" src="images/el2.png" alt="Steps" style="height: auto; width:240px;opacity: 0.2;padding-bottom: 5px;"> </div>
+            <div class="divOutlinerContainer word-break">
+                <div id="outliner">
+                </div>
+            </div>
+        </div>
+        <div class="overlay" ng-show="showOverlay">
+            <div ng-controller="helloController">
+                <div class="hello-screen" ng-show="context.hello.isVisible">
+                    <div class="content popup-drop-shadow">
+                        <div class="logo">
+                            <img class="svg3336" src="images/steps.svg" alt="Steps">
+                        </div>
+                        <div class="description">
+                            <h3 style="text-align: center;margin-top: 8px;margin-bottom: 14px;">Steps helps you focus and get organized.</h3>
+                            <p style="text-align: center;margin: auto;">Steps is a note taking app that uses lists to organize notes which are stored in your Google Drive backup. Use it to spur your creativity and boost productivity!
+                                <!--<insert sample image>-->
+                            </p>
+                            <a href="demo.html" ng-hide="isMobile()">
+                                <div class="smaller-button try-it" style="margin-bottom: -15px">
+                                    Try it out!
+                                </div>
+                            </a>
+
+                            <h3>Who is it for?</h3>
+                            <p>If you're dealing with large amounts of information or simply need an intuitive way to use lists for your work, this is for you. Build your own system or <a href="demo.html">play with some templates</a>. </p>
+                            <ul>
+                                <li style="padding-bottom: 10px;">When <b>working on a project</b>, you can outline tasks and sub-tasks, then drill down to the smaller, simpler tasks. Focus and keep moving!
+
+                                </li>
+                                <li><b>Researching a topic?</b> Organize large amounts of information by easily grouping it in a way thats well comprehensible for better understanding and communication. </li>
+                            </ul>
+
+                            <h3>How does it work?</h3>
+                            <p>A minimal notepad coupled with powerful keyboard shortcuts allow you to <b>quickly create</b> and <b>organize notes</b> which are <b>automatically saved</b>. </p>
+
+                            <p>Notes are saved into your Google Drive account. Take advantage of Google Drive's <b>reliability</b> and <b>backup of old version</b>. <!-- You can also <b>read notes offline</b> with offline editing forthcoming. </p> -->
+
+                            <div style="float:right; margin: 0 auto;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="70" height="65">
+									<path fill="#40AA54" stroke="#20552A" stroke-width="5" d="M34.778 3.5C18.542 3.5 5.38 16.597 5.38 32.755c0 12.542 7.932 23.237 19.075 27.397l6.775-17.98c-3.83-1.43-6.557-5.106-6.557-9.417 0-5.554 4.524-10.058 10.105-10.058 5.582 0 10.106 4.504 10.106 10.058 0 4.31-2.726 7.988-6.557 9.417l6.775 17.98c11.143-4.16 19.075-14.855 19.075-27.397 0-16.16-13.162-29.257-29.4-29.257z" stroke-linejoin="round" />
+								</svg>
+                            </div>
+                            <p>The core is built on the <b><a href="https://github.com/scripting/concord">Concord</a> open source</b> outliner and is available <a href="mailto:jnx@nasha.co.in?subject=Steps Source">on request.</a>
+                            </p>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="loginpopup popup-drop-shadow" ng-show="showLogin">
+                <div class="login">
+                    <img src="images/gd72x72.png" height="72px" width="72px" alt="Simplenote" />
+                    <form id="loginForm" class="form">
+                        <button class="btn" ng-click="login()" ng-disabled="isLoginButtonDisabled()">
+							Sign in with Google Drive
+						</button>
+                        <!-- {{loginButtonText}} use button as login status -->
+                    </form>
+                     <div class="info" ng-show="showLoginInfo">
+                        Currently we use Google Drive to back up your work, login to your account here or create a <a href="https://www.google.com/drive/" target="_blank" rel="noopener">new account</a>.
+                    </div> 
+                    <div class="error" ng-show="sessionAlert">{{sessionAlert}}</div>
+                </div>
+            </div>
+        </div>
+        <div class="notesListContainer drop-shadow-upwards velocity-transition-bounceUpIn velocity-duration-400" ng-show="showNotesList">
+            <div class="notesList-title">NOTES
+                <div style="float:right; cursor:pointer;" ng-click="createNote()">
+                    <i class="icon-plus" ng-hide="isReadOnly()"></i>
+                </div>
+            </div>
+            <div class="notesList">
+                <div class="workingpopup" ng-show="showWorking">
+                    <img class="logo" src="images/spin.svg" alt="Loading..." />
+					<br />Loading{{loadingCountdownMessage}}
+				</div>
+				<div ng-repeat="note in notes() | orderBy:'modifydate' : true">
+                    <div ng-class="{'notesList-note': true, 'notesList-note-selected':  isSelectedNote(note)}" ng-click="launchNote(note)">
+						<i class="icon-caret-right" style="padding-right: 4px;"></i> {{note.title}}
+					</div>
+				</div>
+            </div>
+        </div>
+        <div class="shortcuts animate-slide" ng-show="showShortcuts">
+            <div class="shortcut-definition" ng-repeat="shortcut in shortcuts">
+                <div class="shortcut-function">{{shortcut.function}}</div>
+                <div class="shortcut-code">{{shortcut.code}}</div>
+            </div>
+            <div style="padding: 10px; text-align: center;" ng-click="hideShortcutDialog()">Close</div>
+        </div>
+        <div class="barMenu velocity-transition-slideUpBigIn velocity-duration-200" ng-show="showBarMenu">
+            <div class="barMenu-item-info" style="">
+                {{storage().email}}
+            </div>
+            <div class="barMenu-item" ng-click="deleteNote()" ng-hide="isReadOnly()">
+                <i class="icon-trash barMenu-icon"></i> Delete Note
+            </div>
+            <div class="barMenu-item" ng-click="showShortcutDialog()" ng-hide="isMobile()">
+                <i class="icon-keyboard barMenu-icon"></i> Shortcuts
+            </div>
+            <div class="barMenu-item" style="border-bottom:0px;" onclick="ns.logOut()">
+                <i class="icon-power-off barMenu-icon"></i> Log out
+            </div>
+        </div>
+        <div class="disabledpopup popup-drop-shadow" ng-show="isAppDisabled" ng-click="resetTimeout()">
+            <img class="svg3336 logo" src="images/steps.svg" alt="Steps" />
+            <br />{{appDisabledMessage}}
+        </div>
+        <div class="mainrefreshpopup" ng-show="showMainRefresh">
+            <img class="logo" src="images/spin.svg" alt="Loading..." />
+            <br />Loading...
+        </div>
+        <section class="footer drop-shadow-upwards" ng-hide="!isLoggedIn() && showLogin && !context.hello.isVisible">
+            <div class="footer-extra" ng-if="statusMessage && isReadOnly && isAppReady()">
+                <div class="statusMessage">{{statusMessage}}</div>
+            </div>
+            <div class="footer-extra" ng-show="isTouchEdit()">
+                <div class="touchEditExtras">
+                    <div class="touchEditExtraButtons">
+                        <div class="touchEditDelete">
+                            <i class="icon-trash bar-icon bar-icon-left" ng-click="deleteText()" ng-class="{'warn': readyToDelete}"></i>
+                        </div>
+                        <div class="touchEditStrike">
+                            <i ng-class="{'icon-check': isStrikethrough(), 'icon-check-empty': isStrikethrough() == false}" class="bar-icon bar-icon-left" ng-click="strikethrough()"></i>
+                        </div>
+                    </div>
+                    <div class="touchEditMove">
+                        <i class="icon-caret-up bar-icon bar-icon-left" ng-click="move('up')"></i>
+                        <br />
+                        <i class="icon-caret-down bar-icon bar-icon-left" ng-click="move('down')"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-content">
+                <div ng-show="isAppReady()">
+                    <div class="mobile-edit-footer" ng-show="isTouchEdit()">
+                        <div class="footer-left">
+                            <div>
+                                <i class="icon-chevron-left bar-icon bar-icon-left" ng-click="move('left')"></i>
+                                <i class="icon-chevron-right bar-icon bar-icon-left" ng-click="move('right')" style="padding-left: 15px;"></i>
+                            </div>
+                        </div>
+                        <div class="footer-center"></div>
+                        <div class="footer-right"><span class="taskbar-button" ng-click="forceSync()" style="color:#777879">OK</span></div>
+                    </div>
+                    <div class="main-footer" id="footer" ng-hide="isTouchEdit()">
+                        <div class="footer-left">
+                            <i title="Status" class="icon-refresh bar-icon bar-icon-left" ng-style="{ color: statusColor() }" ng-click="forceSync()" ng-hide="isMobile()"></i>
+                        </div>
+                        <div class="footer-center">
+                            <img class="svg3336" src="images/steps.png" alt="Steps" style="height: 27px; width:55px;" ng-click="forceSync()" ng-style="{ opacity: statusOpacity() }">
+                            <input id="hide" style="opacity:0;overflow: hidden;position:absolute;z-index:-1000;" />
+
+                        </div>
+                        <div class="footer-right">
+                            <i class="icon-reorder bar-icon" ng-click="toggleNotesDialog()"></i>
+                            <i class="icon-cog bar-icon" id="taskBarOptions" title="Options" ng-click="toggleBarMenuDialog()"></i>
+                        </div>
+                    </div>
+                </div>
+                <div ng-click="toggleHello()" ng-hide="isLoggedIn()" style="cursor:pointer;text-shadow:1px 1px white;">Login</div>
+            </div>
+        </section>
+    </div>
+
+    <!--Disable while tuning performance
+<script>
+	(function (i, s, o, g, r, a, m) {
+		i['GoogleAnalyticsObject'] = r;
+		i[r] = i[r] || function () {
+			(i[r].q = i[r].q || []).push(arguments)
+		}, i[r].l = 1 * new Date();
+		a = s.createElement(o),
+			m = s.getElementsByTagName(o)[0];
+		a.async = 1;
+		a.src = g;
+		m.parentNode.insertBefore(a, m)
+	})(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+	ga('create', 'UA-75909444-1', 'auto');
+	ga('send', 'pageview');
+</script>-->
+    <!-- Uncomment, change to sw.js and remove cached elements in sw.js to debug -->
+    <!-- build:template
+	<script>
+		if ('serviceWorker' in navigator) {
+			navigator.serviceWorker
+				.register('/init.min.js')
+				.then(function () {
+					console.log("Service Worker Registered");
+				});
+		}
+	</script>
+    <!-- /build -->
+</body>
+
+</html>

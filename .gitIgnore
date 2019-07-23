@@ -1,0 +1,7 @@
+client/node_modules
+client/build
+client/ts-build
+client/npm-debug.log
+config.js
+.env
+.DS_Store
