@@ -9,7 +9,7 @@
         );
 })(navigator.userAgent || navigator.vendor || window.opera);
 
-var betaMode = window.location.search.substring(1) == "beta";
+var betaMode = window.location.search.substring(1) == 'beta';
 
 var appPrefs = {
     readonly: false,
@@ -17,10 +17,10 @@ var appPrefs = {
     iconSize: 8,
     paddingLeft: $.browser.mobile ? 8 : 11,
     nodeLineHeight: $.browser.mobile ? 25 : 22,
-    authorName: "DJ",
-    authorEmail: "jnx@nasha.co.in"
+    authorName: 'DJ',
+    authorEmail: 'jnx@nasha.co.in'
 };
-var BULLET = "";
+var BULLET = '';
 var whenLastKeystroke = new Date(),
     whenLastAutoSave = new Date();
 var ns;
@@ -39,7 +39,7 @@ function initLocalStorage() {
         localStorage.whenLastSave = new Date().toString();
     }
     if (localStorage.flTextMode == undefined) {
-        localStorage.flTextMode = "true";
+        localStorage.flTextMode = 'true';
     }
 
     store = new NoteStore();
@@ -63,13 +63,15 @@ function backgroundProcess() {
     }
 }
 
-function startup(outliner) {
+function startup(outliner, noInitialize) {
     //Post Outline Initialization
 
     const onAPIInitialized = () => {
         initLocalStorage();
-        var initVal = initialOpmltext;
-        if (!store.note || !store.note.value) opXmlToOutline(initVal);
+        if (!noInitialize || noInitialize === false) {
+            var initVal = initialOpmltext;
+            if (!store.note || !store.note.value) opXmlToOutline(initVal);
+        }
 
         self.setInterval(function() {
             backgroundProcess();
@@ -94,7 +96,7 @@ function opKeystrokeCallback(event) {
     whenLastKeystroke = new Date();
     if (
         event.srcElement != null &&
-        event.srcElement.className.indexOf("concord-wrapper") == -1
+        event.srcElement.className.indexOf('concord-wrapper') == -1
     )
         return;
     if (_.contains(navigationKeystrokes, event.which)) return;
@@ -104,10 +106,10 @@ function opKeystrokeCallback(event) {
 }
 
 function hideSplash() {
-    var hs = "hide-splash";
-    var x = document.getElementById("splash");
+    var hs = 'hide-splash';
+    var x = document.getElementById('splash');
     if (x) {
-        if (_.contains(x.classList, hs) == false) x.className += " " + hs;
+        if (_.contains(x.classList, hs) == false) x.className += ' ' + hs;
     }
 }
 
@@ -123,7 +125,7 @@ function detectIdle() {
         if (!ns) return;
         if (ns.ngScope.isLoggedIn() == false || ns.ngScope.isAppDisabled)
             return;
-        ns.ngScope.showDisabledDialog("Click to continue", true);
+        ns.ngScope.showDisabledDialog('Click to continue', true);
     }
 
     this.resetTimer = function() {
@@ -141,5 +143,5 @@ function resetTimer(event) {
     if (idler) idler.resetTimer();
 }
 
-document.addEventListener("touchstart", resetTimer, false);
-document.addEventListener("click", resetTimer);
+document.addEventListener('touchstart', resetTimer, false);
+document.addEventListener('click', resetTimer);

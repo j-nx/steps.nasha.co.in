@@ -70,8 +70,8 @@ module.exports = function(grunt) {
                 dest: 'build/'
             },
             config: {
-                src: 'config.js',
-                dest: 'build/'
+                src: 'config-prod.js',
+                dest: 'build/config.js'
             }
         },
         htmlmin: {
