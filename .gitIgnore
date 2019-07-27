@@ -3,5 +3,6 @@ client/build
 client/ts-build
 client/npm-debug.log
 config.js
+config-prod.js
 .env
 .DS_Store
