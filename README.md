@@ -1,6 +1,6 @@
 # Steps.nasha.co.in
 
-**Create a config.js in the root:**
+**Create a config.js in the root folder:**
 
 ```
 const config = {
@@ -11,4 +11,5 @@ const config = {
 
 **Build Deployment:**
 
-Run `grunt`
+-   Create config-prod.js
+-   Run `grunt`
