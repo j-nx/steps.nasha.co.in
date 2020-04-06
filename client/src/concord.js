@@ -3,21 +3,21 @@
 // Copyright 2013, Small Picture, Inc.
 $(function () {
     if ($.fn.tooltip !== undefined) {
-        $("a[rel=tooltip]").tooltip({
-            live: true
+        $('a[rel=tooltip]').tooltip({
+            live: true,
         });
     }
 });
 $(function () {
     if ($.fn.popover !== undefined) {
-        $("a[rel=popover]").on("mouseenter mouseleave", function () {
-            $(this).popover("toggle");
+        $('a[rel=popover]').on('mouseenter mouseleave', function () {
+            $(this).popover('toggle');
         });
     }
 });
 if (!Array.prototype.indexOf) {
     Array.prototype.indexOf = function (obj, start) {
-        for (var i = (start || 0), j = this.length; i < j; i++) {
+        for (var i = start || 0, j = this.length; i < j; i++) {
             if (this[i] === obj) {
                 return i;
             }
@@ -26,7 +26,7 @@ if (!Array.prototype.indexOf) {
     };
 }
 var concord = {
-    version: "2.49",
+    version: '2.49',
     mobile: $.browser.mobile,
     ready: false,
     handleEvents: true,
@@ -44,7 +44,6 @@ var concord = {
                     c.op.focusCursor();
                     c.editor.restoreSelection();
                 } else {
-
                     c.pasteBinFocus();
                 }
                 for (var i in this.resumeCallbacks) {
@@ -69,30 +68,32 @@ var concord = {
     },
     focusRoot: null,
     getFocusRoot: function () {
-        if ($(".concord-root:visible").length == 1) {
-            return this.setFocusRoot($(".concord-root:visible:first"));
+        if ($('.concord-root:visible').length == 1) {
+            return this.setFocusRoot($('.concord-root:visible:first'));
         }
-        if ($(".modal").is(":visible")) {
-            if ($(".modal").find(".concord-root:visible:first").length == 1) {
-                return this.setFocusRoot($(".modal").find(".concord-root:visible:first"));
+        if ($('.modal').is(':visible')) {
+            if ($('.modal').find('.concord-root:visible:first').length == 1) {
+                return this.setFocusRoot(
+                    $('.modal').find('.concord-root:visible:first')
+                );
             }
         }
         if (this.focusRoot == null) {
-            if ($(".concord-root:visible").length > 0) {
-                return this.setFocusRoot($(".concord-root:visible:first"));
+            if ($('.concord-root:visible').length > 0) {
+                return this.setFocusRoot($('.concord-root:visible:first'));
             } else {
                 return null;
             }
         }
-        if (!this.focusRoot.is(":visible")) {
-            return this.setFocusRoot($(".concord-root:visible:first"));
+        if (!this.focusRoot.is(':visible')) {
+            return this.setFocusRoot($('.concord-root:visible:first'));
         }
         return this.focusRoot;
     },
     setFocusRoot: function (root) {
         var origRoot = this.focusRoot;
         var concordInstance = new ConcordOutline(root.parent());
-        if ((origRoot !== null) && !(origRoot[0] === root[0])) {
+        if (origRoot !== null && !(origRoot[0] === root[0])) {
             var origConcordInstance = new ConcordOutline(origRoot.parent());
             origConcordInstance.editor.hideContextMenu();
             origConcordInstance.editor.dragModeExit();
@@ -106,7 +107,7 @@ var concord = {
         return this.focusRoot;
     },
     updateFocusRootEvent: function (event) {
-        var root = $(event.target).parents(".concord-root:first");
+        var root = $(event.target).parents('.concord-root:first');
         if (root.length == 1) {
             concord.setFocusRoot(root);
         }
@@ -126,44 +127,53 @@ var concord = {
         var offset = element.offset().top + element.height() + headerHt;
         var windowHt = window.innerHeight - footerHt;
 
-        var position = (offset - window.pageYOffset);
-        if ((position > 0) && (position > windowHt || position < (fromTop + headerHt))) {
-            $('html,body').animate({
-                scrollTop: (element.offset().top - fromTop)
-            }, 1000);
+        var position = offset - window.pageYOffset;
+        if (
+            position > 0 &&
+            (position > windowHt || position < fromTop + headerHt)
+        ) {
+            $('html,body').animate(
+                {
+                    scrollTop: element.offset().top - fromTop,
+                },
+                1000
+            );
         }
-    }
+    },
 };
 var concordEnvironment = {
-    "version": concord.version
+    version: concord.version,
 };
 var concordClipboard = undefined;
 jQuery.fn.reverse = [].reverse;
 //Constants
 var nil = null;
 var infinity = Number.MAX_VALUE;
-var down = "down";
-var left = "left";
-var right = "right";
-var up = "up";
-var flatup = "flatup";
-var flatdown = "flatdown";
-var nodirection = "nodirection";
+var down = 'down';
+var left = 'left';
+var right = 'right';
+var up = 'up';
+var flatup = 'flatup';
+var flatdown = 'flatdown';
+var nodirection = 'nodirection';
 var XML_CHAR_MAP = {
     '<': '&lt;',
     '>': '&gt;',
     '&': '&amp;',
-    '"': '&' + 'quot;'
+    '"': '&' + 'quot;',
 };
 
-var ie = (typeof document.selection != "undefined" && document.selection.type != "Control") && true;
-var w3 = (typeof window.getSelection != "undefined") && true;
+var ie =
+    typeof document.selection != 'undefined' &&
+    document.selection.type != 'Control' &&
+    true;
+var w3 = typeof window.getSelection != 'undefined' && true;
 
 var ConcordUtil = {
     mobile: $.browser.mobile,
     escapeXml: function (s) {
         s = s.toString();
-        s = s.replace(/\u00A0/g, " ");
+        s = s.replace(/\u00A0/g, ' ');
         var escaped = s.replace(/[<>&"]/g, function (ch) {
             return XML_CHAR_MAP[ch];
         });
@@ -183,7 +193,7 @@ var ConcordUtil = {
             var textRange = document.selection.createRange();
             var preCaretTextRange = document.body.createTextRange();
             preCaretTextRange.moveToElementText(element);
-            preCaretTextRange.setEndPoint("EndToEnd", textRange);
+            preCaretTextRange.setEndPoint('EndToEnd', textRange);
             caretOffset = preCaretTextRange.text.length;
         }
         return caretOffset;
@@ -194,7 +204,9 @@ var ConcordUtil = {
             var selectedObj = window.getSelection();
             var rangeCount = 0;
             var pNode = selectedObj.anchorNode.parentNode;
-            while (pNode.localName != "div") //has in classList "concord-text"
+            while (
+                pNode.localName != 'div' //has in classList "concord-text"
+            )
                 pNode = pNode.parentNode;
             var childNodes = pNode.childNodes;
             for (var i = 0; i < childNodes.length; i++) {
@@ -214,14 +226,17 @@ var ConcordUtil = {
         //http://stackoverflow.com/a/4238971
         el.focus();
         var atStart = true;
-        if (typeof window.getSelection != "undefined" && typeof document.createRange != "undefined") {
+        if (
+            typeof window.getSelection != 'undefined' &&
+            typeof document.createRange != 'undefined'
+        ) {
             var range = document.createRange();
             range.selectNodeContents(el);
             range.collapse(atStart);
             var sel = window.getSelection();
             sel.removeAllRanges();
             sel.addRange(range);
-        } else if (typeof document.body.createTextRange != "undefined") {
+        } else if (typeof document.body.createTextRange != 'undefined') {
             var textRange = document.body.createTextRange();
             textRange.moveToElementText(el);
             textRange.collapse(atStart);
@@ -229,6 +244,10 @@ var ConcordUtil = {
         }
     },
     setCaret: function (el, index) {
+        if (index === 0) {
+            ConcordUtil.setCaretAtStart(el);
+            return;
+        }
         //V1 - Not IE<9 (+FF?) friendly
         var sel = window.getSelection();
         var innerDivText = el.firstChild;
@@ -237,10 +256,10 @@ var ConcordUtil = {
     },
     getLineInfo: function (caret, element) {
         var d = $(element),
-            l = parseInt(d.css("lineHeight")),
+            l = parseInt(d.css('lineHeight')),
             s = Math.round(d.height() / l),
             v = {
-                numberOfLines: s
+                numberOfLines: s,
             };
         if (s === 1) {
             v.caretPositionLine = 1;
@@ -254,17 +273,22 @@ var ConcordUtil = {
         // to correctly mimic wrap around!
         var tillNewLine = s.substring(caret, s.length).indexOf('\n');
         var tillEndOfChar = s.substring(caret, s.length).indexOf(' ');
-        var till = (tillNewLine >= 0 && (tillNewLine < tillEndOfChar)) ? tillNewLine : tillEndOfChar;
+        var till =
+            tillNewLine >= 0 && tillNewLine < tillEndOfChar
+                ? tillNewLine
+                : tillEndOfChar;
         var restOfWord = s.substring(caret, eString.length + till);
         if (caret == 0) restOfWord = '';
-        var e = $('<div class="concord-text">' + eString + restOfWord + "</div>");
+        var e = $(
+            '<div class="concord-text">' + eString + restOfWord + '</div>'
+        );
 
         e.css({
-            lineHeight: l + "px",
-            width: d.width() + "px"
+            lineHeight: l + 'px',
+            width: d.width() + 'px',
         });
         d.after(e);
-        d.next(".concord-text")[0];
+        d.next('.concord-text')[0];
         v.caretPositionLine = Math.round(e.height() / l);
         e.remove();
         return v;
@@ -283,20 +307,28 @@ var ConcordUtil = {
         }
     },
     deselectElementContents: function (el) {
-        if (document.selection)
-            document.selection.empty();
-        if (window.getSelection)
-            window.getSelection().removeAllRanges();
+        if (document.selection) document.selection.empty();
+        if (window.getSelection) window.getSelection().removeAllRanges();
     },
     canMoveWithinContent: function (target, direction) {
         // Move up/down in soft broken div content
-        var lineInfo = ConcordUtil.getLineInfo(ConcordUtil.getCaret2(target), target);
+        var lineInfo = ConcordUtil.getLineInfo(
+            ConcordUtil.getCaret2(target),
+            target
+        );
         if (!lineInfo) return false; //log?
 
-        if (direction == "down" && lineInfo.caretPositionLine < lineInfo.numberOfLines)
+        if (
+            direction == 'down' &&
+            lineInfo.caretPositionLine < lineInfo.numberOfLines
+        )
             return true;
 
-        if (direction == "up" && (lineInfo.caretPositionLine != 1 && lineInfo.caretPositionLine != 0))
+        if (
+            direction == 'up' &&
+            lineInfo.caretPositionLine != 1 &&
+            lineInfo.caretPositionLine != 0
+        )
             return true;
 
         return false;
@@ -305,10 +337,8 @@ var ConcordUtil = {
         var node = op.getCursor();
         var isMulti = false;
         if (op.inTextMode() == false) {
-            if (direction == "down")
-                node = op._walk_down(node);
-            else if (direction == "up")
-                node = op._walk_up(node);
+            if (direction == 'down') node = op._walk_down(node);
+            else if (direction == 'up') node = op._walk_up(node);
             isMulti = true;
             if (node == null || node == undefined) return;
         }
@@ -317,16 +347,30 @@ var ConcordUtil = {
     },
     getCurrentDate: function () {
         var monthNames = [
-	  "January", "February", "March",
-	  "April", "May", "June", "July",
-	  "August", "September", "October",
-	  "November", "December"
-	];
+            'January',
+            'February',
+            'March',
+            'April',
+            'May',
+            'June',
+            'July',
+            'August',
+            'September',
+            'October',
+            'November',
+            'December',
+        ];
 
         var date = new Date();
         var monthIndex = date.getMonth();
 
-        return (date.getDate() + ' ' + monthNames[monthIndex] + ' ' + date.getFullYear());
+        return (
+            date.getDate() +
+            ' ' +
+            monthNames[monthIndex] +
+            ' ' +
+            date.getFullYear()
+        );
     },
 };
 
@@ -334,7 +378,7 @@ String.prototype.insertAt = function (index, chars) {
     return this.substr(0, index) + chars + this.substr(index);
 };
 
-var iconName = "circle";
+var iconName = 'circle';
 
 function ConcordOutline(container, options) {
     this.container = container;
@@ -353,28 +397,28 @@ function ConcordOutline(container, options) {
         if (concord.mobile) {
             return;
         }
-        if (this.root.is(":visible")) {
+        if (this.root.is(':visible')) {
             var node = this.op.getCursor();
             var nodeOffset = node.offset();
             this.pasteBin.offset(nodeOffset);
-            this.pasteBin.css("z-index", "1000");
-            if ((this.pasteBin.text() == "") || (this.pasteBin.text() == "\n")) {
-                this.pasteBin.text("...");
+            this.pasteBin.css('z-index', '1000');
+            if (this.pasteBin.text() == '' || this.pasteBin.text() == '\n') {
+                this.pasteBin.text('...');
             }
             this.op.focusCursor();
             this.pasteBin.focus();
             if (this.pasteBin[0] === document.activeElement) {
-                document.execCommand("selectAll");
+                document.execCommand('selectAll');
             }
         }
     };
     this.callbacks = function (callbacks) {
         if (callbacks) {
-            this.root.data("callbacks", callbacks);
+            this.root.data('callbacks', callbacks);
             return callbacks;
         } else {
-            if (this.root.data("callbacks")) {
-                return this.root.data("callbacks");
+            if (this.root.data('callbacks')) {
+                return this.root.data('callbacks');
             } else {
                 return {};
             }
@@ -387,7 +431,7 @@ function ConcordOutline(container, options) {
         }
     };
     this.prefs = function (newprefs) {
-        var prefs = this.root.data("prefs");
+        var prefs = this.root.data('prefs');
         if (prefs == undefined) {
             prefs = {};
         }
@@ -395,12 +439,12 @@ function ConcordOutline(container, options) {
             for (var key in newprefs) {
                 prefs[key] = newprefs[key];
             }
-            this.root.data("prefs", prefs);
+            this.root.data('prefs', prefs);
             if (prefs.readonly) {
-                this.root.addClass("readonly");
+                this.root.addClass('readonly');
             }
             if (prefs.renderMode !== undefined) {
-                this.root.data("renderMode", prefs.renderMode);
+                this.root.data('renderMode', prefs.renderMode);
             }
             if (prefs.contextMenu) {
                 $(prefs.contextMenu).hide();
@@ -408,26 +452,30 @@ function ConcordOutline(container, options) {
             var style = {};
             var nodeStyle = {};
             if (prefs.outlineFont) {
-                nodeStyle["font-family"] = style["font-family"] = prefs.outlineFont;
+                nodeStyle['font-family'] = style['font-family'] =
+                    prefs.outlineFont;
             }
             if (prefs.outlineFontSize) {
                 prefs.outlineFontSize = parseFloat(prefs.outlineFontSize);
                 var diff = prefs.nodeLineHeight - prefs.outlineFontSize;
-                nodeStyle["font-size"] = style["font-size"] = prefs.outlineFontSize + "px";
-                nodeStyle["min-height"] = style["min-height"] = (prefs.outlineFontSize + diff) + "px";
-                nodeStyle["line-height"] = style["line-height"] = (prefs.outlineFontSize + diff) + "px";
+                nodeStyle['font-size'] = style['font-size'] =
+                    prefs.outlineFontSize + 'px';
+                nodeStyle['min-height'] = style['min-height'] =
+                    prefs.outlineFontSize + diff + 'px';
+                nodeStyle['line-height'] = style['line-height'] =
+                    prefs.outlineFontSize + diff + 'px';
             }
 
             if (prefs.nodeLineHeight) {
                 prefs.nodeLineHeight = parseFloat(prefs.nodeLineHeight);
-                nodeStyle["min-height"] = prefs.nodeLineHeight + "px";
-                nodeStyle["line-height"] = prefs.nodeLineHeight + "px";
+                nodeStyle['min-height'] = prefs.nodeLineHeight + 'px';
+                nodeStyle['line-height'] = prefs.nodeLineHeight + 'px';
             }
-            this.root.parent().find("style.prefsStyle").remove();
+            this.root.parent().find('style.prefsStyle').remove();
             var css = '<style type="text/css" class="prefsStyle">\n';
-            var cssId = "";
-            if (this.root.parent().attr("id")) {
-                cssId = "#" + this.root.parent().attr("id");
+            var cssId = '';
+            if (this.root.parent().attr('id')) {
+                cssId = '#' + this.root.parent().attr('id');
             }
             css += cssId + ' .concord .concord-node .concord-wrapper{';
             for (var attribute in style) {
@@ -439,9 +487,10 @@ function ConcordOutline(container, options) {
                 css += attribute + ': ' + nodeStyle[attribute] + ';';
             }
             css += '}\n';
-            css += cssId + ' .concord .concord-node .concord-wrapper .node-icon {';
+            css +=
+                cssId + ' .concord .concord-node .concord-wrapper .node-icon {';
             for (var attrib in style) {
-                if (attrib != "font-family" && attrib != "font-size") {
+                if (attrib != 'font-family' && attrib != 'font-size') {
                     css += attrib + ': ' + style[attrib] + ';';
                 }
             }
@@ -455,8 +504,8 @@ function ConcordOutline(container, options) {
             }
             if (olPaddingLeft !== undefined) {
                 css += cssId + ' .concord ol {';
-                css += "padding-left: " + olPaddingLeft + "px";
-                css += "}\n";
+                css += 'padding-left: ' + olPaddingLeft + 'px';
+                css += '}\n';
             }
             css += '</style>\n';
             this.root.before(css);
@@ -475,62 +524,64 @@ function ConcordOutline(container, options) {
                 this.prefs(options.prefs);
             }
             if (options.open) {
-                this.root.data("open", options.open);
+                this.root.data('open', options.open);
             }
             if (options.save) {
-                this.root.data("save", options.save);
+                this.root.data('save', options.save);
             }
             if (options.callbacks) {
                 this.callbacks(options.callbacks);
             }
             if (options.id) {
-                this.root.data("id", options.id);
+                this.root.data('id', options.id);
                 this.open();
             }
         }
     };
     this.init = function () {
-        if ($(container).find(".concord-root:first").length > 0) {
-            this.root = $(container).find(".concord-root:first");
-            this.pasteBin = $(container).find(".pasteBin:first");
+        if ($(container).find('.concord-root:first').length > 0) {
+            this.root = $(container).find('.concord-root:first');
+            this.pasteBin = $(container).find('.pasteBin:first');
             this.afterInit();
             return;
         }
-        var root = $("<ol></ol>");
-        root.addClass("concord concord-root");
+        var root = $('<ol></ol>');
+        root.addClass('concord concord-root');
         root.appendTo(container);
         this.root = root;
-        var pasteBin = $('<div class="pasteBin" contenteditable="true" style="position: absolute; height: 1px; width:1px; outline:none; overflow:hidden;"></div>');
+        var pasteBin = $(
+            '<div class="pasteBin" contenteditable="true" style="position: absolute; height: 1px; width:1px; outline:none; overflow:hidden;"></div>'
+        );
         pasteBin.appendTo(container);
         this.pasteBin = pasteBin;
         this.afterInit();
         this.events = new ConcordEvents(this.root, this.editor, this.op, this);
     };
-    this["new"] = function () {
+    this['new'] = function () {
         this.op.wipe();
     };
     this.open = function (cb) {
-        var opmlId = this.root.data("id");
+        var opmlId = this.root.data('id');
         if (!opmlId) {
             return;
         }
         var root = this.root;
         var op = this.op;
-        var openUrl = "http://concord.smallpicture.com/open";
-        if (root.data("open")) {
-            openUrl = root.data("open");
+        var openUrl = 'http://concord.smallpicture.com/open';
+        if (root.data('open')) {
+            openUrl = root.data('open');
         }
         var params = {};
         if (opmlId.match(/^http.+$/)) {
-            params["url"] = opmlId;
+            params['url'] = opmlId;
         } else {
-            params["id"] = opmlId;
+            params['id'] = opmlId;
         }
         $.ajax({
             type: 'POST',
             url: openUrl,
             data: params,
-            dataType: "xml",
+            dataType: 'xml',
             success: function (opml) {
                 if (opml) {
                     op.xmlToOutline(opml);
@@ -540,18 +591,18 @@ function ConcordOutline(container, options) {
                 }
             },
             error: function () {
-                if (root.find(".concord-node").length == 0) {
+                if (root.find('.concord-node').length == 0) {
                     op.wipe();
                 }
-            }
+            },
         });
     };
     this.save = function (cb) {
-        var opmlId = this.root.data("id");
+        var opmlId = this.root.data('id');
         if (opmlId && this.op.changed()) {
-            var saveUrl = "http://concord.smallpicture.com/save";
-            if (this.root.data("save")) {
-                saveUrl = this.root.data("save");
+            var saveUrl = 'http://concord.smallpicture.com/save';
+            if (this.root.data('save')) {
+                saveUrl = this.root.data('save');
             }
             var concordInstance = this;
             var opml = this.op.outlineToXml();
@@ -559,58 +610,61 @@ function ConcordOutline(container, options) {
                 type: 'POST',
                 url: saveUrl,
                 data: {
-                    "opml": opml,
-                    "id": opmlId
+                    opml: opml,
+                    id: opmlId,
                 },
-                dataType: "json",
+                dataType: 'json',
                 success: function (json) {
                     concordInstance.op.clearChanged();
                     if (cb) {
                         cb(json);
                     }
-                }
+                },
             });
         }
     };
-    this["import"] = function (opmlId, cb) {
-        var openUrl = "http://concordold.smallpicture.com/open";
+    this['import'] = function (opmlId, cb) {
+        var openUrl = 'http://concordold.smallpicture.com/open';
         var root = this.root;
         var concordInstance = this;
-        if (root.data("open")) {
-            openUrl = root.data("open");
+        if (root.data('open')) {
+            openUrl = root.data('open');
         }
         var params = {};
         if (opmlId.match(/^http.+$/)) {
-            params["url"] = opmlId;
+            params['url'] = opmlId;
         } else {
-            params["id"] = opmlId;
+            params['id'] = opmlId;
         }
         $.ajax({
             type: 'POST',
             url: openUrl,
             data: params,
-            dataType: "xml",
+            dataType: 'xml',
             success: function (opml) {
                 if (opml) {
-                    var cursor = root.find(".concord-cursor:first");
-                    $(opml).find("body").children("outline").each(function () {
-                        var node = concordInstance.editor.build($(this));
-                        cursor.after(node);
-                        cursor = node;
-                    });
+                    var cursor = root.find('.concord-cursor:first');
+                    $(opml)
+                        .find('body')
+                        .children('outline')
+                        .each(function () {
+                            var node = concordInstance.editor.build($(this));
+                            cursor.after(node);
+                            cursor = node;
+                        });
                     concordInstance.op.markChanged();
                     if (cb) {
                         cb();
                     }
                 }
             },
-            error: function () {}
+            error: function () {},
         });
     };
-    this["export"] = function () {
-        var context = this.root.find(".concord-cursor:first");
+    this['export'] = function () {
+        var context = this.root.find('.concord-cursor:first');
         if (context.length == 0) {
-            context = this.root.find(".concord-root:first");
+            context = this.root.find('.concord-root:first');
         }
         return this.editor.opml(context);
     };
@@ -619,100 +673,109 @@ function ConcordOutline(container, options) {
 
 function ConcordEditor(root, concordInstance) {
     this.makeNode = function () {
-        var node = $("<li></li>");
-        node.addClass("concord-node");
+        var node = $('<li></li>');
+        node.addClass('concord-node');
         var wrapper = $("<div class='concord-wrapper'></div>");
-        var icon = "<i" + " class=\"node-icon icon-" + iconName + "\"><" + "/i>";
+        var icon = '<i' + ' class="node-icon icon-' + iconName + '"><' + '/i>';
         wrapper.append(icon);
-        wrapper.addClass("type-icon");
+        wrapper.addClass('type-icon');
         var text = $("<div class='concord-text' contenteditable='true'></div>");
-        var outline = $("<ol></ol>");
+        var outline = $('<ol></ol>');
         text.appendTo(wrapper);
         wrapper.appendTo(node);
         outline.appendTo(node);
         return node;
     };
     this.dragMode = function () {
-        root.data("draggingChange", root.children().clone(true, true));
-        root.addClass("dragging");
-        root.data("dragging", true);
+        root.data('draggingChange', root.children().clone(true, true));
+        root.addClass('dragging');
+        root.data('dragging', true);
     };
     this.dragModeExit = function () {
-        if (root.data("dragging")) {
+        if (root.data('dragging')) {
             concordInstance.op.markChanged();
-            root.data("change", root.data("draggingChange"));
-            root.data("changeTextMode", false);
-            root.data("changeRange", undefined);
+            root.data('change', root.data('draggingChange'));
+            root.data('changeTextMode', false);
+            root.data('changeRange', undefined);
         }
-        root.find(".draggable").removeClass("draggable");
-        root.find(".drop-sibling").removeClass("drop-sibling");
-        root.find(".drop-child").removeClass("drop-child");
-        root.removeClass("dragging");
-        root.data("dragging", false);
-        root.data("mousedown", false);
+        root.find('.draggable').removeClass('draggable');
+        root.find('.drop-sibling').removeClass('drop-sibling');
+        root.find('.drop-child').removeClass('drop-child');
+        root.removeClass('dragging');
+        root.data('dragging', false);
+        root.data('mousedown', false);
     };
     this.edit = function (node, empty) {
-        var text = node.children(".concord-wrapper:first").children(".concord-text:first");
+        var text = node
+            .children('.concord-wrapper:first')
+            .children('.concord-text:first');
         if (empty) {
-            text.html("");
+            text.html('');
         }
         text.focus();
         var el = text.get(0);
         if (el && el.childNodes && el.childNodes[0]) {
-            if (typeof window.getSelection != "undefined" && typeof document.createRange != "undefined") {
+            if (
+                typeof window.getSelection != 'undefined' &&
+                typeof document.createRange != 'undefined'
+            ) {
                 var range = document.createRange();
                 range.selectNodeContents(el);
                 range.collapse(true);
                 var sel = window.getSelection();
                 sel.removeAllRanges();
                 sel.addRange(range);
-            } else if (typeof document.body.createTextRange != "undefined") {
+            } else if (typeof document.body.createTextRange != 'undefined') {
                 var textRange = document.body.createTextRange();
                 textRange.moveToElementText(el);
                 textRange.collapse(true);
                 textRange.select();
             }
         }
-        text.addClass("editing");
+        text.addClass('editing');
         if (!empty) {
-            if (root.find(".concord-node.dirty").length > 0) {
+            if (root.find('.concord-node.dirty').length > 0) {
                 concordInstance.op.markChanged();
             }
         }
     };
     this.editable = function (target) {
         var editable = false;
-        if (!target.hasClass("concord-text")) {
-            target = target.parents(".concord-text:first");
+        if (!target.hasClass('concord-text')) {
+            target = target.parents('.concord-text:first');
         }
         if (target.length == 1) {
-            editable = target.hasClass("concord-text") && target.hasClass("editing");
+            editable =
+                target.hasClass('concord-text') && target.hasClass('editing');
         }
         return editable;
     };
     this.editorMode = function () {
-        root.find(".selected").removeClass("selected");
-        root.find(".editing").each(function () {
+        root.find('.selected').removeClass('selected');
+        root.find('.editing').each(function () {
             //$(this).blur();
-            $(this).removeClass("editing");
+            $(this).removeClass('editing');
         });
-        root.find(".selection-toolbar").remove();
+        root.find('.selection-toolbar').remove();
     };
     this.opml = function (_root, flsubsonly) {
-
-        if (flsubsonly == undefined) { //8/5/13 by DW
+        if (flsubsonly == undefined) {
+            //8/5/13 by DW
             flsubsonly = false;
         }
 
         if (_root) {
             root = _root;
         }
-        var title = root.data("title");
+        var title = root.data('title');
         if (!title) {
-            if (root.hasClass("concord-node")) {
-                title = root.children(".concord-wrapper:first").children(".concord-text:first").text();
+            if (root.hasClass('concord-node')) {
+                title = root
+                    .children('.concord-wrapper:first')
+                    .children('.concord-text:first')
+                    .text();
             } else {
-                title = "";
+                title = '';
             }
         }
         var opml = '<?xml version="1.0"?>\n';
@@ -721,11 +784,11 @@ function ConcordEditor(root, concordInstance) {
         opml += '<title>' + ConcordUtil.escapeXml(title) + '</title>\n';
         opml += '</head>\n';
         opml += '<body>\n';
-        if (root.hasClass("concord-cursor")) {
+        if (root.hasClass('concord-cursor')) {
             opml += this.opmlLine(root, 0, flsubsonly);
         } else {
             var editor = this;
-            root.children(".concord-node").each(function () {
+            root.children('.concord-node').each(function () {
                 opml += editor.opmlLine($(this));
             });
         }
@@ -738,11 +801,17 @@ function ConcordEditor(root, concordInstance) {
             indent = 0;
         }
 
-        if (flsubsonly == undefined) { //8/5/13 by DW
+        if (flsubsonly == undefined) {
+            //8/5/13 by DW
             flsubsonly = false;
         }
 
-        var text = this.unescape(node.children(".concord-wrapper:first").children(".concord-text:first").html());
+        var text = this.unescape(
+            node
+                .children('.concord-wrapper:first')
+                .children('.concord-text:first')
+                .html()
+        );
         var textMatches = text.match(/^(.+)<br>\s*$/);
         if (textMatches) {
             text = textMatches[1];
@@ -757,27 +826,33 @@ function ConcordEditor(root, concordInstance) {
         text = text.replace(/&amp;#10;/g, '&#10;');
 
         var subheads;
-        if (!flsubsonly) { //8/5/13 by DW
+        if (!flsubsonly) {
+            //8/5/13 by DW
             opml += '<outline text="' + text + '"';
-            var attributes = node.data("attributes");
+            var attributes = node.data('attributes');
             if (attributes === undefined) {
                 attributes = {};
             }
             for (var name in attributes) {
-                if ((name !== undefined) && (name != "") && (name != "text")) {
+                if (name !== undefined && name != '' && name != 'text') {
                     if (attributes[name] !== undefined) {
-                        opml += ' ' + name + '="' + ConcordUtil.escapeXml(attributes[name]) + '"';
+                        opml +=
+                            ' ' +
+                            name +
+                            '="' +
+                            ConcordUtil.escapeXml(attributes[name]) +
+                            '"';
                     }
                 }
             }
-            subheads = node.children("ol").children(".concord-node");
+            subheads = node.children('ol').children('.concord-node');
             if (subheads.length == 0) {
-                opml += "/>\n";
+                opml += '/>\n';
                 return opml;
             }
-            opml += ">\n";
+            opml += '>\n';
         } else {
-            subheads = node.children("ol").children(".concord-node");
+            subheads = node.children('ol').children('.concord-node');
         }
 
         var editor = this;
@@ -786,7 +861,8 @@ function ConcordEditor(root, concordInstance) {
             opml += editor.opmlLine($(this), indent);
         });
 
-        if (!flsubsonly) { //8/5/13 by DW
+        if (!flsubsonly) {
+            //8/5/13 by DW
             for (var i = 0; i < indent; i++) {
                 opml += '\t';
             }
@@ -799,18 +875,24 @@ function ConcordEditor(root, concordInstance) {
         if (!indent) {
             indent = 0;
         }
-        var text = "";
+        var text = '';
         for (var i = 0; i < indent; i++) {
-            text += "\t";
+            text += '\t';
         }
-        if (bulletChar)
-            text += bulletChar + " ";
-        text += this.unescape(node.children(".concord-wrapper:first").children(".concord-text:first").html());
-        text += "\n";
+        if (bulletChar) text += bulletChar + ' ';
+        text += this.unescape(
+            node
+                .children('.concord-wrapper:first')
+                .children('.concord-text:first')
+                .html()
+        );
+        text += '\n';
         var editor = this;
-        node.children("ol").children(".concord-node").each(function () {
-            text += editor.textLine($(this), indent + 1, bulletChar);
-        });
+        node.children('ol')
+            .children('.concord-node')
+            .each(function () {
+                text += editor.textLine($(this), indent + 1, bulletChar);
+            });
         return text;
     };
     this.select = function (node, multiple, multipleRange) {
@@ -823,46 +905,50 @@ function ConcordEditor(root, concordInstance) {
         if (node.length == 1) {
             this.selectionMode(multiple);
             if (multiple) {
-                node.parents(".concord-node.selected").removeClass("selected");
-                node.find(".concord-node.selected").removeClass("selected");
+                node.parents('.concord-node.selected').removeClass('selected');
+                node.find('.concord-node.selected').removeClass('selected');
             }
             if (multiple && multipleRange) {
-                var prevNodes = node.prevAll(".selected");
+                var prevNodes = node.prevAll('.selected');
                 if (prevNodes.length > 0) {
                     var stamp = false;
-                    node.prevAll().reverse().each(function () {
-                        if ($(this).hasClass("selected")) {
-                            stamp = true;
-                        } else if (stamp) {
-                            $(this).addClass("selected");
-                        }
-                    });
+                    node.prevAll()
+                        .reverse()
+                        .each(function () {
+                            if ($(this).hasClass('selected')) {
+                                stamp = true;
+                            } else if (stamp) {
+                                $(this).addClass('selected');
+                            }
+                        });
                 } else {
-                    var nextNodes = node.nextAll(".selected");
+                    var nextNodes = node.nextAll('.selected');
                     if (nextNodes.length > 0) {
                         var stamp = true;
                         node.nextAll().each(function () {
-                            if ($(this).hasClass("selected")) {
+                            if ($(this).hasClass('selected')) {
                                 stamp = false;
                             } else if (stamp) {
-                                $(this).addClass("selected");
+                                $(this).addClass('selected');
                             }
                         });
                     }
                 }
             }
-            var text = node.children(".concord-wrapper:first").children(".concord-text:first");
-            if (text.hasClass("editing")) {
-                text.removeClass("editing");
+            var text = node
+                .children('.concord-wrapper:first')
+                .children('.concord-text:first');
+            if (text.hasClass('editing')) {
+                text.removeClass('editing');
             }
             //text.blur();
-            node.addClass("selected");
+            node.addClass('selected');
             if (text.text().length > 0) {
                 //root.data("currentChange", root.children().clone());
             }
             this.dragModeExit();
         }
-        if (root.find(".concord-node.dirty").length > 0) {
+        if (root.find('.concord-node.dirty').length > 0) {
             concordInstance.op.markChanged();
         }
     };
@@ -870,72 +956,79 @@ function ConcordEditor(root, concordInstance) {
         if (multiple == undefined) {
             multiple = false;
         }
-        var node = root.find(".concord-cursor");
+        var node = root.find('.concord-cursor');
         if (node.length == 1) {
-            var text = node.children(".concord-wrapper:first").children(".concord-text:first");
+            var text = node
+                .children('.concord-wrapper:first')
+                .children('.concord-text:first');
             if (text.length == 1) {
                 //text.blur();
             }
         }
         if (!multiple) {
-            root.find(".selected").removeClass("selected");
+            root.find('.selected').removeClass('selected');
         }
-        root.find(".selection-toolbar").remove();
+        root.find('.selection-toolbar').remove();
     };
     this.build = function (outline, collapsed, level) {
         if (!level) {
             level = 1;
         }
-        var node = $("<li></li>");
-        node.addClass("concord-node");
-        node.addClass("concord-level-" + level);
+        var node = $('<li></li>');
+        node.addClass('concord-node');
+        node.addClass('concord-level-' + level);
         var attributes = {};
         $(outline[0].attributes).each(function () {
             if (this.name != 'text') {
                 attributes[this.name] = this.value;
-                if (this.name == "type") {
-                    node.attr("opml-" + this.name, this.value);
+                if (this.name == 'type') {
+                    node.attr('opml-' + this.name, this.value);
                 }
             }
         });
-        node.data("attributes", attributes);
+        node.data('attributes', attributes);
         var wrapper = $("<div class='concord-wrapper'></div>");
-        var nodeIcon = attributes["icon"];
+        var nodeIcon = attributes['icon'];
         if (!nodeIcon) {
-            nodeIcon = attributes["type"];
+            nodeIcon = attributes['type'];
         }
         if (nodeIcon) {
-            if ((nodeIcon == node.attr("opml-type")) && concordInstance.prefs() && concordInstance.prefs().typeIcons && concordInstance.prefs().typeIcons[nodeIcon]) {
+            if (
+                nodeIcon == node.attr('opml-type') &&
+                concordInstance.prefs() &&
+                concordInstance.prefs().typeIcons &&
+                concordInstance.prefs().typeIcons[nodeIcon]
+            ) {
                 iconName = concordInstance.prefs().typeIcons[nodeIcon];
-            } else if (nodeIcon == attributes["icon"]) {
+            } else if (nodeIcon == attributes['icon']) {
                 iconName = nodeIcon;
             }
         }
-        var icon = "<i" + " class=\"node-icon icon-" + iconName + "\"><" + "/i>";
+        var icon = '<i' + ' class="node-icon icon-' + iconName + '"><' + '/i>';
         wrapper.append(icon);
-        wrapper.addClass("type-icon");
-        if (attributes["isComment"] == "true") {
-            node.addClass("concord-comment");
+        wrapper.addClass('type-icon');
+        if (attributes['isComment'] == 'true') {
+            node.addClass('concord-comment');
         }
         var text = $("<div class='concord-text' contenteditable='true'></div>");
-        text.addClass("concord-level-" + level + "-text");
+        text.addClass('concord-level-' + level + '-text');
         text.html(this.escape(outline.attr('text')));
-        if (attributes["cssTextClass"] !== undefined) {
-            var cssClasses = attributes["cssTextClass"].split(/\s+/);
+        if (attributes['cssTextClass'] !== undefined) {
+            var cssClasses = attributes['cssTextClass'].split(/\s+/);
             for (var c in cssClasses) {
                 var newClass = cssClasses[c];
                 text.addClass(newClass);
             }
         }
-        var children = $("<ol></ol>");
+        var children = $('<ol></ol>');
         var editor = this;
-        outline.children("outline").each(function () {
+        outline.children('outline').each(function () {
             var child = editor.build($(this), collapsed, level + 1);
             child.appendTo(children);
         });
         if (collapsed) {
-            if (outline.children("outline").size() > 0) {
-                node.addClass("collapsed");
+            if (outline.children('outline').size() > 0) {
+                node.addClass('collapsed');
             }
         }
         text.appendTo(wrapper);
@@ -944,56 +1037,70 @@ function ConcordEditor(root, concordInstance) {
         return node;
     };
     this.hideContextMenu = function () {
-        if (root.data("dropdown")) {
-            root.data("dropdown").hide();
-            root.data("dropdown").remove();
-            root.removeData("dropdown");
+        if (root.data('dropdown')) {
+            root.data('dropdown').hide();
+            root.data('dropdown').remove();
+            root.removeData('dropdown');
         }
     };
     this.showContextMenu = function (x, y) {
         if (concordInstance.prefs().contextMenu) {
             this.hideContextMenu();
-            root.data("dropdown", $(concordInstance.prefs().contextMenu).clone().appendTo(concordInstance.container));
+            root.data(
+                'dropdown',
+                $(concordInstance.prefs().contextMenu)
+                    .clone()
+                    .appendTo(concordInstance.container)
+            );
             var editor = this;
-            root.data("dropdown").on("click", "a", function (event) {
+            root.data('dropdown').on('click', 'a', function (event) {
                 editor.hideContextMenu();
             });
-            root.data("dropdown").css({
-                "position": "absolute",
-                "top": y + "px",
-                "left": x + "px",
-                "cursor": "default"
+            root.data('dropdown').css({
+                position: 'absolute',
+                top: y + 'px',
+                left: x + 'px',
+                cursor: 'default',
             });
-            root.data("dropdown").show();
+            root.data('dropdown').show();
         }
     };
     this.sanitize = function () {
-        root.find(".concord-text.paste").each(function () {
+        root.find('.concord-text.paste').each(function () {
             var concordText = $(this);
-            if (concordInstance.pasteBin.text() == "...") {
+            if (concordInstance.pasteBin.text() == '...') {
                 return;
             }
             var h = concordInstance.pasteBin.html();
-            h = h.replace(new RegExp("<(div|p|blockquote|pre|li|br|dd|dt|code|h\\d)[^>]*(/)?>", "gi"), "\n");
-            h = $("<div/>").html(h).text();
+            h = h.replace(
+                new RegExp(
+                    '<(div|p|blockquote|pre|li|br|dd|dt|code|h\\d)[^>]*(/)?>',
+                    'gi'
+                ),
+                '\n'
+            );
+            h = $('<div/>').html(h).text();
             var clipboardMatch = false;
             if (concordClipboard !== undefined) {
-                var trimmedClipboardText = concordClipboard.text.replace(/^[\s\r\n]+|[\s\r\n]+$/g, '');
+                var trimmedClipboardText = concordClipboard.text.replace(
+                    /^[\s\r\n]+|[\s\r\n]+$/g,
+                    ''
+                );
                 var trimmedPasteText = h.replace(/^[\s\r\n]+|[\s\r\n]+$/g, '');
                 if (trimmedClipboardText == trimmedPasteText) {
                     var clipboardNodes = concordClipboard.data;
                     if (clipboardNodes) {
                         var collapseNode = function (node) {
-                            node.find("ol").each(function () {
+                            node.find('ol').each(function () {
                                 if ($(this).children().length > 0) {
-                                    $(this).parent().addClass("collapsed");
+                                    $(this).parent().addClass('collapsed');
                                 }
                             });
                         };
                         clipboardNodes.each(function () {
                             collapseNode($(this));
                         });
-                        root.data("clipboard", clipboardNodes);
+                        root.data('clipboard', clipboardNodes);
                         concordInstance.op.setTextMode(false);
                         concordInstance.op.paste();
                         clipboardMatch = true;
@@ -1003,19 +1110,21 @@ function ConcordEditor(root, concordInstance) {
             if (!clipboardMatch) {
                 concordClipboard = undefined;
                 var numberoflines = 0;
-                var lines = h.split("\n");
+                var lines = h.split('\n');
                 for (var i = 0; i < lines.length; i++) {
                     var line = lines[i];
-                    if ((line != "") && !line.match(/^\s+$/)) {
+                    if (line != '' && !line.match(/^\s+$/)) {
                         numberoflines++;
                     }
                 }
-                if (!concordInstance.op.inTextMode() || (numberoflines > 1)) {
+                if (!concordInstance.op.inTextMode() || numberoflines > 1) {
                     concordInstance.op.insertText(h);
                 } else {
                     concordInstance.op.saveState();
                     concordText.focus();
-                    var range = concordText.parents(".concord-node:first").data("range");
+                    var range = concordText
+                        .parents('.concord-node:first')
+                        .data('range');
                     if (range) {
                         try {
                             var sel = window.getSelection();
@@ -1024,38 +1133,77 @@ function ConcordEditor(root, concordInstance) {
                         } catch (e) {
                             console.log(e);
                         } finally {
-                            concordText.parents(".concord-node:first").removeData("range");
+                            concordText
+                                .parents('.concord-node:first')
+                                .removeData('range');
                         }
                     }
-                    document.execCommand("insertText", null, h);
-                    concordInstance.root.removeData("clipboard");
+                    document.execCommand('insertText', null, h);
+                    concordInstance.root.removeData('clipboard');
                     concordInstance.op.markChanged();
                 }
             }
-            concordText.removeClass("paste");
+            concordText.removeClass('paste');
         });
     };
     this.escape = function (s) {
-        var h = $("<div/>").text(s).html();
-        h = h.replace(/\u00A0/g, " ");
-        if (concordInstance.op.getRenderMode()) { // Render HTML if op.getRenderMode() returns true - 2/17/13 by KS
-            var allowedTags = ["b", "strong", "i", "em", "a", "img", "strike", "del"];
+        var h = $('<div/>').text(s).html();
+        h = h.replace(/\u00A0/g, ' ');
+        if (concordInstance.op.getRenderMode()) {
+            // Render HTML if op.getRenderMode() returns true - 2/17/13 by KS
+            var allowedTags = [
+                'b',
+                'strong',
+                'i',
+                'em',
+                'a',
+                'img',
+                'strike',
+                'del',
+            ];
             for (var tagIndex in allowedTags) {
                 var tag = allowedTags[tagIndex];
-                if (tag == "img") {
-                    h = h.replace(new RegExp("&lt;" + tag + "((?!&gt;).+)(/)?&gt;", "gi"), "<" + tag + "$1" + "/>");
-                } else if (tag == "a") {
-                    h = h.replace(new RegExp("&lt;" + tag + "((?!&gt;).*?)&gt;((?!&lt;/" + tag + "&gt;).+?)&lt;/" + tag + "&gt;", "gi"), "<" + tag + "$1" + ">$2" + "<" + "/" + tag + ">");
+                if (tag == 'img') {
+                    h = h.replace(
+                        new RegExp('&lt;' + tag + '((?!&gt;).+)(/)?&gt;', 'gi'),
+                        '<' + tag + '$1' + '/>'
+                    );
+                } else if (tag == 'a') {
+                    h = h.replace(
+                        new RegExp(
+                            '&lt;' +
+                                tag +
+                                '((?!&gt;).*?)&gt;((?!&lt;/' +
+                                tag +
+                                '&gt;).+?)&lt;/' +
+                                tag +
+                                '&gt;',
+                            'gi'
+                        ),
+                        '<' + tag + '$1' + '>$2' + '<' + '/' + tag + '>'
+                    );
                 } else {
-                    h = h.replace(new RegExp("&lt;" + tag + "&gt;((?!&lt;/" + tag + "&gt;).+?)&lt;/" + tag + "&gt;", "gi"), "<" + tag + ">$1" + "<" + "/" + tag + ">");
+                    h = h.replace(
+                        new RegExp(
+                            '&lt;' +
+                                tag +
+                                '&gt;((?!&lt;/' +
+                                tag +
+                                '&gt;).+?)&lt;/' +
+                                tag +
+                                '&gt;',
+                            'gi'
+                        ),
+                        '<' + tag + '>$1' + '<' + '/' + tag + '>'
+                    );
                 }
             }
         }
         return h;
     };
     this.unescape = function (s) {
-        var h = s.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        h = $("<div/>").html(h).text();
+        var h = s.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        h = $('<div/>').html(h).text();
         return h;
     };
     this.getSelection = function () {
@@ -1064,7 +1212,10 @@ function ConcordEditor(root, concordInstance) {
             var sel = window.getSelection();
             if (sel.getRangeAt && sel.rangeCount) {
                 range = sel.getRangeAt(0);
-                if ($(range.startContainer).parents(".concord-node:first").length == 0) {
+                if (
+                    $(range.startContainer).parents('.concord-node:first')
+                        .length == 0
+                ) {
                     range = undefined;
                 }
             }
@@ -1074,14 +1225,14 @@ function ConcordEditor(root, concordInstance) {
     this.saveSelection = function () {
         var range = this.getSelection();
         if (range !== undefined) {
-            concordInstance.op.getCursor().data("range", range.cloneRange());
+            concordInstance.op.getCursor().data('range', range.cloneRange());
         }
         return range;
     };
     this.restoreSelection = function (range) {
         var cursor = concordInstance.op.getCursor();
         if (range === undefined) {
-            range = cursor.data("range");
+            range = cursor.data('range');
         }
         if (range !== undefined) {
             if (window.getSelection) {
@@ -1093,7 +1244,7 @@ function ConcordEditor(root, concordInstance) {
                 } catch (e) {
                     console.log(e);
                 } finally {
-                    cursor.removeData("range");
+                    cursor.removeData('range');
                 }
             }
         }
@@ -1101,27 +1252,31 @@ function ConcordEditor(root, concordInstance) {
     };
     this.recalculateLevels = function (context) {
         if (!context) {
-            context = root.find(".concord-node");
+            context = root.find('.concord-node');
         }
         context.each(function () {
-            var text = $(this).children(".concord-wrapper").children(".concord-text");
-            var levelMatch = $(this).attr("class").match(/.*concord-level-(\d+).*/);
+            var text = $(this)
+                .children('.concord-wrapper')
+                .children('.concord-text');
+            var levelMatch = $(this)
+                .attr('class')
+                .match(/.*concord-level-(\d+).*/);
             if (levelMatch) {
-                $(this).removeClass("concord-level-" + levelMatch[1]);
-                text.removeClass("concord-level-" + levelMatch[1] + "-text");
+                $(this).removeClass('concord-level-' + levelMatch[1]);
+                text.removeClass('concord-level-' + levelMatch[1] + '-text');
             }
-            var level = $(this).parents(".concord-node").length + 1;
-            $(this).addClass("concord-level-" + level);
-            text.addClass("concord-level-" + level + "-text");
+            var level = $(this).parents('.concord-node').length + 1;
+            $(this).addClass('concord-level-' + level);
+            text.addClass('concord-level-' + level + '-text');
         });
     };
     this.exportText = function (node, bulletChar) {
         if (!node) return '';
         var sb = [];
-        node.children(".concord-node").each(function () {
+        node.children('.concord-node').each(function () {
             sb.push(concordInstance.editor.textLine($(this), null, bulletChar));
         });
-        return sb.join("");
+        return sb.join('');
     };
     this.parseText = function (text, bulletChar) {
         var opml = concordInstance.op.textToOutline(text, bulletChar);
@@ -1136,14 +1291,14 @@ function ConcordEvents(root, editor, op, concordInstance) {
         if (!concord.handleEvents) {
             return;
         }
-        if (root.data("dropdown")) {
+        if (root.data('dropdown')) {
             editor.hideContextMenu();
             return;
         }
         if (event.shiftKey) return;
         if (!editor.editable($(event.target))) {
             var wrapper = $(event.target);
-            if (wrapper.hasClass("node-icon")) {
+            if (wrapper.hasClass('node-icon')) {
                 wrapper = wrapper.parent();
             }
             event.preventDefault();
@@ -1159,30 +1314,37 @@ function ConcordEvents(root, editor, op, concordInstance) {
         if (!concord.handleEvents) {
             return;
         }
-        if (root.data("dropdown")) {
+        if (root.data('dropdown')) {
             event.stopPropagation();
             editor.hideContextMenu();
             return;
         }
-        if (concordInstance.prefs()["readonly"]) {
+        if (concordInstance.prefs()['readonly']) {
             var node = $(event.target);
             if (concordInstance.op.getCursor()[0] === node[0]) {
                 instance.doubleClick(event);
                 return;
             }
         }
-        if ((event.which == 1) && !editor.editable($(event.target))) {
+        if (event.which == 1 && !editor.editable($(event.target))) {
             var node = $(event.target);
-            if (!node.hasClass("concord-node")) {
+            if (!node.hasClass('concord-node')) {
                 return;
             }
             if (node.length == 1) {
                 event.stopPropagation();
-                if (event.shiftKey && (node.parents(".concord-node.selected").length > 0)) {
+                if (
+                    event.shiftKey &&
+                    node.parents('.concord-node.selected').length > 0
+                ) {
                     return;
                 }
                 op.setTextMode(false);
-                op.setCursor(node, event.shiftKey || event.metaKey, event.shiftKey);
+                op.setCursor(
+                    node,
+                    event.shiftKey || event.metaKey,
+                    event.shiftKey
+                );
             }
         }
     };
@@ -1190,13 +1352,16 @@ function ConcordEvents(root, editor, op, concordInstance) {
         if (!concord.handleEvents) {
             return;
         }
-        if (root.data("dropdown")) {
+        if (root.data('dropdown')) {
             editor.hideContextMenu();
             return;
         }
         if (!editor.editable($(event.target))) {
             var node = $(event.target);
-            if (node.hasClass("concord-node") && node.hasClass("concord-cursor")) {
+            if (
+                node.hasClass('concord-node') &&
+                node.hasClass('concord-cursor')
+            ) {
                 event.stopPropagation();
                 op.setTextMode(false);
                 op.setCursor(node);
@@ -1212,15 +1377,15 @@ function ConcordEvents(root, editor, op, concordInstance) {
         if (!concord.handleEvents) {
             return;
         }
-        var keycode = (event.keyCode ? event.keyCode : event.which);
+        var keycode = event.keyCode ? event.keyCode : event.which;
         if (keycode == 32)
             if (event.ctrlKey)
                 if (!editor.editable($(event.target))) {
                     var wrapper = $(event.target);
-                    if (wrapper.hasClass("node-icon")) {
+                    if (wrapper.hasClass('node-icon')) {
                         wrapper = wrapper.parent();
                     }
-                    if (wrapper.hasClass("concord-text")) {
+                    if (wrapper.hasClass('concord-text')) {
                         event.stopPropagation();
                         event.preventDefault();
                         op.setTextMode(true);
@@ -1236,46 +1401,58 @@ function ConcordEvents(root, editor, op, concordInstance) {
         if (!concord.handleEvents) {
             return;
         }
-        if (root.data("dropdown")) {
+        if (root.data('dropdown')) {
             editor.hideContextMenu();
             return;
         }
-        if (concordInstance.prefs()["readonly"]) {
+        if (concordInstance.prefs()['readonly']) {
             var target = $(event.target);
-            var node = target.parents(".concord-node:first");
+            var node = target.parents('.concord-node:first');
             concordInstance.op.setCursor(node);
             instance.wrapperDoubleClick(event);
             return;
         }
-        if ((event.which == 1) && !editor.editable($(event.target))) {
+        if (event.which == 1 && !editor.editable($(event.target))) {
             var wrapper = $(event.target);
             var isIconClicked = false;
-            if (wrapper.hasClass("node-icon")) {
+            if (wrapper.hasClass('node-icon')) {
                 wrapper = wrapper.parent();
                 isIconClicked = true;
             }
-            if (wrapper.hasClass("concord-wrapper")) {
-                var node = wrapper.parents(".concord-node:first");
-                if (event.shiftKey && (node.parents(".concord-node.selected").length > 0)) {
+            if (wrapper.hasClass('concord-wrapper')) {
+                var node = wrapper.parents('.concord-node:first');
+                if (
+                    event.shiftKey &&
+                    node.parents('.concord-node.selected').length > 0
+                ) {
                     return;
                 }
-                
-                if (isIconClicked || !concord.mobile) {
+
+                if (isIconClicked) {
                     //Expand / Collapse
                     op.setTextMode(false);
-                    op.setCursor(node, event.shiftKey || event.metaKey, event.shiftKey);
-                    instance.wrapperDoubleClick(event);    
-                }
-                else {
+                    op.setCursor(
+                        node,
+                        event.shiftKey || event.metaKey,
+                        event.shiftKey
+                    );
+                    instance.wrapperDoubleClick(event);
+                } else {
                     //Edit mode
                     op.setTextMode(true);
-                    op.setCursor(node, event.shiftKey || event.metaKey, event.shiftKey);
+                    op.setCursor(
+                        node,
+                        event.shiftKey || event.metaKey,
+                        event.shiftKey
+                    );
                     var caretPosition = op.getLineText().length;
-                    ConcordUtil.setCaret(op.getCursor().children(".concord-wrapper").children(".concord-text")[0], caretPosition);
+                    const el = op
+                        .getCursor()
+                        .children('.concord-wrapper')
+                        .children('.concord-text')[0];
+                    ConcordUtil.setCaret(el, caretPosition);
                     instance.clickSelect(event);
                 }
-                
-                
             }
         }
     };
@@ -1286,13 +1463,16 @@ function ConcordEvents(root, editor, op, concordInstance) {
         event.preventDefault();
         event.stopPropagation();
         var node = $(event.target);
-        if (node.hasClass("concord-wrapper") || node.hasClass("node-icon")) {
+        if (node.hasClass('concord-wrapper') || node.hasClass('node-icon')) {
             op.setTextMode(false);
         }
-        if (!node.hasClass("concord-node")) {
-            node = node.parents(".concord-node:first");
+        if (!node.hasClass('concord-node')) {
+            node = node.parents('.concord-node:first');
         }
-        concordInstance.fireCallback("opContextMenu", op.setCursorContext(node));
+        concordInstance.fireCallback(
+            'opContextMenu',
+            op.setCursorContext(node)
+        );
         op.setCursor(node);
         editor.showContextMenu(event.pageX, event.pageY);
     };
@@ -1305,17 +1485,17 @@ function ConcordEvents(root, editor, op, concordInstance) {
     this.dispatchEvent = function (event) {
         root[0].dispatchEvent(event);
     };
-    root.on("dblclick", ".concord-wrapper", this.wrapperDoubleClick);
-    root.on("dblclick", ".concord-node", this.doubleClick);
-    root.on("keydown", ".concord-wrapper", this.keyPress);
-    root.on("dblclick", ".concord-text", function (event) {
+    root.on('dblclick', '.concord-wrapper', this.wrapperDoubleClick);
+    root.on('dblclick', '.concord-node', this.doubleClick);
+    root.on('keydown', '.concord-wrapper', this.keyPress);
+    root.on('dblclick', '.concord-text', function (event) {
         if (!concord.handleEvents) {
             return;
         }
-        if (concordInstance.prefs()["readonly"] == true) {
+        if (concordInstance.prefs()['readonly'] == true) {
             event.preventDefault();
             event.stopPropagation();
-            var node = $(event.target).parents(".concord-node:first");
+            var node = $(event.target).parents('.concord-node:first');
             op.setCursor(node);
             if (op.subsExpanded()) {
                 op.collapse();
@@ -1324,98 +1504,109 @@ function ConcordEvents(root, editor, op, concordInstance) {
             }
         }
     });
-    root.on("click", ".concord-wrapper", this.wrapperClickSelect);
-    root.on("click", ".concord-node", this.clickSelect);
-    root.on("mouseover", ".concord-wrapper", function (event) {
+    root.on('click', '.concord-wrapper', this.wrapperClickSelect);
+    root.on('click', '.concord-node', this.clickSelect);
+    root.on('mouseover', '.concord-wrapper', function (event) {
         if (!concord.handleEvents) {
             return;
         }
-        var node = $(event.target).parents(".concord-node:first");
-        concordInstance.fireCallback("opHover", op.setCursorContext(node));
+        var node = $(event.target).parents('.concord-node:first');
+        concordInstance.fireCallback('opHover', op.setCursorContext(node));
     });
     if (concordInstance.prefs.contextMenu) {
-        root.on("contextmenu", ".concord-text", this.contextmenu);
-        root.on("contextmenu", ".concord-node", this.contextmenu);
-        root.on("contextmenu", ".concord-wrapper", this.contextmenu);
+        root.on('contextmenu', '.concord-text', this.contextmenu);
+        root.on('contextmenu', '.concord-node', this.contextmenu);
+        root.on('contextmenu', '.concord-wrapper', this.contextmenu);
     }
-    root.on("blur", ".concord-text", function (event) {
+    root.on('blur', '.concord-text', function (event) {
         if (!concord.handleEvents) {
             return;
         }
-        if (concordInstance.prefs()["readonly"] == true) {
+        if (concordInstance.prefs()['readonly'] == true) {
             return;
         }
-        if ($(this).html().match(/^\s*<br>\s*$/)) {
-            $(this).html("");
+        if (
+            $(this)
+                .html()
+                .match(/^\s*<br>\s*$/)
+        ) {
+            $(this).html('');
         }
-        var node = $(this).parents(".concord-node:first");
+        var node = $(this).parents('.concord-node:first');
         if (concordInstance.op.inTextMode()) {
             editor.saveSelection();
         }
-        if (concordInstance.op.inTextMode() && node.hasClass("dirty")) {
-            node.removeClass("dirty");
+        if (concordInstance.op.inTextMode() && node.hasClass('dirty')) {
+            node.removeClass('dirty');
         }
     });
-    root.on("paste", ".concord-text", function (event) {
+    root.on('paste', '.concord-text', function (event) {
         if (!concord.handleEvents) {
             return;
         }
-        if (concordInstance.prefs()["readonly"] == true) {
+        if (concordInstance.prefs()['readonly'] == true) {
             return;
         }
-        $(this).addClass("paste");
+        $(this).addClass('paste');
         concordInstance.editor.saveSelection();
-        concordInstance.pasteBin.html("");
+        concordInstance.pasteBin.html('');
         concordInstance.pasteBin.focus();
         setTimeout(editor.sanitize, 10);
     });
-    concordInstance.pasteBin.on("copy", function () {
+    concordInstance.pasteBin.on('copy', function () {
         if (!concord.handleEvents) {
             return;
         }
-        var copyText = "";
-        root.find(".selected").each(function () {
+        var copyText = '';
+        root.find('.selected').each(function () {
             copyText += concordInstance.editor.textLine($(this));
         });
-        if ((copyText != "") && (copyText != "\n")) {
+        if (copyText != '' && copyText != '\n') {
             concordClipboard = {
                 text: copyText,
-                data: root.find(".selected").clone(true, true)
+                data: root.find('.selected').clone(true, true),
             };
-            concordInstance.pasteBin.html("<pre>" + $("<div/>").text(copyText).html() + "</pre>");
+            concordInstance.pasteBin.html(
+                '<pre>' + $('<div/>').text(copyText).html() + '</pre>'
+            );
             concordInstance.pasteBin.focus();
-            document.execCommand("selectAll");
+            document.execCommand('selectAll');
         }
     });
-    concordInstance.pasteBin.on("paste", function (event) {
+    concordInstance.pasteBin.on('paste', function (event) {
         if (!concord.handleEvents) {
             return;
         }
-        if (concordInstance.prefs()["readonly"] == true) {
+        if (concordInstance.prefs()['readonly'] == true) {
             return;
         }
-        var concordText = concordInstance.op.getCursor().children(".concord-wrapper").children(".concord-text");
-        concordText.addClass("paste");
-        concordInstance.pasteBin.html("");
+        var concordText = concordInstance.op
+            .getCursor()
+            .children('.concord-wrapper')
+            .children('.concord-text');
+        concordText.addClass('paste');
+        concordInstance.pasteBin.html('');
         setTimeout(editor.sanitize, 10);
     });
-    concordInstance.pasteBin.on("cut", function () {
+    concordInstance.pasteBin.on('cut', function () {
         if (!concord.handleEvents) {
             return;
         }
-        if (concordInstance.prefs()["readonly"] == true) {
+        if (concordInstance.prefs()['readonly'] == true) {
             return;
         }
-        var copyText = "";
-        root.find(".selected").each(function () {
+        var copyText = '';
+        root.find('.selected').each(function () {
             copyText += concordInstance.editor.textLine($(this));
         });
-        if ((copyText != "") && (copyText != "\n")) {
+        if (copyText != '' && copyText != '\n') {
             concordClipboard = {
                 text: copyText,
-                data: root.find(".selected").clone(true, true)
+                data: root.find('.selected').clone(true, true),
             };
-            concordInstance.pasteBin.html("<pre>" + $("<div/>").text(copyText).html() + "</pre>");
+            concordInstance.pasteBin.html(
+                '<pre>' + $('<div/>').text(copyText).html() + '</pre>'
+            );
             concordInstance.pasteBinFocus();
         }
         concordInstance.op.deleteLine();
@@ -1423,26 +1614,26 @@ function ConcordEvents(root, editor, op, concordInstance) {
             concordInstance.pasteBinFocus();
         }, 200);
     });
-    root.on("mousedown", function (event) {
+    root.on('mousedown', function (event) {
         if (!concord.handleEvents) {
             return;
         }
         var target = $(event.target);
-        if (target.is("a")) {
-            if (target.attr("href")) {
+        if (target.is('a')) {
+            if (target.attr('href')) {
                 event.preventDefault();
-                window.open(target.attr("href"));
+                window.open(target.attr('href'));
             }
             return;
         }
-        if (concordInstance.prefs()["readonly"] == true) {
+        if (concordInstance.prefs()['readonly'] == true) {
             event.preventDefault();
             var target = $(event.target);
-            if (target.parents(".concord-text:first").length == 1) {
-                target = target.parents(".concord-text:first");
+            if (target.parents('.concord-text:first').length == 1) {
+                target = target.parents('.concord-text:first');
             }
-            if (target.hasClass("concord-text")) {
-                var node = target.parents(".concord-node:first");
+            if (target.hasClass('concord-text')) {
+                var node = target.parents('.concord-node:first');
                 if (node.length == 1) {
                     op.setCursor(node);
                 }
@@ -1450,77 +1641,97 @@ function ConcordEvents(root, editor, op, concordInstance) {
             return;
         }
         if (event.which == 1) {
-            if (root.data("dropdown")) {
+            if (root.data('dropdown')) {
                 editor.hideContextMenu();
                 return;
             }
-            if (target.parents(".concord-text:first").length == 1) {
-                target = target.parents(".concord-text:first");
+            if (target.parents('.concord-text:first').length == 1) {
+                target = target.parents('.concord-text:first');
             }
-            if (target.hasClass("concord-text")) {
-                var node = target.parents(".concord-node:first");
+            if (target.hasClass('concord-text')) {
+                var node = target.parents('.concord-node:first');
                 if (node.length == 1) {
-                    if (!root.hasClass("textMode")) {
-                        root.find(".selected").removeClass("selected");
-                        root.addClass("textMode");
+                    if (!root.hasClass('textMode')) {
+                        root.find('.selected').removeClass('selected');
+                        root.addClass('textMode');
                     }
-                    if (node.children(".concord-wrapper").children(".concord-text").hasClass("editing")) {
-                        root.find(".editing").removeClass("editing");
-                        node.children(".concord-wrapper").children(".concord-text").addClass("editing");
+                    if (
+                        node
+                            .children('.concord-wrapper')
+                            .children('.concord-text')
+                            .hasClass('editing')
+                    ) {
+                        root.find('.editing').removeClass('editing');
+                        node.children('.concord-wrapper')
+                            .children('.concord-text')
+                            .addClass('editing');
                     }
-                    if (!node.hasClass("concord-cursor")) {
-                        root.find(".concord-cursor").removeClass("concord-cursor");
-                        node.addClass("concord-cursor");
-                        concordInstance.fireCallback("opCursorMoved", op.setCursorContext(node));
+                    if (!node.hasClass('concord-cursor')) {
+                        root.find('.concord-cursor').removeClass(
+                            'concord-cursor'
+                        );
+                        node.addClass('concord-cursor');
+                        concordInstance.fireCallback(
+                            'opCursorMoved',
+                            op.setCursorContext(node)
+                        );
                     }
                     concord.bringIntoView($(event.target));
                 }
             } else {
                 event.preventDefault();
-                root.data("mousedown", true);
+                root.data('mousedown', true);
             }
         }
     });
-    root.on("mousemove", function (event) {
+    root.on('mousemove', function (event) {
         if (!concord.handleEvents) {
             return;
         }
-        if (concordInstance.prefs()["readonly"] == true) {
+        if (concordInstance.prefs()['readonly'] == true) {
             return;
         }
-        if (!editor.editable($(event.target)) && concordInstance.op.inTextMode() == false) {
+        if (
+            !editor.editable($(event.target)) &&
+            concordInstance.op.inTextMode() == false
+        ) {
             event.preventDefault();
-            if (root.data("mousedown") && !root.data("dragging")) {
+            if (root.data('mousedown') && !root.data('dragging')) {
                 var target = $(event.target);
-                if (target.hasClass("node-icon")) {
+                if (target.hasClass('node-icon')) {
                     target = target.parent();
                 }
-                if (target.hasClass("concord-wrapper") && target.parent().hasClass("selected")) {
+                if (
+                    target.hasClass('concord-wrapper') &&
+                    target.parent().hasClass('selected')
+                ) {
                     editor.dragMode();
                 }
             }
         }
     });
-    root.on("mouseup", function (event) {
+    root.on('mouseup', function (event) {
         if (!concord.handleEvents) {
             return;
         }
-        if (concordInstance.prefs()["readonly"] == true) {
+        if (concordInstance.prefs()['readonly'] == true) {
             return;
         }
         var target = $(event.target);
-        if (target.hasClass("concord-node")) {
-            target = target.children(".concord-wrapper:first").children(".concord-text:first");
-        } else if (target.hasClass("concord-wrapper")) {
-            target = target.children(".concord-text:first");
+        if (target.hasClass('concord-node')) {
+            target = target
+                .children('.concord-wrapper:first')
+                .children('.concord-text:first');
+        } else if (target.hasClass('concord-wrapper')) {
+            target = target.children('.concord-text:first');
         }
         if (!editor.editable(target)) {
-            root.data("mousedown", false);
-            if (root.data("dragging")) {
+            root.data('mousedown', false);
+            if (root.data('dragging')) {
                 var target = $(event.target);
-                var node = target.parents(".concord-node:first");
-                var draggable = root.find(".selected");
-                if ((node.length == 1) && (draggable.length >= 1)) {
+                var node = target.parents('.concord-node:first');
+                var draggable = root.find('.selected');
+                if (node.length == 1 && draggable.length >= 1) {
                     var isDraggableTarget = false;
                     draggable.each(function () {
                         if (this == node[0]) {
@@ -1529,7 +1740,7 @@ function ConcordEvents(root, editor, op, concordInstance) {
                     });
                     if (!isDraggableTarget) {
                         var draggableIsTargetParent = false;
-                        node.parents(".concord-node").each(function () {
+                        node.parents('.concord-node').each(function () {
                             var nodeParent = $(this)[0];
                             draggable.each(function () {
                                 if ($(this)[0] == nodeParent) {
@@ -1538,26 +1749,38 @@ function ConcordEvents(root, editor, op, concordInstance) {
                             });
                         });
                         if (!draggableIsTargetParent) {
-                            if (target.hasClass("concord-wrapper") || target.hasClass("node-icon")) {
-                                var clonedDraggable = draggable.clone(true, true);
+                            if (
+                                target.hasClass('concord-wrapper') ||
+                                target.hasClass('node-icon')
+                            ) {
+                                var clonedDraggable = draggable.clone(
+                                    true,
+                                    true
+                                );
                                 clonedDraggable.insertAfter(node);
                                 draggable.remove();
                             } else {
-                                var clonedDraggable = draggable.clone(true, true);
-                                var outline = node.children("ol");
+                                var clonedDraggable = draggable.clone(
+                                    true,
+                                    true
+                                );
+                                var outline = node.children('ol');
                                 clonedDraggable.prependTo(outline);
-                                node.removeClass("collapsed");
+                                node.removeClass('collapsed');
                                 draggable.remove();
                             }
                         }
                     } else {
                         var prev = node.prev();
                         if (prev.length == 1) {
-                            if (prev.hasClass("drop-child")) {
-                                var clonedDraggable = draggable.clone(true, true);
-                                var outline = prev.children("ol");
+                            if (prev.hasClass('drop-child')) {
+                                var clonedDraggable = draggable.clone(
+                                    true,
+                                    true
+                                );
+                                var outline = prev.children('ol');
                                 clonedDraggable.appendTo(outline);
-                                prev.removeClass("collapsed");
+                                prev.removeClass('collapsed');
                                 draggable.remove();
                             }
                         }
@@ -1568,19 +1791,19 @@ function ConcordEvents(root, editor, op, concordInstance) {
             }
         }
     });
-    root.on("mouseover", function (event) {
+    root.on('mouseover', function (event) {
         if (!concord.handleEvents) {
             return;
         }
-        if (concordInstance.prefs()["readonly"] == true) {
+        if (concordInstance.prefs()['readonly'] == true) {
             return;
         }
-        if (root.data("dragging")) {
+        if (root.data('dragging')) {
             event.preventDefault();
             var target = $(event.target);
-            var node = target.parents(".concord-node:first");
-            var draggable = root.find(".selected");
-            if ((node.length == 1) && (draggable.length >= 1)) {
+            var node = target.parents('.concord-node:first');
+            var draggable = root.find('.selected');
+            if (node.length == 1 && draggable.length >= 1) {
                 var isDraggableTarget = false;
                 draggable.each(function () {
                     if (this == node[0]) {
@@ -1589,7 +1812,7 @@ function ConcordEvents(root, editor, op, concordInstance) {
                 });
                 if (!isDraggableTarget) {
                     var draggableIsTargetParent = false;
-                    node.parents(".concord-node").each(function () {
+                    node.parents('.concord-node').each(function () {
                         var nodeParent = $(this)[0];
                         draggable.each(function () {
                             if ($(this)[0] == nodeParent) {
@@ -1598,33 +1821,36 @@ function ConcordEvents(root, editor, op, concordInstance) {
                         });
                     });
                     if (!draggableIsTargetParent) {
-                        node.removeClass("drop-sibling").remove("drop-child");
-                        if (target.hasClass("concord-wrapper") || target.hasClass("node-icon")) {
-                            node.addClass("drop-sibling");
+                        node.removeClass('drop-sibling').remove('drop-child');
+                        if (
+                            target.hasClass('concord-wrapper') ||
+                            target.hasClass('node-icon')
+                        ) {
+                            node.addClass('drop-sibling');
                         } else {
-                            node.addClass("drop-child");
+                            node.addClass('drop-child');
                         }
                     }
                 } else if (draggable.length == 1) {
                     var prev = node.prev();
                     if (prev.length == 1) {
-                        prev.removeClass("drop-sibling").remove("drop-child");
-                        prev.addClass("drop-child");
+                        prev.removeClass('drop-sibling').remove('drop-child');
+                        prev.addClass('drop-child');
                     }
                 }
             }
         }
     });
-    root.on("mouseout", function (event) {
+    root.on('mouseout', function (event) {
         if (!concord.handleEvents) {
             return;
         }
-        if (concordInstance.prefs()["readonly"] == true) {
+        if (concordInstance.prefs()['readonly'] == true) {
             return;
         }
-        if (root.data("dragging")) {
-            root.find(".drop-sibling").removeClass("drop-sibling");
-            root.find(".drop-child").removeClass("drop-child");
+        if (root.data('dragging')) {
+            root.find('.drop-sibling').removeClass('drop-sibling');
+            root.find('.drop-child').removeClass('drop-child');
         }
     });
     this.textModeChangedEvent = new Event('textModeChanged');
@@ -1634,7 +1860,7 @@ function ConcordOp(root, concordInstance, _cursor) {
     this._walk_up = function (context) {
         var prev = context.prev();
         if (prev.length == 0) {
-            var parent = context.parents(".concord-node:first");
+            var parent = context.parents('.concord-node:first');
             if (parent.length == 1) {
                 return parent;
             } else {
@@ -1649,7 +1875,7 @@ function ConcordOp(root, concordInstance, _cursor) {
         if (next.length == 1) {
             return next;
         } else {
-            var parent = context.parents(".concord-node:first");
+            var parent = context.parents('.concord-node:first');
             if (parent.length == 1) {
                 return this._walk_down(parent);
             } else {
@@ -1658,14 +1884,14 @@ function ConcordOp(root, concordInstance, _cursor) {
         }
     };
     this._last_child = function (context) {
-        if (context.hasClass("collapsed")) {
+        if (context.hasClass('collapsed')) {
             return context;
         }
-        var outline = context.children("ol");
+        var outline = context.children('ol');
         if (outline.length == 0) {
             return context;
         } else {
-            var lastChild = outline.children(".concord-node:last");
+            var lastChild = outline.children('.concord-node:last');
             if (lastChild.length == 1) {
                 return this._last_child(lastChild);
             } else {
@@ -1688,10 +1914,10 @@ function ConcordOp(root, concordInstance, _cursor) {
                 this.markChanged();*/
     };
     this.changed = function () {
-        return root.data("changed") == true;
+        return root.data('changed') == true;
     };
     this.clearChanged = function () {
-        root.data("changed", false);
+        root.data('changed', false);
         return true;
     };
     this.collapse = function (triggerCallbacks) {
@@ -1701,12 +1927,15 @@ function ConcordOp(root, concordInstance, _cursor) {
         var node = this.getCursor();
         if (node.length == 1) {
             if (triggerCallbacks) {
-                concordInstance.fireCallback("opCollapse", this.setCursorContext(node));
+                concordInstance.fireCallback(
+                    'opCollapse',
+                    this.setCursorContext(node)
+                );
             }
-            node.addClass("collapsed");
-            node.find("ol").each(function () {
+            node.addClass('collapsed');
+            node.find('ol').each(function () {
                 if ($(this).children().length > 0) {
-                    $(this).parent().addClass("collapsed");
+                    $(this).parent().addClass('collapsed');
                 }
             });
             this.markChanged();
@@ -1714,21 +1943,22 @@ function ConcordOp(root, concordInstance, _cursor) {
     };
     this.copy = function () {
         if (!this.inTextMode()) {
-            root.data("clipboard", root.find(".selected").clone(true, true));
+            root.data('clipboard', root.find('.selected').clone(true, true));
         }
     };
     this.countSubs = function (n) {
         var node = n;
         if (!node) node = this.getCursor();
         if (node.length == 1) {
-            return node.children("ol").children().size();
+            return node.children('ol').children().size();
         }
         return 0;
     };
     this.cursorToXml = function () {
         return concordInstance.editor.opml(this.getCursor());
     };
-    this.cursorToXmlSubsOnly = function () { //8/5/13 by DW
+    this.cursorToXmlSubsOnly = function () {
+        //8/5/13 by DW
         return concordInstance.editor.opml(this.getCursor(), true);
     };
     this.cut = function () {
@@ -1743,40 +1973,40 @@ function ConcordOp(root, concordInstance, _cursor) {
             var cursor = this.getCursor();
             var p = cursor.prev();
             if (p.length == 0) {
-                p = cursor.parents(".concord-node:first");
+                p = cursor.parents('.concord-node:first');
             }
             cursor.remove();
             if (p.length == 1) {
                 this.setCursor(p);
             } else {
-                if (root.find(".concord-node:first").length == 1) {
-                    this.setCursor(root.find(".concord-node:first"));
+                if (root.find('.concord-node:first').length == 1) {
+                    this.setCursor(root.find('.concord-node:first'));
                 } else {
                     this.wipe();
                 }
             }
         } else {
-            var selected = root.find(".selected");
+            var selected = root.find('.selected');
             if (selected.length == 1) {
                 var p = selected.prev();
                 if (p.length == 0) {
-                    p = selected.parents(".concord-node:first");
+                    p = selected.parents('.concord-node:first');
                 }
                 selected.remove();
                 if (p.length == 1) {
                     this.setCursor(p);
                 } else {
-                    if (root.find(".concord-node:first").length == 1) {
-                        this.setCursor(root.find(".concord-node:first"));
+                    if (root.find('.concord-node:first').length == 1) {
+                        this.setCursor(root.find('.concord-node:first'));
                     } else {
                         this.wipe();
                     }
                 }
             } else if (selected.length > 1) {
-                var first = root.find(".selected:first");
+                var first = root.find('.selected:first');
                 var p = first.prev();
                 if (p.length == 0) {
-                    p = first.parents(".concord-node:first");
+                    p = first.parents('.concord-node:first');
                 }
                 selected.each(function () {
                     $(this).remove();
@@ -1784,16 +2014,16 @@ function ConcordOp(root, concordInstance, _cursor) {
                 if (p.length == 1) {
                     this.setCursor(p);
                 } else {
-                    if (root.find(".concord-node:first").length == 1) {
-                        this.setCursor(root.find(".concord-node:first"));
+                    if (root.find('.concord-node:first').length == 1) {
+                        this.setCursor(root.find('.concord-node:first'));
                     } else {
                         this.wipe();
                     }
                 }
             }
         }
-        if (root.find(".concord-node").length == 0) {
-            var node = this.insert("", down);
+        if (root.find('.concord-node').length == 0) {
+            var node = this.insert('', down);
             this.setCursor(node);
         }
         this.markChanged();
@@ -1801,9 +2031,9 @@ function ConcordOp(root, concordInstance, _cursor) {
     this.deleteSubs = function () {
         var node = this.getCursor();
         if (node.length == 1) {
-            if (node.children("ol").children().length > 0) {
+            if (node.children('ol').children().length > 0) {
                 this.saveState();
-                node.children("ol").empty();
+                node.children('ol').empty();
             }
         }
         this.markChanged();
@@ -1816,10 +2046,12 @@ function ConcordOp(root, concordInstance, _cursor) {
             node.nextAll().each(function () {
                 var sibling = $(this).clone(true, true);
                 $(this).remove();
-                sibling.appendTo(node.children("ol"));
-                node.removeClass("collapsed");
+                sibling.appendTo(node.children('ol'));
+                node.removeClass('collapsed');
             });
-            concordInstance.editor.recalculateLevels(node.find(".concord-node"));
+            concordInstance.editor.recalculateLevels(
+                node.find('.concord-node')
+            );
             this.markChanged();
         }
     };
@@ -1830,23 +2062,42 @@ function ConcordOp(root, concordInstance, _cursor) {
         var node = this.getCursor();
         if (node.length == 1) {
             if (triggerCallbacks) {
-                concordInstance.fireCallback("opExpand", this.setCursorContext(node));
+                concordInstance.fireCallback(
+                    'opExpand',
+                    this.setCursorContext(node)
+                );
             }
-            if (!node.hasClass("collapsed")) {
+            if (!node.hasClass('collapsed')) {
                 return;
             }
-            node.removeClass("collapsed");
+            node.removeClass('collapsed');
             var cursorPosition = node.offset().top;
             var cursorHeight = node.height();
             var windowPosition = $(window).scrollTop();
             var windowHeight = $(window).height();
-            if ((cursorPosition < windowPosition) || ((cursorPosition + cursorHeight) > (windowPosition + windowHeight))) {
+            if (
+                cursorPosition < windowPosition ||
+                cursorPosition + cursorHeight > windowPosition + windowHeight
+            ) {
                 if (cursorPosition < windowPosition) {
                     $(window).scrollTop(cursorPosition);
-                } else if ((cursorPosition + cursorHeight) > (windowPosition + windowHeight)) {
-                    var lineHeight = parseInt(node.children(".concord-wrapper").children(".concord-text").css("line-height")) + 6;
-                    if ((cursorHeight + lineHeight) < windowHeight) {
-                        $(window).scrollTop(cursorPosition - (windowHeight - cursorHeight) + lineHeight);
+                } else if (
+                    cursorPosition + cursorHeight >
+                    windowPosition + windowHeight
+                ) {
+                    var lineHeight =
+                        parseInt(
+                            node
+                                .children('.concord-wrapper')
+                                .children('.concord-text')
+                                .css('line-height')
+                        ) + 6;
+                    if (cursorHeight + lineHeight < windowHeight) {
+                        $(window).scrollTop(
+                            cursorPosition -
+                                (windowHeight - cursorHeight) +
+                                lineHeight
+                        );
                     } else {
                         $(window).scrollTop(cursorPosition);
                     }
@@ -1858,56 +2109,69 @@ function ConcordOp(root, concordInstance, _cursor) {
     this.expandAllLevels = function () {
         var node = this.getCursor();
         if (node.length == 1) {
-            node.removeClass("collapsed");
-            node.find(".concord-node").removeClass("collapsed");
+            node.removeClass('collapsed');
+            node.find('.concord-node').removeClass('collapsed');
         }
     };
     this.focusCursor = function () {
-        this.getCursor().children(".concord-wrapper").children(".concord-text").focus();
-        ConcordUtil.setCaretAtStart(this.getCursor().children(".concord-wrapper").children(".concord-text")[0]);
+        this.getCursor()
+            .children('.concord-wrapper')
+            .children('.concord-text')
+            .focus();
+        ConcordUtil.setCaretAtStart(
+            this.getCursor()
+                .children('.concord-wrapper')
+                .children('.concord-text')[0]
+        );
     };
     this.blurCursor = function () {
-        this.getCursor().children(".concord-wrapper").children(".concord-text").blur();
+        this.getCursor()
+            .children('.concord-wrapper')
+            .children('.concord-text')
+            .blur();
     };
     this.fullCollapse = function () {
-        root.find(".concord-node").each(function () {
-            if ($(this).children("ol").children().size() > 0) {
-                $(this).addClass("collapsed");
+        root.find('.concord-node').each(function () {
+            if ($(this).children('ol').children().size() > 0) {
+                $(this).addClass('collapsed');
             }
         });
         var cursor = this.getCursor();
-        var topParent = cursor.parents(".concord-node:last");
+        var topParent = cursor.parents('.concord-node:last');
         if (topParent.length == 1) {
             concordInstance.editor.select(topParent);
         }
         this.markChanged();
     };
     this.fullExpand = function () {
-        root.find(".concord-node").removeClass("collapsed");
+        root.find('.concord-node').removeClass('collapsed');
         this.markChanged();
     };
     this.getCursor = function () {
         if (_cursor) {
             return _cursor;
         }
-        return root.find(".concord-cursor:first");
+        return root.find('.concord-cursor:first');
     };
     this.getCursorRef = function () {
         return this.setCursorContext(this.getCursor());
     };
     this.getHeaders = function () {
         var headers = {};
-        if (root.data("head")) {
-            headers = root.data("head");
+        if (root.data('head')) {
+            headers = root.data('head');
         }
-        headers["title"] = this.getTitle();
+        headers['title'] = this.getTitle();
         return headers;
     };
     this.getLineText = function (n) {
         var node = n;
         if (!node) node = this.getCursor();
         if (node.length == 1) {
-            var text = node.children(".concord-wrapper:first").children(".concord-text:first").html();
+            var text = node
+                .children('.concord-wrapper:first')
+                .children('.concord-text:first')
+                .html();
             var textMatches = text.match(/^(.+)<br>\s*$/);
             if (textMatches) {
                 text = textMatches[1];
@@ -1918,14 +2182,14 @@ function ConcordOp(root, concordInstance, _cursor) {
         }
     };
     this.getRenderMode = function () {
-        if (root.data("renderMode") !== undefined) {
-            return (root.data("renderMode") === true);
+        if (root.data('renderMode') !== undefined) {
+            return root.data('renderMode') === true;
         } else {
             return true;
         }
     };
     this.getTitle = function () {
-        return root.data("title");
+        return root.data('title');
     };
     this.go = function (direction, count, multiple, textMode) {
         if (count === undefined) {
@@ -1964,7 +2228,7 @@ function ConcordOp(root, concordInstance, _cursor) {
                 break;
             case left:
                 for (var i = 0; i < count; i++) {
-                    var parent = cursor.parents(".concord-node:first");
+                    var parent = cursor.parents('.concord-node:first');
                     if (parent.length == 1) {
                         cursor = parent;
                         ableToMoveInDirection = true;
@@ -1976,7 +2240,9 @@ function ConcordOp(root, concordInstance, _cursor) {
                 break;
             case right:
                 for (var i = 0; i < count; i++) {
-                    var firstSibling = cursor.children("ol").children(".concord-node:first");
+                    var firstSibling = cursor
+                        .children('ol')
+                        .children('.concord-node:first');
                     if (firstSibling.length == 1) {
                         cursor = firstSibling;
                         ableToMoveInDirection = true;
@@ -1988,10 +2254,13 @@ function ConcordOp(root, concordInstance, _cursor) {
                 break;
             case flatup:
                 var nodeCount = 0;
-                while (cursor && (nodeCount < count)) {
+                while (cursor && nodeCount < count) {
                     var cursor = this._walk_up(cursor);
                     if (cursor) {
-                        if (!cursor.hasClass("collapsed") && (cursor.children("ol").children().size() > 0)) {
+                        if (
+                            !cursor.hasClass('collapsed') &&
+                            cursor.children('ol').children().size() > 0
+                        ) {
                             nodeCount++;
                             ableToMoveInDirection = true;
                             if (nodeCount == count) {
@@ -2004,12 +2273,14 @@ function ConcordOp(root, concordInstance, _cursor) {
                 break;
             case flatdown:
                 var nodeCount = 0;
-                while (cursor && (nodeCount < count)) {
+                while (cursor && nodeCount < count) {
                     var next = null;
-                    if (!cursor.hasClass("collapsed")) {
-                        var outline = cursor.children("ol");
+                    if (!cursor.hasClass('collapsed')) {
+                        var outline = cursor.children('ol');
                         if (outline.length == 1) {
-                            var firstChild = outline.children(".concord-node:first");
+                            var firstChild = outline.children(
+                                '.concord-node:first'
+                            );
                             if (firstChild.length == 1) {
                                 next = firstChild;
                             }
@@ -2020,7 +2291,10 @@ function ConcordOp(root, concordInstance, _cursor) {
                     }
                     cursor = next;
                     if (cursor) {
-                        if (!cursor.hasClass("collapsed") && (cursor.children("ol").children().size() > 0)) {
+                        if (
+                            !cursor.hasClass('collapsed') &&
+                            cursor.children('ol').children().size() > 0
+                        ) {
                             nodeCount++;
                             ableToMoveInDirection = true;
                             if (nodeCount == count) {
@@ -2036,9 +2310,9 @@ function ConcordOp(root, concordInstance, _cursor) {
     };
     this.insert = function (insertText, insertDirection) {
         this.saveState();
-        var level = this.getCursor().parents(".concord-node").length + 1;
-        var node = $("<li></li>");
-        node.addClass("concord-node");
+        var level = this.getCursor().parents('.concord-node').length + 1;
+        var node = $('<li></li>');
+        node.addClass('concord-node');
         switch (insertDirection) {
             case right:
                 level += 1;
@@ -2047,18 +2321,18 @@ function ConcordOp(root, concordInstance, _cursor) {
                 level -= 1;
                 break;
         }
-        node.addClass("concord-level-" + level);
+        node.addClass('concord-level-' + level);
         var wrapper = $("<div class='concord-wrapper'></div>");
-        var icon = "<i" + " class=\"node-icon icon-" + iconName + "\"><" + "/i>";
+        var icon = '<i' + ' class="node-icon icon-' + iconName + '"><' + '/i>';
         wrapper.append(icon);
-        wrapper.addClass("type-icon");
+        wrapper.addClass('type-icon');
         var text = $("<div class='concord-text' contenteditable='true'></div>");
-        text.addClass("concord-level-" + level + "-text");
-        var outline = $("<ol></ol>");
+        text.addClass('concord-level-' + level + '-text');
+        var outline = $('<ol></ol>');
         text.appendTo(wrapper);
         wrapper.appendTo(node);
         outline.appendTo(node);
-        if (insertText && (insertText != "")) {
+        if (insertText && insertText != '') {
             text.html(concordInstance.editor.escape(insertText));
         }
         var cursor = this.getCursor();
@@ -2070,14 +2344,14 @@ function ConcordOp(root, concordInstance, _cursor) {
                 cursor.after(node);
                 break;
             case right:
-                cursor.children("ol").prepend(node);
+                cursor.children('ol').prepend(node);
                 this.expand(false);
                 break;
             case up:
                 cursor.before(node);
                 break;
             case left:
-                var parent = cursor.parents(".concord-node:first");
+                var parent = cursor.parents('.concord-node:first');
                 if (parent.length == 1) {
                     parent.after(node);
                 }
@@ -2085,25 +2359,25 @@ function ConcordOp(root, concordInstance, _cursor) {
         }
         this.setCursor(node);
         this.markChanged();
-        concordInstance.fireCallback("opInsert", this.setCursorContext(node));
+        concordInstance.fireCallback('opInsert', this.setCursorContext(node));
         return node;
     };
     this.insertImage = function (url) {
         if (this.inTextMode()) {
-            document.execCommand("insertImage", null, url);
+            document.execCommand('insertImage', null, url);
         } else {
             this.insert('<img src="' + url + '">', down);
         }
     };
     this.insertText = function (text) {
-        var nodes = $("<ol></ol>");
+        var nodes = $('<ol></ol>');
         var lastLevel = 0;
         var startingline = 0;
         var startinglevel = 0;
         var lastNode = null;
         var parent = null;
         var parents = {};
-        var lines = text.split("\n");
+        var lines = text.split('\n');
         var workflowy = true;
         var workflowyParent = null;
         var firstlinewithcontent = 0;
@@ -2114,16 +2388,27 @@ function ConcordOp(root, concordInstance, _cursor) {
                 break;
             }
         }
-        if (lines.length > (firstlinewithcontent + 2)) {
-            if ((lines[firstlinewithcontent].match(/^([\t\s]*)\-.*$/) == null) && lines[firstlinewithcontent].match(/^.+$/) && (lines[firstlinewithcontent + 1] == "")) {
+        if (lines.length > firstlinewithcontent + 2) {
+            if (
+                lines[firstlinewithcontent].match(/^([\t\s]*)\-.*$/) == null &&
+                lines[firstlinewithcontent].match(/^.+$/) &&
+                lines[firstlinewithcontent + 1] == ''
+            ) {
                 startingline = firstlinewithcontent + 2;
                 var workflowyParent = concordInstance.editor.makeNode();
-                workflowyParent.children(".concord-wrapper").children(".concord-text").html(lines[firstlinewithcontent]);
+                workflowyParent
+                    .children('.concord-wrapper')
+                    .children('.concord-text')
+                    .html(lines[firstlinewithcontent]);
             }
         }
         for (var i = startingline; i < lines.length; i++) {
             var line = lines[i];
-            if ((line != "") && !line.match(/^\s+$/) && (line.match(/^([\t\s]*)\-.*$/) == null)) {
+            if (
+                line != '' &&
+                !line.match(/^\s+$/) &&
+                line.match(/^([\t\s]*)\-.*$/) == null
+            ) {
                 workflowy = false;
                 break;
             }
@@ -2134,34 +2419,38 @@ function ConcordOp(root, concordInstance, _cursor) {
         }
         for (var i = startingline; i < lines.length; i++) {
             var line = lines[i];
-            if ((line != "") && !line.match(/^\s+$/)) {
+            if (line != '' && !line.match(/^\s+$/)) {
                 var matches = line.match(/^([\t\s]*)(.+)$/);
                 var node = concordInstance.editor.makeNode();
                 var nodeText = concordInstance.editor.escape(matches[2]);
                 if (workflowy) {
-                    var nodeTextMatches = nodeText.match(/^([\t\s]*)\-\s*(.+)$/);
+                    var nodeTextMatches = nodeText.match(
+                        /^([\t\s]*)\-\s*(.+)$/
+                    );
                     if (nodeTextMatches !== null) {
                         nodeText = nodeTextMatches[2];
                     }
                 }
-                node.children(".concord-wrapper").children(".concord-text").html(nodeText);
+                node.children('.concord-wrapper')
+                    .children('.concord-text')
+                    .html(nodeText);
                 var level = startinglevel;
                 if (matches[1]) {
                     if (workflowy) {
-                        level = (matches[1].length / 2) + startinglevel;
+                        level = matches[1].length / 2 + startinglevel;
                     } else {
                         level = matches[1].length + startinglevel;
                     }
                     if (level > lastLevel) {
                         parents[lastLevel] = lastNode;
                         parent = lastNode;
-                    } else if ((level > 0) && (level < lastLevel)) {
+                    } else if (level > 0 && level < lastLevel) {
                         parent = parents[level - 1];
                     }
                 }
-                if (parent && (level > 0)) {
-                    parent.children("ol").append(node);
-                    parent.addClass("collapsed");
+                if (parent && level > 0) {
+                    parent.children('ol').append(node);
+                    parent.addClass('collapsed');
                 } else {
                     parents = {};
                     nodes.append(node);
@@ -2172,11 +2461,11 @@ function ConcordOp(root, concordInstance, _cursor) {
         }
         if (workflowyParent) {
             if (nodes.children().length > 0) {
-                workflowyParent.addClass("collapsed");
+                workflowyParent.addClass('collapsed');
             }
             var clonedNodes = nodes.clone();
-            clonedNodes.children().appendTo(workflowyParent.children("ol"));
-            nodes = $("<ol></ol>");
+            clonedNodes.children().appendTo(workflowyParent.children('ol'));
+            nodes = $('<ol></ol>');
             nodes.append(workflowyParent);
         }
         if (nodes.children().length > 0) {
@@ -2185,7 +2474,7 @@ function ConcordOp(root, concordInstance, _cursor) {
             var cursor = this.getCursor();
             nodes.children().insertAfter(cursor);
             this.setCursor(cursor.next());
-            concordInstance.root.removeData("clipboard");
+            concordInstance.root.removeData('clipboard');
             this.markChanged();
             concordInstance.editor.recalculateLevels();
         }
@@ -2193,9 +2482,9 @@ function ConcordOp(root, concordInstance, _cursor) {
     this.insertXml = function (opmltext, dir) {
         this.saveState();
         var doc = null;
-        var nodes = $("<ol></ol>");
+        var nodes = $('<ol></ol>');
         var cursor = this.getCursor();
-        var level = cursor.parents(".concord-node").length + 1;
+        var level = cursor.parents('.concord-node').length + 1;
         if (!dir) {
             dir = down;
         }
@@ -2207,21 +2496,29 @@ function ConcordOp(root, concordInstance, _cursor) {
                 level -= 1;
                 break;
         }
-        if (typeof opmltext == "string") {
+        if (typeof opmltext == 'string') {
             doc = $($.parseXML(opmltext));
         } else {
             doc = $(opmltext);
         }
-        doc.find("body").children("outline").each(function () {
-            nodes.append(concordInstance.editor.build($(this), true, level));
-        });
-        var expansionState = doc.find("expansionState");
-        if (expansionState && expansionState.text() && (expansionState.text() != "")) {
-            var expansionStates = expansionState.text().split(",");
+        doc.find('body')
+            .children('outline')
+            .each(function () {
+                nodes.append(
+                    concordInstance.editor.build($(this), true, level)
+                );
+            });
+        var expansionState = doc.find('expansionState');
+        if (
+            expansionState &&
+            expansionState.text() &&
+            expansionState.text() != ''
+        ) {
+            var expansionStates = expansionState.text().split(',');
             var nodeId = 1;
-            nodes.find(".concord-node").each(function () {
-                if (expansionStates.indexOf("" + nodeId) >= 0) {
-                    $(this).removeClass("collapsed");
+            nodes.find('.concord-node').each(function () {
+                if (expansionStates.indexOf('' + nodeId) >= 0) {
+                    $(this).removeClass('collapsed');
                 }
                 nodeId++;
             });
@@ -2231,14 +2528,14 @@ function ConcordOp(root, concordInstance, _cursor) {
                 nodes.children().insertAfter(cursor);
                 break;
             case right:
-                nodes.children().prependTo(cursor.children("ol"));
+                nodes.children().prependTo(cursor.children('ol'));
                 this.expand(false);
                 break;
             case up:
                 nodes.children().insertBefore(cursor);
                 break;
             case left:
-                var parent = cursor.parents(".concord-node:first");
+                var parent = cursor.parents('.concord-node:first');
                 if (parent.length == 1) {
                     nodes.children().insertAfter(parent);
                 }
@@ -2248,7 +2545,7 @@ function ConcordOp(root, concordInstance, _cursor) {
         return true;
     };
     this.inTextMode = function () {
-        return root.hasClass("textMode");
+        return root.hasClass('textMode');
     };
     this.italic = function () {
         /*        this.saveState();
@@ -2265,7 +2562,7 @@ function ConcordOp(root, concordInstance, _cursor) {
                 this.markChanged();*/
     };
     this.level = function () {
-        return this.getCursor().parents(".concord-node").length + 1;
+        return this.getCursor().parents('.concord-node').length + 1;
     };
     this.link = function (url) {
         if (this.inTextMode()) {
@@ -2282,27 +2579,27 @@ function ConcordOp(root, concordInstance, _cursor) {
             }
             if (concordInstance.editor.getSelection()) {
                 this.saveState();
-                document.execCommand("createLink", null, url);
+                document.execCommand('createLink', null, url);
                 this.markChanged();
             }
         }
     };
     this.markChanged = function () {
-        root.data("changed", true);
+        root.data('changed', true);
         if (!this.inTextMode()) {
-            root.find(".concord-node.dirty").removeClass("dirty");
+            root.find('.concord-node.dirty').removeClass('dirty');
         }
         return true;
     };
     this.paste = function () {
         if (!this.inTextMode()) {
-            if (root.data("clipboard") !== null) {
-                var pasteNodes = root.data("clipboard").clone(true, true);
+            if (root.data('clipboard') !== null) {
+                var pasteNodes = root.data('clipboard').clone(true, true);
                 if (pasteNodes.length > 0) {
                     this.saveState();
-                    root.find(".selected").removeClass("selected");
+                    root.find('.selected').removeClass('selected');
                     pasteNodes.insertAfter(this.getCursor());
-                    this.setCursor($(pasteNodes[0]), (pasteNodes.length > 1));
+                    this.setCursor($(pasteNodes[0]), pasteNodes.length > 1);
                     this.markChanged();
                 }
             }
@@ -2310,14 +2607,19 @@ function ConcordOp(root, concordInstance, _cursor) {
     };
     this.promote = function () {
         var node = this.getCursor();
-        if (node.children("ol").children().length > 0) {
+        if (node.children('ol').children().length > 0) {
             this.saveState();
-            node.children("ol").children().reverse().each(function () {
-                var child = $(this).clone(true, true);
-                $(this).remove();
-                node.after(child);
-            });
-            concordInstance.editor.recalculateLevels(node.parent().find(".concord-node"));
+            node.children('ol')
+                .children()
+                .reverse()
+                .each(function () {
+                    var child = $(this).clone(true, true);
+                    $(this).remove();
+                    node.after(child);
+                });
+            concordInstance.editor.recalculateLevels(
+                node.parent().find('.concord-node')
+            );
             this.markChanged();
         }
     };
@@ -2325,8 +2627,8 @@ function ConcordOp(root, concordInstance, _cursor) {
         var ct = 1;
         var cursorIndex = 1;
         var wasChanged = this.changed();
-        root.find(".concord-node:visible").each(function () {
-            if ($(this).hasClass("concord-cursor")) {
+        root.find('.concord-node:visible').each(function () {
+            if ($(this).hasClass('concord-cursor')) {
                 cursorIndex = ct;
                 return false;
             }
@@ -2335,7 +2637,7 @@ function ConcordOp(root, concordInstance, _cursor) {
         this.xmlToOutline(this.outlineToXml());
         ct = 1;
         var thisOp = this;
-        root.find(".concord-node:visible").each(function () {
+        root.find('.concord-node:visible').each(function () {
             if (cursorIndex == ct) {
                 thisOp.setCursor($(this));
                 return false;
@@ -2354,11 +2656,11 @@ function ConcordOp(root, concordInstance, _cursor) {
         var cursor = this.getCursor();
         var range = undefined;
         var toMove = this.getCursor();
-        var selected = root.find(".selected");
+        var selected = root.find('.selected');
         var iteration = 1;
         if (selected.length > 1) {
-            cursor = root.find(".selected:first");
-            toMove = root.find(".selected");
+            cursor = root.find('.selected:first');
+            toMove = root.find('.selected');
         }
         switch (direction) {
             case up:
@@ -2387,7 +2689,7 @@ function ConcordOp(root, concordInstance, _cursor) {
                 break;
             case down:
                 if (!this.inTextMode()) {
-                    cursor = root.find(".selected:last");
+                    cursor = root.find('.selected:last');
                 }
                 var next = cursor.next();
                 if (next.length == 1) {
@@ -2413,10 +2715,12 @@ function ConcordOp(root, concordInstance, _cursor) {
                 break;
             case left:
                 var outline = cursor.parent();
-                if (!outline.hasClass("concord-root")) {
+                if (!outline.hasClass('concord-root')) {
                     var parent = outline.parent();
                     while (iteration < count) {
-                        var parentParent = parent.parents(".concord-node:first");
+                        var parentParent = parent.parents(
+                            '.concord-node:first'
+                        );
                         if (parentParent.length == 1) {
                             parent = parentParent;
                         } else {
@@ -2428,7 +2732,9 @@ function ConcordOp(root, concordInstance, _cursor) {
                     var clonedMove = toMove.clone(true, true);
                     toMove.remove();
                     clonedMove.insertAfter(parent);
-                    concordInstance.editor.recalculateLevels(parent.nextAll(".concord-node"));
+                    concordInstance.editor.recalculateLevels(
+                        parent.nextAll('.concord-node')
+                    );
                     ableToMoveInDirection = true;
                 }
                 break;
@@ -2437,8 +2743,10 @@ function ConcordOp(root, concordInstance, _cursor) {
                 if (prev.length == 1) {
                     this.saveState();
                     while (iteration < count) {
-                        if (prev.children("ol").length == 1) {
-                            var prevNode = prev.children("ol").children(".concord-node:last");
+                        if (prev.children('ol').length == 1) {
+                            var prevNode = prev
+                                .children('ol')
+                                .children('.concord-node:last');
                             if (prevNode.length == 1) {
                                 prev = prevNode;
                             } else {
@@ -2449,16 +2757,18 @@ function ConcordOp(root, concordInstance, _cursor) {
                         }
                         iteration++;
                     }
-                    var prevOutline = prev.children("ol");
+                    var prevOutline = prev.children('ol');
                     if (prevOutline.length == 0) {
-                        prevOutline = $("<ol></ol>");
+                        prevOutline = $('<ol></ol>');
                         prevOutline.appendTo(prev);
                     }
                     var clonedMove = toMove.clone(true, true);
                     toMove.remove();
                     clonedMove.appendTo(prevOutline);
-                    prev.removeClass("collapsed");
-                    concordInstance.editor.recalculateLevels(prev.find(".concord-node"));
+                    prev.removeClass('collapsed');
+                    concordInstance.editor.recalculateLevels(
+                        prev.find('.concord-node')
+                    );
                     ableToMoveInDirection = true;
                 }
                 break;
@@ -2474,49 +2784,54 @@ function ConcordOp(root, concordInstance, _cursor) {
     this.runSelection = function () {
         var value = eval(this.getLineText());
         this.deleteSubs();
-        this.insert(value, "right");
+        this.insert(value, 'right');
         concordInstance.script.makeComment();
-        this.go("left", 1);
+        this.go('left', 1);
     };
     this.saveState = function () {
-        root.data("change", root.children().clone(true, true));
-        root.data("changeTextMode", this.inTextMode());
+        root.data('change', root.children().clone(true, true));
+        root.data('changeTextMode', this.inTextMode());
         if (this.inTextMode()) {
             var range = concordInstance.editor.getSelection();
             if (range) {
-                root.data("changeRange", range.cloneRange());
+                root.data('changeRange', range.cloneRange());
             } else {
-                root.data("changeRange", undefined);
+                root.data('changeRange', undefined);
             }
         } else {
-            root.data("changeRange", undefined);
+            root.data('changeRange', undefined);
         }
         return true;
     };
     this.setCursor = function (node, multiple, multipleRange) {
-        root.find(".concord-cursor").removeClass("concord-cursor");
-        node.addClass("concord-cursor");
+        root.find('.concord-cursor').removeClass('concord-cursor');
+        node.addClass('concord-cursor');
         if (this.inTextMode()) {
             concordInstance.editor.edit(node);
         } else {
             concordInstance.editor.select(node, multiple, multipleRange);
             concordInstance.pasteBinFocus();
         }
-        concordInstance.fireCallback("opCursorMoved", this.setCursorContext(node));
+        concordInstance.fireCallback(
+            'opCursorMoved',
+            this.setCursorContext(node)
+        );
         concordInstance.editor.hideContextMenu();
     };
     this.setCursorContext = function (cursor) {
         return new ConcordOp(root, concordInstance, cursor);
     };
     this.setHeaders = function (headers) {
-        root.data("head", headers);
+        root.data('head', headers);
         this.markChanged();
     };
     this.setLineText = function (text) {
         this.saveState();
         var node = this.getCursor();
         if (node.length == 1) {
-            node.children(".concord-wrapper:first").children(".concord-text:first").html(concordInstance.editor.escape(text));
+            node.children('.concord-wrapper:first')
+                .children('.concord-text:first')
+                .html(concordInstance.editor.escape(text));
             return true;
         } else {
             return false;
@@ -2524,67 +2839,72 @@ function ConcordOp(root, concordInstance, _cursor) {
         this.markChanged();
     };
     this.setRenderMode = function (mode) {
-        root.data("renderMode", mode);
+        root.data('renderMode', mode);
         this.redraw();
         return true;
     };
     this.setStyle = function (css) {
-        root.parent().find("style.customStyle").remove();
-        root.before('<style type="text/css" class="customStyle">' + css + '</style>');
+        root.parent().find('style.customStyle').remove();
+        root.before(
+            '<style type="text/css" class="customStyle">' + css + '</style>'
+        );
         return true;
     };
     this.setTextMode = function (textMode, doSelect) {
         if (doSelect == null) doSelect = true;
-        var readonly = concordInstance.prefs()["readonly"];
+        var readonly = concordInstance.prefs()['readonly'];
         if (readonly == undefined) {
             readonly = false;
         }
         if (readonly) {
             return;
         }
-        if (root.hasClass("textMode") == textMode) {
+        if (root.hasClass('textMode') == textMode) {
             return;
         }
         if (textMode == true) {
             if (this.inTextMode() == false) {
-                root.addClass("textMode");
+                root.addClass('textMode');
                 concordInstance.editor.editorMode();
                 concordInstance.editor.edit(this.getCursor());
             }
             concord.bringIntoView($(event.target));
         } else {
-            root.removeClass("textMode");
-            root.find(".editing").removeClass("editing");
+            root.removeClass('textMode');
+            root.find('.editing').removeClass('editing');
             this.blurCursor();
-            if (doSelect)
-                concordInstance.editor.select(this.getCursor());
+            if (doSelect) concordInstance.editor.select(this.getCursor());
         }
         if (concordInstance.events)
-            concordInstance.events.dispatchEvent(concordInstance.events.textModeChangedEvent);
+            concordInstance.events.dispatchEvent(
+                concordInstance.events.textModeChangedEvent
+            );
     };
     this.inTextMode = function () {
-        return (root.hasClass("textMode") == true);
+        return root.hasClass('textMode') == true;
     };
     this.setTitle = function (title) {
-        root.data("title", title);
+        root.data('title', title);
         return true;
     };
     this.strikethrough = function () {
         this.saveState();
         if (this.inTextMode()) {
-            document.execCommand("strikeThrough");
+            document.execCommand('strikeThrough');
         } else {
             this.focusCursor();
-            document.execCommand("selectAll");
-            document.execCommand("strikeThrough");
-            document.execCommand("unselect");
+            document.execCommand('selectAll');
+            document.execCommand('strikeThrough');
+            document.execCommand('unselect');
             this.blurCursor();
             concordInstance.pasteBinFocus();
         }
         this.markChanged();
     };
     this.strikethroughLine = function () {
-        var el = this.getCursor().children(".concord-wrapper").children(".concord-text")[0];
+        var el = this.getCursor()
+            .children('.concord-wrapper')
+            .children('.concord-text')[0];
         ConcordUtil.selectElementContents(el);
         this.strikethrough();
         ConcordUtil.deselectElementContents(el);
@@ -2592,12 +2912,15 @@ function ConcordOp(root, concordInstance, _cursor) {
     };
     this.isStrikethrough = function (node) {
         if (!node) node = this.getCursor();
-        return $(node).contents().slice(0, 1).find("strike").length > 0
+        return $(node).contents().slice(0, 1).find('strike').length > 0;
     };
     this.subsExpanded = function (node) {
         if (!node) node = this.getCursor();
         if (node.length == 1) {
-            if (!node.hasClass("collapsed") && (node.children("ol").children().size() > 0)) {
+            if (
+                !node.hasClass('collapsed') &&
+                node.children('ol').children().size() > 0
+            ) {
                 return true;
             } else {
                 return false;
@@ -2606,8 +2929,8 @@ function ConcordOp(root, concordInstance, _cursor) {
         return false;
     };
     this.outlineToText = function () {
-        var text = "";
-        root.children(".concord-node").each(function () {
+        var text = '';
+        root.children('.concord-node').each(function () {
             text += concordInstance.editor.textLine($(this));
         });
         return text;
@@ -2615,28 +2938,31 @@ function ConcordOp(root, concordInstance, _cursor) {
     this.outlineToXml = function (ownerName, ownerEmail, ownerId, title) {
         var head = this.getHeaders();
         if (ownerName) {
-            head["ownerName"] = ownerName;
+            head['ownerName'] = ownerName;
         }
         if (ownerEmail) {
-            head["ownerEmail"] = ownerEmail;
+            head['ownerEmail'] = ownerEmail;
         }
         if (ownerId) {
-            head["ownerId"] = ownerId;
+            head['ownerId'] = ownerId;
         }
         if (title == null || title == undefined) {
             title = this.getTitle();
             if (!title) {
-                title = "";
+                title = '';
             }
         }
-        head["title"] = title;
-        head["dateModified"] = (new Date()).toGMTString();
+        head['title'] = title;
+        head['dateModified'] = new Date().toGMTString();
         var expansionStates = [];
         var nodeId = 1;
-        var cursor = root.find(".concord-node:first");
+        var cursor = root.find('.concord-node:first');
         do {
             if (cursor) {
-                if (!cursor.hasClass("collapsed") && (cursor.children("ol").children().size() > 0)) {
+                if (
+                    !cursor.hasClass('collapsed') &&
+                    cursor.children('ol').children().size() > 0
+                ) {
                     expansionStates.push(nodeId);
                 }
                 nodeId++;
@@ -2644,10 +2970,10 @@ function ConcordOp(root, concordInstance, _cursor) {
                 break;
             }
             var next = null;
-            if (!cursor.hasClass("collapsed")) {
-                var outline = cursor.children("ol");
+            if (!cursor.hasClass('collapsed')) {
+                var outline = cursor.children('ol');
                 if (outline.length == 1) {
-                    var firstChild = outline.children(".concord-node:first");
+                    var firstChild = outline.children('.concord-node:first');
                     if (firstChild.length == 1) {
                         next = firstChild;
                     }
@@ -2658,7 +2984,7 @@ function ConcordOp(root, concordInstance, _cursor) {
             }
             cursor = next;
         } while (cursor !== null);
-        head["expansionState"] = expansionStates.join(",");
+        head['expansionState'] = expansionStates.join(',');
         var opml = '';
         var indent = 0;
         var add = function (s) {
@@ -2674,17 +3000,25 @@ function ConcordOp(root, concordInstance, _cursor) {
         indent++;
         for (var headName in head) {
             if (head[headName] !== undefined) {
-                add('<' + headName + '>' + ConcordUtil.escapeXml(head[headName]) + '</' + headName + '>');
+                add(
+                    '<' +
+                        headName +
+                        '>' +
+                        ConcordUtil.escapeXml(head[headName]) +
+                        '</' +
+                        headName +
+                        '>'
+                );
             }
         }
         add('</head>');
         indent--;
         add('<body>');
         indent++;
-        if (root.children(".concord-node").length == 0)
+        if (root.children('.concord-node').length == 0)
             opml += '<outline text=""/>';
         else
-            root.children(".concord-node").each(function () {
+            root.children('.concord-node').each(function () {
                 opml += concordInstance.editor.opmlLine($(this), indent);
             });
         add('</body>');
@@ -2702,20 +3036,20 @@ function ConcordOp(root, concordInstance, _cursor) {
                 beforeRange = range.cloneRange();
             }
         }
-        if (root.data("change")) {
+        if (root.data('change')) {
             root.empty();
-            root.data("change").appendTo(root);
-            this.setTextMode(root.data("changeTextMode"));
+            root.data('change').appendTo(root);
+            this.setTextMode(root.data('changeTextMode'));
             if (this.inTextMode()) {
                 this.focusCursor();
-                var range = root.data("changeRange");
+                var range = root.data('changeRange');
                 if (range) {
                     concordInstance.editor.restoreSelection(range);
                 }
             }
-            root.data("change", stateBeforeChange);
-            root.data("changeTextMode", textModeBeforeChange);
-            root.data("changeRange", beforeRange);
+            root.data('change', stateBeforeChange);
+            root.data('changeTextMode', textModeBeforeChange);
+            root.data('changeRange', beforeRange);
             return true;
         }
         return false;
@@ -2723,16 +3057,19 @@ function ConcordOp(root, concordInstance, _cursor) {
     this.visitLevel = function (cb) {
         var cursor = this.getCursor();
         var op = this;
-        cursor.children("ol").children().each(function () {
-            var subCursorContext = op.setCursorContext($(this));
-            cb(subCursorContext);
-        });
+        cursor
+            .children('ol')
+            .children()
+            .each(function () {
+                var subCursorContext = op.setCursorContext($(this));
+                cb(subCursorContext);
+            });
         return true;
     };
     this.visitToSummit = function (cb) {
         var cursor = this.getCursor();
         while (cb(this.setCursorContext(cursor))) {
-            var parent = cursor.parents(".concord-node:first");
+            var parent = cursor.parents('.concord-node:first');
             if (parent.length == 1) {
                 cursor = parent;
             } else {
@@ -2743,16 +3080,16 @@ function ConcordOp(root, concordInstance, _cursor) {
     };
     this.visitAll = function (cb) {
         var op = this;
-        root.find(".concord-node").each(function () {
+        root.find('.concord-node').each(function () {
             var subCursorContext = op.setCursorContext($(this));
             var retVal = cb(subCursorContext);
-            if ((retVal !== undefined) && (retVal === false)) {
+            if (retVal !== undefined && retVal === false) {
                 return false;
             }
         });
     };
     this.wipe = function () {
-        if (root.find(".concord-node").length > 0) {
+        if (root.find('.concord-node').length > 0) {
             this.saveState();
         }
         root.empty();
@@ -2762,53 +3099,65 @@ function ConcordOp(root, concordInstance, _cursor) {
         this.setCursor(node);
         this.markChanged();
     };
-    this.xmlToOutline = function (xmlText, flSetFocus) { //2/22/14 by DW -- new param, flSetFocus
+    this.xmlToOutline = function (xmlText, flSetFocus) {
+        //2/22/14 by DW -- new param, flSetFocus
 
-        if (flSetFocus == undefined) { //2/22/14 by DW
+        if (flSetFocus == undefined) {
+            //2/22/14 by DW
             flSetFocus = true;
         }
 
         var doc = null;
-        if (typeof xmlText == "string") {
+        if (typeof xmlText == 'string') {
             doc = $($.parseXML(xmlText));
         } else {
             doc = $(xmlText);
         }
         root.empty();
-        var title = "";
-        if (doc.find("title:first").length == 1) {
-            title = doc.find("title:first").text();
+        var title = '';
+        if (doc.find('title:first').length == 1) {
+            title = doc.find('title:first').text();
         }
         this.setTitle(title);
         var headers = {};
-        doc.find("head").children().each(function () {
-            headers[$(this).prop("tagName")] = $(this).text();
-        });
-        root.data("head", headers);
-        doc.find("body").children("outline").each(function () {
-            root.append(concordInstance.editor.build($(this), true));
-        });
-        root.data("changed", false);
-        root.removeData("previousChange");
-        var expansionState = doc.find("expansionState");
-        if (expansionState && expansionState.text() && (expansionState.text() != "")) {
+        doc.find('head')
+            .children()
+            .each(function () {
+                headers[$(this).prop('tagName')] = $(this).text();
+            });
+        root.data('head', headers);
+        doc.find('body')
+            .children('outline')
+            .each(function () {
+                root.append(concordInstance.editor.build($(this), true));
+            });
+        root.data('changed', false);
+        root.removeData('previousChange');
+        var expansionState = doc.find('expansionState');
+        if (
+            expansionState &&
+            expansionState.text() &&
+            expansionState.text() != ''
+        ) {
             var expansionStates = expansionState.text().split(/\s*,\s*/);
             var nodeId = 1;
-            var cursor = root.find(".concord-node:first");
+            var cursor = root.find('.concord-node:first');
             do {
                 if (cursor) {
-                    if (expansionStates.indexOf("" + nodeId) >= 0) {
-                        cursor.removeClass("collapsed");
+                    if (expansionStates.indexOf('' + nodeId) >= 0) {
+                        cursor.removeClass('collapsed');
                     }
                     nodeId++;
                 } else {
                     break;
                 }
                 var next = null;
-                if (!cursor.hasClass("collapsed")) {
-                    var outline = cursor.children("ol");
+                if (!cursor.hasClass('collapsed')) {
+                    var outline = cursor.children('ol');
                     if (outline.length == 1) {
-                        var firstChild = outline.children(".concord-node:first");
+                        var firstChild = outline.children(
+                            '.concord-node:first'
+                        );
                         if (firstChild.length == 1) {
                             next = firstChild;
                         }
@@ -2821,33 +3170,32 @@ function ConcordOp(root, concordInstance, _cursor) {
             } while (cursor !== null);
         }
 
-        this.setCursor(root.find(".concord-node:first"));
+        this.setCursor(root.find('.concord-node:first'));
 
         this.setTextMode(!flSetFocus && !concord.mobile);
 
-        root.data("currentChange", root.children().clone(true, true));
+        root.data('currentChange', root.children().clone(true, true));
         return true;
     };
     this.textToOutline = function (text, bulletChar) {
         var c = bulletChar; //currently unused
-        var rows = text.split("\n");
+        var rows = text.split('\n');
 
         var parser = new DOMParser();
-        var xd = parser.parseFromString("<opml><head /></opml>", "text/xml");
+        var xd = parser.parseFromString('<opml><head /></opml>', 'text/xml');
 
-        var body = xd.createElement("body");
-        var root = xd.getElementsByTagName("opml");
+        var body = xd.createElement('body');
+        var root = xd.getElementsByTagName('opml');
         root[0].appendChild(body);
 
         var parents = {};
 
         $.each(rows, function (index, value) {
             var indents = rows[index].split(/[\t]/g).length - 1;
-            var outline = xd.createElement("outline");
-            outline.setAttribute("text", rows[index].trim());
+            var outline = xd.createElement('outline');
+            outline.setAttribute('text', rows[index].trim());
 
-            if (indents == 0)
-                parents = {};
+            if (indents == 0) parents = {};
 
             parents['' + indents] = outline;
 
@@ -2858,25 +3206,32 @@ function ConcordOp(root, concordInstance, _cursor) {
                 if (immediateParent) {
                     immediateParent.appendChild(outline);
                 } else {
-                    console.log("Error Parsing text, skipping line: " + rows[index]);
+                    console.log(
+                        'Error Parsing text, skipping line: ' + rows[index]
+                    );
                 }
             }
         });
 
         return xd;
     };
-    this.attributes = new ConcordOpAttributes(concordInstance, this.getCursor());
+    this.attributes = new ConcordOpAttributes(
+        concordInstance,
+        this.getCursor()
+    );
 }
 
 function ConcordOpAttributes(concordInstance, cursor) {
-    this._cssTextClassName = "cssTextClass";
+    this._cssTextClassName = 'cssTextClass';
     this._cssTextClass = function (newValue) {
         if (newValue === undefined) {
             return;
         }
         var newCssClasses = newValue.split(/\s+/);
-        var concordText = cursor.children(".concord-wrapper:first").children(".concord-text:first");
-        var currentCssClass = concordText.attr("class");
+        var concordText = cursor
+            .children('.concord-wrapper:first')
+            .children('.concord-text:first');
+        var currentCssClass = concordText.attr('class');
         if (currentCssClass) {
             var cssClassesArray = currentCssClass.split(/\s+/);
             for (var i in cssClassesArray) {
@@ -2892,35 +3247,45 @@ function ConcordOpAttributes(concordInstance, cursor) {
         }
     };
     this.addGroup = function (attributes) {
-        if (attributes["type"]) {
-            cursor.attr("opml-type", attributes["type"]);
+        if (attributes['type']) {
+            cursor.attr('opml-type', attributes['type']);
         } else {
-            cursor.removeAttr("opml-type");
+            cursor.removeAttr('opml-type');
         }
         this._cssTextClass(attributes[this._cssTextClassName]);
         var finalAttributes = this.getAll();
-        var iconAttribute = "type";
-        if (attributes["icon"]) {
-            iconAttribute = "icon";
+        var iconAttribute = 'type';
+        if (attributes['icon']) {
+            iconAttribute = 'icon';
         }
         for (var name in attributes) {
             finalAttributes[name] = attributes[name];
             if (name == iconAttribute) {
                 var value = attributes[name];
-                var wrapper = cursor.children(".concord-wrapper");
+                var wrapper = cursor.children('.concord-wrapper');
                 var iconName = null;
-                if ((name == "type") && concordInstance.prefs() && concordInstance.prefs().typeIcons && concordInstance.prefs().typeIcons[value]) {
+                if (
+                    name == 'type' &&
+                    concordInstance.prefs() &&
+                    concordInstance.prefs().typeIcons &&
+                    concordInstance.prefs().typeIcons[value]
+                ) {
                     iconName = concordInstance.prefs().typeIcons[value];
-                } else if (name == "icon") {
+                } else if (name == 'icon') {
                     iconName = value;
                 }
                 if (iconName) {
-                    var icon = "<i" + " class=\"node-icon icon-" + iconName + "\"><" + "/i>";
-                    wrapper.children(".node-icon:first").replaceWith(icon);
+                    var icon =
+                        '<i' +
+                        ' class="node-icon icon-' +
+                        iconName +
+                        '"><' +
+                        '/i>';
+                    wrapper.children('.node-icon:first').replaceWith(icon);
                 }
             }
         }
-        cursor.data("attributes", finalAttributes);
+        cursor.data('attributes', finalAttributes);
         concordInstance.op.markChanged();
         return finalAttributes;
     };
@@ -2928,10 +3293,10 @@ function ConcordOpAttributes(concordInstance, cursor) {
         if (attributes[this._cssTextClassName] !== undefined) {
             this._cssTextClass(attributes[this._cssTextClassName]);
         } else {
-            this._cssTextClass("");
+            this._cssTextClass('');
         }
-        cursor.data("attributes", attributes);
-        var wrapper = cursor.children(".concord-wrapper");
+        cursor.data('attributes', attributes);
+        var wrapper = cursor.children('.concord-wrapper');
         $(cursor[0].attributes).each(function () {
             var matches = this.name.match(/^opml-(.+)$/);
             if (matches) {
@@ -2941,26 +3306,36 @@ function ConcordOpAttributes(concordInstance, cursor) {
                 }
             }
         });
-        var iconAttribute = "type";
-        if (attributes["icon"]) {
-            iconAttribute = "icon";
+        var iconAttribute = 'type';
+        if (attributes['icon']) {
+            iconAttribute = 'icon';
         }
-        if (name == "type") {
-            cursor.attr("opml-" + name, attributes[name]);
+        if (name == 'type') {
+            cursor.attr('opml-' + name, attributes[name]);
         }
         for (var name in attributes) {
             if (name == iconAttribute) {
                 var value = attributes[name];
-                var wrapper = cursor.children(".concord-wrapper");
+                var wrapper = cursor.children('.concord-wrapper');
                 var iconName = null;
-                if ((name == "type") && concordInstance.prefs() && concordInstance.prefs().typeIcons && concordInstance.prefs().typeIcons[value]) {
+                if (
+                    name == 'type' &&
+                    concordInstance.prefs() &&
+                    concordInstance.prefs().typeIcons &&
+                    concordInstance.prefs().typeIcons[value]
+                ) {
                     iconName = concordInstance.prefs().typeIcons[value];
-                } else if (name == "icon") {
+                } else if (name == 'icon') {
                     iconName = value;
                 }
                 if (iconName) {
-                    var icon = "<i" + " class=\"node-icon icon-" + iconName + "\"><" + "/i>";
-                    wrapper.children(".node-icon:first").replaceWith(icon);
+                    var icon =
+                        '<i' +
+                        ' class="node-icon icon-' +
+                        iconName +
+                        '"><' +
+                        '/i>';
+                    wrapper.children('.node-icon:first').replaceWith(icon);
                 }
             }
         }
@@ -2968,8 +3343,8 @@ function ConcordOpAttributes(concordInstance, cursor) {
         return attributes;
     };
     this.getAll = function () {
-        if (cursor.data("attributes") !== undefined) {
-            return cursor.data("attributes");
+        if (cursor.data('attributes') !== undefined) {
+            return cursor.data('attributes');
         }
         return {};
     };
@@ -2977,7 +3352,7 @@ function ConcordOpAttributes(concordInstance, cursor) {
         return this.getAll()[name];
     };
     this.makeEmpty = function () {
-        this._cssTextClass("");
+        this._cssTextClass('');
         var numAttributes = 0;
         var atts = this.getAll();
         if (atts !== undefined) {
@@ -2985,8 +3360,8 @@ function ConcordOpAttributes(concordInstance, cursor) {
                 numAttributes++;
             }
         }
-        cursor.removeData("attributes");
-        var removedAnyAttributes = (numAttributes > 0);
+        cursor.removeData('attributes');
+        var removedAnyAttributes = numAttributes > 0;
         var attributes = {};
         $(cursor[0].attributes).each(function () {
             var matches = this.name.match(/^opml-(.+)$/);
@@ -3005,19 +3380,25 @@ function ConcordOpAttributes(concordInstance, cursor) {
         }
         var atts = this.getAll();
         atts[name] = value;
-        cursor.data("attributes", atts);
-        if ((name == "type") || (name == "icon")) {
-            cursor.attr("opml-" + name, value);
-            var wrapper = cursor.children(".concord-wrapper");
+        cursor.data('attributes', atts);
+        if (name == 'type' || name == 'icon') {
+            cursor.attr('opml-' + name, value);
+            var wrapper = cursor.children('.concord-wrapper');
             var iconName = null;
-            if ((name == "type") && concordInstance.prefs() && concordInstance.prefs().typeIcons && concordInstance.prefs().typeIcons[value]) {
+            if (
+                name == 'type' &&
+                concordInstance.prefs() &&
+                concordInstance.prefs().typeIcons &&
+                concordInstance.prefs().typeIcons[value]
+            ) {
                 iconName = concordInstance.prefs().typeIcons[value];
-            } else if (name == "icon") {
+            } else if (name == 'icon') {
                 iconName = value;
             }
             if (iconName) {
-                var icon = "<i" + " class=\"node-icon icon-" + iconName + "\"><" + "/i>";
-                wrapper.children(".node-icon:first").replaceWith(icon);
+                var icon =
+                    '<i' + ' class="node-icon icon-' + iconName + '"><' + '/i>';
+                wrapper.children('.node-icon:first').replaceWith(icon);
             }
         }
         concordInstance.op.markChanged();
@@ -3033,7 +3414,7 @@ function ConcordOpAttributes(concordInstance, cursor) {
     this.removeOne = function (name) {
         if (this.getAll()[name]) {
             if (name == this._cssTextClassName) {
-                this._cssTextClass("");
+                this._cssTextClass('');
             }
             delete this.getAll()[name];
             concordInstance.op.markChanged();
@@ -3045,32 +3426,39 @@ function ConcordOpAttributes(concordInstance, cursor) {
 
 function ConcordScript(root, concordInstance) {
     this.isComment = function () {
-        if (concordInstance.op.attributes.getOne("isComment") !== undefined) {
-            return concordInstance.op.attributes.getOne("isComment") == "true";
+        if (concordInstance.op.attributes.getOne('isComment') !== undefined) {
+            return concordInstance.op.attributes.getOne('isComment') == 'true';
         }
         var parentIsAComment = false;
-        concordInstance.op.getCursor().parents(".concord-node").each(function () {
-            if (concordInstance.op.setCursorContext($(this)).attributes.getOne("isComment") == "true") {
-                parentIsAComment = true;
-                return;
-            }
-        });
+        concordInstance.op
+            .getCursor()
+            .parents('.concord-node')
+            .each(function () {
+                if (
+                    concordInstance.op
+                        .setCursorContext($(this))
+                        .attributes.getOne('isComment') == 'true'
+                ) {
+                    parentIsAComment = true;
+                    return;
+                }
+            });
         return parentIsAComment;
     };
     this.makeComment = function () {
-        concordInstance.op.attributes.setOne("isComment", "true");
-        concordInstance.op.getCursor().addClass("concord-comment");
+        concordInstance.op.attributes.setOne('isComment', 'true');
+        concordInstance.op.getCursor().addClass('concord-comment');
         return true;
     };
     this.unComment = function () {
-        concordInstance.op.attributes.setOne("isComment", "false");
-        concordInstance.op.getCursor().removeClass("concord-comment");
+        concordInstance.op.attributes.setOne('isComment', 'false');
+        concordInstance.op.getCursor().removeClass('concord-comment');
         return true;
     };
 }
 
 function Op(opmltext) {
-    var fakeDom = $("<div></div>");
+    var fakeDom = $('<div></div>');
     fakeDom.concord().op.xmlToOutline(opmltext);
     return fakeDom.concord().op;
 }
@@ -3081,13 +3469,13 @@ window.currentInstance;
         if (typeof window.currentInstance != 'undefined')
             return window.currentInstance;
         window.currentInstance = new ConcordOutline($(this), options);
-        return window.currentInstance
+        return window.currentInstance;
     };
-    $(document).on("keydown", function (event) {
+    $(document).on('keydown', function (event) {
         if (!concord.handleEvents) {
             return;
         }
-        if ($(event.target).is("input") || $(event.target).is("textarea")) {
+        if ($(event.target).is('input') || $(event.target).is('textarea')) {
             return;
         }
         var focusRoot = concord.getFocusRoot();
@@ -3095,22 +3483,22 @@ window.currentInstance;
             return;
         }
         var context = focusRoot;
-        context.data("keydownEvent", event);
+        context.data('keydownEvent', event);
         var concordInstance = new ConcordOutline(context.parent());
-        var readonly = concordInstance.prefs()["readonly"];
+        var readonly = concordInstance.prefs()['readonly'];
         if (readonly == undefined) {
             readonly = false;
         }
         // Readonly exceptions for arrow keys and cmd-comma
         if (readonly) {
-            if ((event.which >= 37) && (event.which <= 40)) {
+            if (event.which >= 37 && event.which <= 40) {
                 readonly = false;
-            } else if ((event.metaKey || event.ctrlKey) && (event.which == 188)) {
+            } else if ((event.metaKey || event.ctrlKey) && event.which == 188) {
                 readonly = false;
             }
         }
         if (!readonly) {
-            concordInstance.fireCallback("opKeystroke", event);
+            concordInstance.fireCallback('opKeystroke', event);
             var keyCaptured = false;
             var commandKey = event.metaKey || event.ctrlKey;
             var altKey = event.altKey;
@@ -3121,39 +3509,60 @@ window.currentInstance;
                     //Backspace
                     {
                         if (concordInstance.op.inTextMode() && !commandKey) {
-                            if (!concordInstance.op.getCursor().hasClass("dirty")) {
+                            if (
+                                !concordInstance.op
+                                    .getCursor()
+                                    .hasClass('dirty')
+                            ) {
                                 concordInstance.op.saveState();
-                                concordInstance.op.getCursor().addClass("dirty");
+                                concordInstance.op
+                                    .getCursor()
+                                    .addClass('dirty');
                             }
                             var isParent = concordInstance.op.countSubs() > 0;
                             var sel = window.getSelection();
-                            var isTextSelected = sel.anchorOffset != sel.focusOffset;
-                            var caretPosition = ConcordUtil.getCaret(event.target);
+                            var isTextSelected =
+                                sel.anchorOffset != sel.focusOffset;
+                            var caretPosition = ConcordUtil.getCaret(
+                                event.target
+                            );
                             var currentNode = concordInstance.op.getCursor();
-                            var prevNode = currentNode ? currentNode.prev() : null;
+                            var prevNode = currentNode
+                                ? currentNode.prev()
+                                : null;
 
-                            if (ConcordUtil.canMoveWithinContent(event.target, "up")) {
+                            if (
+                                ConcordUtil.canMoveWithinContent(
+                                    event.target,
+                                    'up'
+                                )
+                            ) {
                                 keyCaptured = true;
                                 break;
                             }
 
                             //check if the current sibling is strikethrough
-                            if (concordInstance.op.isStrikethrough() && caretPosition == 0) {
+                            if (
+                                concordInstance.op.isStrikethrough() &&
+                                caretPosition == 0
+                            ) {
                                 if (prevNode) {
-                                    if ($(prevNode).text().length > 0)
-                                        break;
-                                } else
-                                    break;
+                                    if ($(prevNode).text().length > 0) break;
+                                } else break;
                             }
 
                             //Check if the prev node is strikethrough
                             if (prevNode) {
-                                if (concordInstance.op.isStrikethrough(prevNode) &&
-                                    concordInstance.op.getLineText().length != 0)
+                                if (
+                                    concordInstance.op.isStrikethrough(
+                                        prevNode
+                                    ) &&
+                                    concordInstance.op.getLineText().length != 0
+                                )
                                     break;
                             }
 
-                        /*
+                            /*
                             Backspacing on 
                             - first position 
                             - not a parent
@@ -3161,19 +3570,30 @@ window.currentInstance;
                             - is a child and has no siblings
                             deletes the current row
                             */
-                            if (caretPosition == 0 && !isParent && !isTextSelected) {
+                            if (
+                                caretPosition == 0 &&
+                                !isParent &&
+                                !isTextSelected
+                            ) {
                                 //Save text
                                 var text = concordInstance.op.getLineText();
 
                                 //Check if the previous sibling is a parent and has subs expanded
-                                if (prevNode && concordInstance.op.countSubs(prevNode) > 0
-                                   && concordInstance.op.subsExpanded(prevNode))
+                                if (
+                                    prevNode &&
+                                    concordInstance.op.countSubs(prevNode) >
+                                        0 &&
+                                    concordInstance.op.subsExpanded(prevNode)
+                                )
                                     break;
-                                
+
                                 //Check if is first child and has siblings
-                                if (prevNode && prevNode.length == 0 
-                                    && currentNode.parent() 
-                                    && concordInstance.op._walk_down(currentNode)) 
+                                if (
+                                    prevNode &&
+                                    prevNode.length == 0 &&
+                                    currentNode.parent() &&
+                                    concordInstance.op._walk_down(currentNode)
+                                )
                                     break;
 
                                 //Delete row
@@ -3186,31 +3606,63 @@ window.currentInstance;
                                    - Recursive: If concordInstance.op.subsExpanded() move to last child
                                 */
 
-                                //Append text to previous (now focused) row and set caret 
-                                var caretPosition = concordInstance.op.getLineText().length;
-                                concordInstance.op.setLineText(concordInstance.op.getLineText() + text);
-                                ConcordUtil.setCaret(concordInstance.op.getCursor().children(".concord-wrapper").children(".concord-text")[0], caretPosition);
+                                //Append text to previous (now focused) row and set caret
+                                var caretPosition = concordInstance.op.getLineText()
+                                    .length;
+                                concordInstance.op.setLineText(
+                                    concordInstance.op.getLineText() + text
+                                );
+                                ConcordUtil.setCaret(
+                                    concordInstance.op
+                                        .getCursor()
+                                        .children('.concord-wrapper')
+                                        .children('.concord-text')[0],
+                                    caretPosition
+                                );
                             }
                             /*
                             if caret in 1st position, is parent, and prev node not parent and same indent
                             then delete prev node, merge text with current node and set caret
                             */
-                            if (cursor && isParent && caretPosition == 0 && !isTextSelected) {
+                            if (
+                                cursor &&
+                                isParent &&
+                                caretPosition == 0 &&
+                                !isTextSelected
+                            ) {
                                 if (prevNode) {
-                                    if (concordInstance.op.countSubs(prevNode) == 0) {
-                                        var prevNodeText = concordInstance.op.getLineText(prevNode);
-                                        if (prevNodeText == undefined || prevNodeText == null) break;
+                                    if (
+                                        concordInstance.op.countSubs(
+                                            prevNode
+                                        ) == 0
+                                    ) {
+                                        var prevNodeText = concordInstance.op.getLineText(
+                                            prevNode
+                                        );
+                                        if (
+                                            prevNodeText == undefined ||
+                                            prevNodeText == null
+                                        )
+                                            break;
                                         var currNodeText = concordInstance.op.getLineText();
                                         var sel = window.getSelection();
 
-                                        concordInstance.op.setLineText(prevNodeText + concordInstance.op.getLineText());
+                                        concordInstance.op.setLineText(
+                                            prevNodeText +
+                                                concordInstance.op.getLineText()
+                                        );
 
                                         concordInstance.op.setCursor(prevNode);
                                         concordInstance.op.deleteLine();
 
                                         concordInstance.op.setCursor(cursor);
-                                        ConcordUtil.setCaret(concordInstance.op.getCursor().children(".concord-wrapper").children(".concord-text")[0],
-                                            prevNodeText.length);
+                                        ConcordUtil.setCaret(
+                                            concordInstance.op
+                                                .getCursor()
+                                                .children('.concord-wrapper')
+                                                .children('.concord-text')[0],
+                                            prevNodeText.length
+                                        );
                                         event.preventDefault();
                                     }
                                 }
@@ -3245,7 +3697,7 @@ window.currentInstance;
                             document.execCommand('selectAll', false, null);
                         } else {
                             concordInstance.editor.selectionMode();
-                            cursor.parent().children().addClass("selected");
+                            cursor.parent().children().addClass('selected');
                         }
                     }
                     break;
@@ -3300,10 +3752,15 @@ window.currentInstance;
                 case 13:
                     {
                         keyCaptured = true;
-                        if (event.originalEvent && ((event.originalEvent.location && (event.originalEvent.location != 0)))) {
+                        if (
+                            event.originalEvent &&
+                            event.originalEvent.location &&
+                            event.originalEvent.location != 0
+                        ) {
                             event.preventDefault();
-                            concordInstance.op.setTextMode(!concordInstance.op.inTextMode());
-
+                            concordInstance.op.setTextMode(
+                                !concordInstance.op.inTextMode()
+                            );
                         } else {
                             if (shiftKey) {
                                 event.preventDefault();
@@ -3330,50 +3787,74 @@ window.currentInstance;
                             */
                             var lineText = concordInstance.op.getLineText();
                             var currentCursor = concordInstance.op.getCursor();
-                            var caretPosition = ConcordUtil.getCaret(event.target);
+                            var caretPosition = ConcordUtil.getCaret(
+                                event.target
+                            );
 
                             var isActionAllowed = true;
                             var isStrike = concordInstance.op.isStrikethrough();
                             var strikeTagLen = 17;
-                            var isCaretAtEndOfLine = caretPosition == (lineText.length - (isStrike ? strikeTagLen : 0)); //17 = length of strike tags
-
+                            var isCaretAtEndOfLine =
+                                caretPosition ==
+                                lineText.length - (isStrike ? strikeTagLen : 0); //17 = length of strike tags
 
                             if (isCaretAtEndOfLine) {
-                                if (isStrike) caretPosition = caretPosition + strikeTagLen;
-                                var newLineText = lineText.substr(caretPosition, lineText.length);
-                                var oldLineText = lineText.substring(0, caretPosition);
-                                direction = (concordInstance.op.subsExpanded()) ? right : down;
-
+                                if (isStrike)
+                                    caretPosition =
+                                        caretPosition + strikeTagLen;
+                                var newLineText = lineText.substr(
+                                    caretPosition,
+                                    lineText.length
+                                );
+                                var oldLineText = lineText.substring(
+                                    0,
+                                    caretPosition
+                                );
+                                direction = concordInstance.op.subsExpanded()
+                                    ? right
+                                    : down;
                             } else {
-                                var newLineText = lineText.substring(0, caretPosition); //1st
-                                var oldLineText = lineText.substring(caretPosition, lineText.length); //2nd
+                                var newLineText = lineText.substring(
+                                    0,
+                                    caretPosition
+                                ); //1st
+                                var oldLineText = lineText.substring(
+                                    caretPosition,
+                                    lineText.length
+                                ); //2nd
                                 direction = up;
-                                isActionAllowed = (!isStrike || caretPosition == 0);
+                                isActionAllowed =
+                                    !isStrike || caretPosition == 0;
                             }
 
                             if (isActionAllowed) {
                                 concordInstance.op.setLineText(oldLineText);
-                                var node = concordInstance.op.insert(newLineText, direction);
+                                var node = concordInstance.op.insert(
+                                    newLineText,
+                                    direction
+                                );
 
-                                if (caretPosition != 0 && caretPosition != lineText.length)
+                                if (
+                                    caretPosition != 0 &&
+                                    caretPosition != lineText.length
+                                )
                                     concordInstance.op.setCursor(currentCursor);
 
                                 concordInstance.op.setTextMode(true);
                                 concordInstance.op.focusCursor();
                             }
-
                         }
                     }
                     break;
                 case 37:
                     // left
                     var active = false;
-                    if ($(event.target).hasClass("concord-text")) {
+                    if ($(event.target).hasClass('concord-text')) {
                         if (event.target.selectionStart > 0) {
                             active = false;
                         }
                     }
-                    if (context.find(".concord-cursor.selected").length == 1) {
+                    if (context.find('.concord-cursor.selected').length == 1) {
                         active = true;
                     }
                     if (active) {
@@ -3387,7 +3868,7 @@ window.currentInstance;
                     }
                     break;
                 case 38:
-                    // SHIFT+ALT+UP 
+                    // SHIFT+ALT+UP
                     if (shiftKey && altKey) {
                         keyCaptured = true;
                         event.preventDefault();
@@ -3408,7 +3889,10 @@ window.currentInstance;
                     if (shiftKey && !altKey) {
                         keyCaptured = true;
                         event.preventDefault();
-                        ConcordUtil.selectMultipleNodes("up", concordInstance.op);
+                        ConcordUtil.selectMultipleNodes(
+                            'up',
+                            concordInstance.op
+                        );
                         break;
                     }
 
@@ -3422,9 +3906,11 @@ window.currentInstance;
                         }
                     }
 
-                    if (ConcordUtil.canMoveWithinContent(event.target, "up") && concordInstance.op.inTextMode())
+                    if (
+                        ConcordUtil.canMoveWithinContent(event.target, 'up') &&
+                        concordInstance.op.inTextMode()
+                    )
                         break;
-
 
                     // up
                     keyCaptured = true;
@@ -3442,7 +3928,7 @@ window.currentInstance;
                 case 39:
                     // right
                     var active = false;
-                    if (context.find(".concord-cursor.selected").length == 1) {
+                    if (context.find('.concord-cursor.selected').length == 1) {
                         active = true;
                     }
                     if (active) {
@@ -3450,10 +3936,12 @@ window.currentInstance;
                         event.preventDefault();
                         var next = null;
                         var cursor = concordInstance.op.getCursor();
-                        if (!cursor.hasClass("collapsed")) {
-                            var outline = cursor.children("ol");
+                        if (!cursor.hasClass('collapsed')) {
+                            var outline = cursor.children('ol');
                             if (outline.length == 1) {
-                                var firstChild = outline.children(".concord-node:first");
+                                var firstChild = outline.children(
+                                    '.concord-node:first'
+                                );
                                 if (firstChild.length == 1) {
                                     next = firstChild;
                                 }
@@ -3488,7 +3976,10 @@ window.currentInstance;
                     if (shiftKey && !altKey) {
                         keyCaptured = true;
                         event.preventDefault();
-                        ConcordUtil.selectMultipleNodes("down", concordInstance.op);
+                        ConcordUtil.selectMultipleNodes(
+                            'down',
+                            concordInstance.op
+                        );
                         break;
                     }
 
@@ -3504,7 +3995,13 @@ window.currentInstance;
                     }
 
                     // down
-                    if (ConcordUtil.canMoveWithinContent(event.target, "down") && concordInstance.op.inTextMode())
+                    if (
+                        ConcordUtil.canMoveWithinContent(
+                            event.target,
+                            'down'
+                        ) &&
+                        concordInstance.op.inTextMode()
+                    )
                         break;
 
                     keyCaptured = true;
@@ -3512,10 +4009,12 @@ window.currentInstance;
                     if (concordInstance.op.inTextMode()) {
                         var next = null;
                         var cursor = concordInstance.op.getCursor();
-                        if (!cursor.hasClass("collapsed")) {
-                            var outline = cursor.children("ol");
+                        if (!cursor.hasClass('collapsed')) {
+                            var outline = cursor.children('ol');
                             if (outline.length == 1) {
-                                var firstChild = outline.children(".concord-node:first");
+                                var firstChild = outline.children(
+                                    '.concord-node:first'
+                                );
                                 if (firstChild.length == 1) {
                                     next = firstChild;
                                 }
@@ -3534,9 +4033,9 @@ window.currentInstance;
                 case 46:
                     // delete
                     if (concordInstance.op.inTextMode()) {
-                        if (!concordInstance.op.getCursor().hasClass("dirty")) {
+                        if (!concordInstance.op.getCursor().hasClass('dirty')) {
                             concordInstance.op.saveState();
-                            concordInstance.op.getCursor().addClass("dirty");
+                            concordInstance.op.getCursor().addClass('dirty');
                         }
                     } else {
                         keyCaptured = true;
@@ -3546,10 +4045,8 @@ window.currentInstance;
                     break;
                 case 49:
                     //ALT+1 and ALT+SHIFT+1
-                    if (altKey && shiftKey)
-                        concordInstance.op.fullExpand();
-                    else if (altKey)
-                        concordInstance.op.fullCollapse();
+                    if (altKey && shiftKey) concordInstance.op.fullExpand();
+                    else if (altKey) concordInstance.op.fullCollapse();
                     keyCaptured = true;
                     break;
                 case 90:
@@ -3564,7 +4061,7 @@ window.currentInstance;
                     //CMD+X
                     if (commandKey) {
                         if (concordInstance.op.inTextMode()) {
-                            if (concordInstance.op.getLineText() == "") {
+                            if (concordInstance.op.getLineText() == '') {
                                 keyCaptured = true;
                                 event.preventDefault();
                                 concordInstance.op.deleteLine();
@@ -3578,8 +4075,8 @@ window.currentInstance;
                     //CMD+C
                     if (false && commandKey) {
                         if (concordInstance.op.inTextMode()) {
-                            if (concordInstance.op.getLineText() != "") {
-                                concordInstance.root.removeData("clipboard");
+                            if (concordInstance.op.getLineText() != '') {
+                                concordInstance.root.removeData('clipboard');
                             }
                         } else {
                             keyCaptured = true;
@@ -3622,7 +4119,9 @@ window.currentInstance;
                     if (commandKey) {
                         keyCaptured = true;
                         event.preventDefault();
-                        concordInstance.op.setRenderMode(!concordInstance.op.getRenderMode());
+                        concordInstance.op.setRenderMode(
+                            !concordInstance.op.getRenderMode()
+                        );
                     }
                     break;
                 case 32:
@@ -3647,7 +4146,13 @@ window.currentInstance;
 
                         text = text.insertAt(caret, date);
                         concordInstance.op.setLineText(text);
-                        ConcordUtil.setCaret(concordInstance.op.getCursor().children(".concord-wrapper").children(".concord-text")[0], caret + date.length);
+                        ConcordUtil.setCaret(
+                            concordInstance.op
+                                .getCursor()
+                                .children('.concord-wrapper')
+                                .children('.concord-text')[0],
+                            caret + date.length
+                        );
                         keyCaptured = true;
                     }
                     break;
@@ -3663,18 +4168,23 @@ window.currentInstance;
                     keyCaptured = false;
             }
             if (!keyCaptured) {
-                if ((event.which >= 32) && ((event.which < 112) || (event.which > 123)) && (event.which < 1000) && !commandKey) {
+                if (
+                    event.which >= 32 &&
+                    (event.which < 112 || event.which > 123) &&
+                    event.which < 1000 &&
+                    !commandKey
+                ) {
                     var node = concordInstance.op.getCursor();
                     if (concordInstance.op.inTextMode()) {
-                        if (!node.hasClass("dirty")) {
+                        if (!node.hasClass('dirty')) {
                             concordInstance.op.saveState();
                         }
-                        node.addClass("dirty");
+                        node.addClass('dirty');
                     } else {
                         concordInstance.op.setTextMode(true);
                         concordInstance.op.saveState();
                         concordInstance.editor.edit(node, true);
-                        node.addClass("dirty");
+                        node.addClass('dirty');
                     }
                     concordInstance.op.markChanged();
                 }
@@ -3682,19 +4192,26 @@ window.currentInstance;
             concord.bringIntoView($(event.target));
         }
     });
-    $(document).on("mouseup", function (event) {
+    $(document).on('mouseup', function (event) {
         if (!concord.handleEvents) {
             return;
         }
-        if ($(".concord-root").length == 0) {
+        if ($('.concord-root').length == 0) {
             return;
         }
-        if ($(event.target).is("a") || $(event.target).is("input") || $(event.target).is("textarea") || ($(event.target).parents("a:first").length == 1) || $(event.target).hasClass("dropdown-menu") || ($(event.target).parents(".dropdown-menu:first").length > 0)) {
+        if (
+            $(event.target).is('a') ||
+            $(event.target).is('input') ||
+            $(event.target).is('textarea') ||
+            $(event.target).parents('a:first').length == 1 ||
+            $(event.target).hasClass('dropdown-menu') ||
+            $(event.target).parents('.dropdown-menu:first').length > 0
+        ) {
             return;
         }
-        var context = $(event.target).parents(".concord-root:first");
+        var context = $(event.target).parents('.concord-root:first');
         if (context.length == 0) {
-            $(".concord-root").each(function () {
+            $('.concord-root').each(function () {
                 var concordInstance = new ConcordOutline($(this).parent());
                 concordInstance.editor.hideContextMenu();
                 concordInstance.editor.dragModeExit();
@@ -3702,18 +4219,18 @@ window.currentInstance;
             var focusRoot = concord.getFocusRoot();
         }
     });
-    $(document).on("click", concord.updateFocusRootEvent);
-    $(document).on("dblclick", concord.updateFocusRootEvent);
+    $(document).on('click', concord.updateFocusRootEvent);
+    $(document).on('dblclick', concord.updateFocusRootEvent);
     $(document).on('show', function (e) {
-        if ($(e.target).is(".modal")) {
-            if ($(e.target).attr("concord-events") != "true") {
+        if ($(e.target).is('.modal')) {
+            if ($(e.target).attr('concord-events') != 'true') {
                 concord.stopListening();
             }
         }
     });
     $(document).on('hidden', function (e) {
-        if ($(e.target).is(".modal")) {
-            if ($(e.target).attr("concord-events") != "true") {
+        if ($(e.target).is('.modal')) {
+            if ($(e.target).attr('concord-events') != 'true') {
                 concord.resumeListening();
             }
         }
