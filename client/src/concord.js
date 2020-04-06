@@ -244,6 +244,10 @@ var ConcordUtil = {
         }
     },
     setCaret: function (el, index) {
+        if (index === 0) {
+            ConcordUtil.setCaretAtStart(el);
+            return;
+        }
         //V1 - Not IE<9 (+FF?) friendly
         var sel = window.getSelection();
         var innerDivText = el.firstChild;
@@ -1424,7 +1428,7 @@ function ConcordEvents(root, editor, op, concordInstance) {
                     return;
                 }
 
-                if (isIconClicked || !concord.mobile) {
+                if (isIconClicked) {
                     //Expand / Collapse
                     op.setTextMode(false);
                     op.setCursor(
@@ -1442,13 +1446,11 @@ function ConcordEvents(root, editor, op, concordInstance) {
                         event.shiftKey
                     );
                     var caretPosition = op.getLineText().length;
-                    ConcordUtil.setCaret(
-                        op
-                            .getCursor()
-                            .children('.concord-wrapper')
-                            .children('.concord-text')[0],
-                        caretPosition
-                    );
+                    const el = op
+                        .getCursor()
+                        .children('.concord-wrapper')
+                        .children('.concord-text')[0];
+                    ConcordUtil.setCaret(el, caretPosition);
                     instance.clickSelect(event);
                 }
             }
