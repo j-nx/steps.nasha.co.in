@@ -252,7 +252,7 @@ var ConcordUtil = {
         //V1 - Not IE<9 (+FF?) friendly
         var sel = window.getSelection();
         var innerDivText = el.firstChild;
-        sel.collapse(innerDivText, index);
+        if (sel) sel.collapse(innerDivText, index);
         el.parentNode.focus();
     },
     getLineInfo: function (caret, element) {
@@ -372,6 +372,9 @@ var ConcordUtil = {
             ' ' +
             date.getFullYear()
         );
+    },
+    getIcon: function (iconName) {
+        return '<span class="node-icon icon-' + iconName + '"></i>';
     }
 };
 
@@ -677,7 +680,7 @@ function ConcordEditor(root, concordInstance) {
         var node = $('<li></li>');
         node.addClass('concord-node');
         var wrapper = $("<div class='concord-wrapper'></div>");
-        var icon = '<i' + ' class="node-icon icon-' + iconName + '"><' + '/i>';
+        var icon = ConcordUtil.getIcon(iconName);
         wrapper.append(icon);
         wrapper.addClass('type-icon');
         var text = $("<div class='concord-text' contenteditable='true'></div>");
@@ -1005,7 +1008,7 @@ function ConcordEditor(root, concordInstance) {
                 iconName = nodeIcon;
             }
         }
-        var icon = '<i' + ' class="node-icon icon-' + iconName + '"><' + '/i>';
+        var icon = '<span class="node-icon icon-' + iconName + '"></span>';
         wrapper.append(icon);
         wrapper.addClass('type-icon');
         if (attributes['isComment'] == 'true') {
@@ -1154,6 +1157,7 @@ function ConcordEditor(root, concordInstance) {
             // Render HTML if op.getRenderMode() returns true - 2/17/13 by KS
             var allowedTags = [
                 'b',
+                'u',
                 'strong',
                 'i',
                 'em',
@@ -1901,18 +1905,27 @@ function ConcordOp(root, concordInstance, _cursor) {
         }
     };
     this.bold = function () {
-        /*        this.saveState();
-                if (this.inTextMode()) {
-                    document.execCommand("bold");
-                } else {
-                    this.focusCursor();
-                    document.execCommand("selectAll");
-                    document.execCommand("bold");
-                    document.execCommand("unselect");
-                    this.blurCursor();
-                    concordInstance.pasteBinFocus();
-                }
-                this.markChanged();*/
+        this.stylize('bold');
+    };
+    this.underline = function () {
+        this.stylize('underline');
+    };
+    this.italic = function () {
+        this.stylize('italic');
+    };
+    this.stylize = function (style) {
+        this.saveState();
+        if (this.inTextMode()) {
+            document.execCommand(style);
+        } else {
+            this.focusCursor();
+            document.execCommand('selectAll');
+            document.execCommand(style);
+            document.execCommand('unselect');
+            this.blurCursor();
+            concordInstance.pasteBinFocus();
+        }
+        this.markChanged();
     };
     this.changed = function () {
         return root.data('changed') == true;
@@ -2169,10 +2182,13 @@ function ConcordOp(root, concordInstance, _cursor) {
         var node = n;
         if (!node) node = this.getCursor();
         if (node.length == 1) {
-            var text = node
+            const textNode = node
                 .children('.concord-wrapper:first')
-                .children('.concord-text:first')
-                .html();
+                .children('.concord-text:first');
+            //.html(); to return <b>text</b> instead of text
+
+            var text = textNode ? textNode[0].innerText : '';
+
             var textMatches = text.match(/^(.+)<br>\s*$/);
             if (textMatches) {
                 text = textMatches[1];
@@ -2324,7 +2340,7 @@ function ConcordOp(root, concordInstance, _cursor) {
         }
         node.addClass('concord-level-' + level);
         var wrapper = $("<div class='concord-wrapper'></div>");
-        var icon = '<i' + ' class="node-icon icon-' + iconName + '"><' + '/i>';
+        var icon = ConcordUtil.getIcon(iconName);
         wrapper.append(icon);
         wrapper.addClass('type-icon');
         var text = $("<div class='concord-text' contenteditable='true'></div>");
@@ -2547,20 +2563,6 @@ function ConcordOp(root, concordInstance, _cursor) {
     };
     this.inTextMode = function () {
         return root.hasClass('textMode');
-    };
-    this.italic = function () {
-        /*        this.saveState();
-                if (this.inTextMode()) {
-                    document.execCommand("italic");
-                } else {
-                    this.focusCursor();
-                    document.execCommand("selectAll");
-                    document.execCommand("italic");
-                    document.execCommand("unselect");
-                    this.blurCursor();
-                    concordInstance.pasteBinFocus();
-                }
-                this.markChanged();*/
     };
     this.level = function () {
         return this.getCursor().parents('.concord-node').length + 1;
@@ -3276,12 +3278,7 @@ function ConcordOpAttributes(concordInstance, cursor) {
                     iconName = value;
                 }
                 if (iconName) {
-                    var icon =
-                        '<i' +
-                        ' class="node-icon icon-' +
-                        iconName +
-                        '"><' +
-                        '/i>';
+                    var icon = ConcordUtil.getIcon(iconName);
                     wrapper.children('.node-icon:first').replaceWith(icon);
                 }
             }
@@ -3330,12 +3327,7 @@ function ConcordOpAttributes(concordInstance, cursor) {
                     iconName = value;
                 }
                 if (iconName) {
-                    var icon =
-                        '<i' +
-                        ' class="node-icon icon-' +
-                        iconName +
-                        '"><' +
-                        '/i>';
+                    var icon = ConcordUtil.getIcon(iconName);
                     wrapper.children('.node-icon:first').replaceWith(icon);
                 }
             }
@@ -3397,8 +3389,7 @@ function ConcordOpAttributes(concordInstance, cursor) {
                 iconName = value;
             }
             if (iconName) {
-                var icon =
-                    '<i' + ' class="node-icon icon-' + iconName + '"><' + '/i>';
+                var icon = ConcordUtil.getIcon(iconName);
                 wrapper.children('.node-icon:first').replaceWith(icon);
             }
         }
@@ -3645,7 +3636,6 @@ window.currentInstance;
                                             prevNodeText == null
                                         )
                                             break;
-                                        var currNodeText = concordInstance.op.getLineText();
                                         var sel = window.getSelection();
 
                                         concordInstance.op.setLineText(
@@ -3678,6 +3668,7 @@ window.currentInstance;
                     }
                     break;
                 case 9:
+                    // Tab
                     keyCaptured = true;
                     event.preventDefault();
                     event.stopPropagation();
@@ -3707,15 +3698,7 @@ window.currentInstance;
                     if (commandKey) {
                         keyCaptured = true;
                         event.preventDefault();
-                        concordInstance.op.reorg(up);
-                    }
-                    break;
-                case 68:
-                    //CMD+D
-                    if (commandKey) {
-                        keyCaptured = true;
-                        event.preventDefault();
-                        concordInstance.op.reorg(down);
+                        concordInstance.op.underline(up);
                     }
                     break;
                 case 76:
@@ -3750,7 +3733,7 @@ window.currentInstance;
                         concordInstance.op.demote();
                     }
                     break;
-                case 13:
+                case 13: // Enter
                     {
                         keyCaptured = true;
                         if (
@@ -3815,6 +3798,10 @@ window.currentInstance;
                                     ? right
                                     : down;
                             } else {
+                                /*  Temporary workaround for doing a line break inside bold,u,i:
+                                    On breaking styled text --> Strip out all style tags
+                                */
+
                                 var newLineText = lineText.substring(
                                     0,
                                     caretPosition
