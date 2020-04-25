@@ -4,7 +4,7 @@
 $(function () {
     if ($.fn.tooltip !== undefined) {
         $('a[rel=tooltip]').tooltip({
-            live: true,
+            live: true
         });
     }
 });
@@ -92,8 +92,9 @@ var concord = {
     },
     setFocusRoot: function (root) {
         var origRoot = this.focusRoot;
-        var concordInstance = new ConcordOutline(root.parent());
+
         if (origRoot !== null && !(origRoot[0] === root[0])) {
+            var concordInstance = new ConcordOutline(root.parent());
             var origConcordInstance = new ConcordOutline(origRoot.parent());
             origConcordInstance.editor.hideContextMenu();
             origConcordInstance.editor.dragModeExit();
@@ -134,15 +135,15 @@ var concord = {
         ) {
             $('html,body').animate(
                 {
-                    scrollTop: element.offset().top - fromTop,
+                    scrollTop: element.offset().top - fromTop
                 },
                 1000
             );
         }
-    },
+    }
 };
 var concordEnvironment = {
-    version: concord.version,
+    version: concord.version
 };
 var concordClipboard = undefined;
 jQuery.fn.reverse = [].reverse;
@@ -160,7 +161,7 @@ var XML_CHAR_MAP = {
     '<': '&lt;',
     '>': '&gt;',
     '&': '&amp;',
-    '"': '&' + 'quot;',
+    '"': '&' + 'quot;'
 };
 
 var ie =
@@ -259,7 +260,7 @@ var ConcordUtil = {
             l = parseInt(d.css('lineHeight')),
             s = Math.round(d.height() / l),
             v = {
-                numberOfLines: s,
+                numberOfLines: s
             };
         if (s === 1) {
             v.caretPositionLine = 1;
@@ -285,7 +286,7 @@ var ConcordUtil = {
 
         e.css({
             lineHeight: l + 'px',
-            width: d.width() + 'px',
+            width: d.width() + 'px'
         });
         d.after(e);
         d.next('.concord-text')[0];
@@ -358,7 +359,7 @@ var ConcordUtil = {
             'September',
             'October',
             'November',
-            'December',
+            'December'
         ];
 
         var date = new Date();
@@ -371,7 +372,7 @@ var ConcordUtil = {
             ' ' +
             date.getFullYear()
         );
-    },
+    }
 };
 
 String.prototype.insertAt = function (index, chars) {
@@ -594,7 +595,7 @@ function ConcordOutline(container, options) {
                 if (root.find('.concord-node').length == 0) {
                     op.wipe();
                 }
-            },
+            }
         });
     };
     this.save = function (cb) {
@@ -611,7 +612,7 @@ function ConcordOutline(container, options) {
                 url: saveUrl,
                 data: {
                     opml: opml,
-                    id: opmlId,
+                    id: opmlId
                 },
                 dataType: 'json',
                 success: function (json) {
@@ -619,7 +620,7 @@ function ConcordOutline(container, options) {
                     if (cb) {
                         cb(json);
                     }
-                },
+                }
             });
         }
     };
@@ -658,7 +659,7 @@ function ConcordOutline(container, options) {
                     }
                 }
             },
-            error: function () {},
+            error: function () {}
         });
     };
     this['export'] = function () {
@@ -1060,7 +1061,7 @@ function ConcordEditor(root, concordInstance) {
                 position: 'absolute',
                 top: y + 'px',
                 left: x + 'px',
-                cursor: 'default',
+                cursor: 'default'
             });
             root.data('dropdown').show();
         }
@@ -1159,7 +1160,7 @@ function ConcordEditor(root, concordInstance) {
                 'a',
                 'img',
                 'strike',
-                'del',
+                'del'
             ];
             for (var tagIndex in allowedTags) {
                 var tag = allowedTags[tagIndex];
@@ -1564,7 +1565,7 @@ function ConcordEvents(root, editor, op, concordInstance) {
         if (copyText != '' && copyText != '\n') {
             concordClipboard = {
                 text: copyText,
-                data: root.find('.selected').clone(true, true),
+                data: root.find('.selected').clone(true, true)
             };
             concordInstance.pasteBin.html(
                 '<pre>' + $('<div/>').text(copyText).html() + '</pre>'
@@ -1602,7 +1603,7 @@ function ConcordEvents(root, editor, op, concordInstance) {
         if (copyText != '' && copyText != '\n') {
             concordClipboard = {
                 text: copyText,
-                data: root.find('.selected').clone(true, true),
+                data: root.find('.selected').clone(true, true)
             };
             concordInstance.pasteBin.html(
                 '<pre>' + $('<div/>').text(copyText).html() + '</pre>'
