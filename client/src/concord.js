@@ -1931,7 +1931,6 @@ function ConcordOp(root, concordInstance, _cursor) {
     };
     this.stylize = function (style) {
         return; // Temporarily disabled
-
         const styles = [];
 
         const checkStyle = (s) => {
@@ -2211,7 +2210,7 @@ function ConcordOp(root, concordInstance, _cursor) {
         headers['title'] = this.getTitle();
         return headers;
     };
-    this.getLineText = function (n, getHtml = true) {
+    this.getLineText = function (n, getHtml = false) {
         var node = n;
         if (!node) node = this.getCursor();
         if (node.length === 0) return null;
