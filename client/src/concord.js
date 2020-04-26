@@ -1930,6 +1930,8 @@ function ConcordOp(root, concordInstance, _cursor) {
         this.stylize('italic');
     };
     this.stylize = function (style) {
+        return; // Temporarily disabled
+
         const styles = [];
 
         const checkStyle = (s) => {
@@ -3598,6 +3600,9 @@ window.currentInstance;
                                 !isParent &&
                                 !isTextSelected
                             ) {
+                                //Save text (do not move)
+                                var text = concordInstance.op.getLineText();
+
                                 //Check if the previous sibling is a parent and has subs expanded
                                 if (
                                     prevNode &&
@@ -3615,9 +3620,6 @@ window.currentInstance;
                                     concordInstance.op._walk_down(currentNode)
                                 )
                                     break;
-
-                                //Save text
-                                var text = concordInstance.op.getLineText();
 
                                 //Delete row
                                 keyCaptured = true;
