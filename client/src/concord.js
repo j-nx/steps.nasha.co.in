@@ -375,6 +375,22 @@ var ConcordUtil = {
     },
     getIcon: function (iconName) {
         return '<span class="node-icon icon-' + iconName + '"></i>';
+    },
+    consolidateTags: function (a, b) {
+        const bTag = '<b';
+
+        const checkTag = (tagOpen, tagClose, aM, bM) => {
+            if (aM.endsWith(tagClose) && bM.startsWith(tagOpen)) {
+                a = aM.substring(0, aM.length - tagClose.length);
+                b = bM.substring(tagOpen.length);
+            }
+        };
+
+        checkTag('<b>', '</b>', a, b);
+        checkTag('<i>', '</i>', a, b);
+        checkTag('<u>', '</u>', a, b);
+
+        return a + b;
     }
 };
 
@@ -1914,13 +1930,28 @@ function ConcordOp(root, concordInstance, _cursor) {
         this.stylize('italic');
     };
     this.stylize = function (style) {
+        const styles = [];
+
+        const checkStyle = (s) => {
+            if (document.queryCommandState(s) && style != s) {
+                document.execCommand(s);
+                styles.push(s);
+            }
+        };
+
+        checkStyle('bold');
+        checkStyle('italic');
+        checkStyle('underline');
+        styles.push(style);
+        styles.sort();
+
         this.saveState();
         if (this.inTextMode()) {
-            document.execCommand(style);
+            styles.forEach((style) => document.execCommand(style));
         } else {
             this.focusCursor();
             document.execCommand('selectAll');
-            document.execCommand(style);
+            styles.forEach((style) => document.execCommand(style));
             document.execCommand('unselect');
             this.blurCursor();
             concordInstance.pasteBinFocus();
@@ -2178,25 +2209,25 @@ function ConcordOp(root, concordInstance, _cursor) {
         headers['title'] = this.getTitle();
         return headers;
     };
-    this.getLineText = function (n) {
+    this.getLineText = function (n, getHtml = true) {
         var node = n;
         if (!node) node = this.getCursor();
-        if (node.length == 1) {
-            const textNode = node
-                .children('.concord-wrapper:first')
-                .children('.concord-text:first');
-            //.html(); to return <b>text</b> instead of text
+        if (node.length === 0) return null;
+        const textNode = node
+            .children('.concord-wrapper:first')
+            .children('.concord-text:first');
 
-            var text = textNode ? textNode[0].innerText : '';
+        var text = textNode
+            ? getHtml
+                ? textNode[0].innerHTML
+                : textNode[0].innerText
+            : '';
 
-            var textMatches = text.match(/^(.+)<br>\s*$/);
-            if (textMatches) {
-                text = textMatches[1];
-            }
-            return concordInstance.editor.unescape(text);
-        } else {
-            return null;
+        var textMatches = text.match(/^(.+)<br>\s*$/);
+        if (textMatches) {
+            text = textMatches[1];
         }
+        return concordInstance.editor.unescape(text);
     };
     this.getRenderMode = function () {
         if (root.data('renderMode') !== undefined) {
@@ -3567,9 +3598,6 @@ window.currentInstance;
                                 !isParent &&
                                 !isTextSelected
                             ) {
-                                //Save text
-                                var text = concordInstance.op.getLineText();
-
                                 //Check if the previous sibling is a parent and has subs expanded
                                 if (
                                     prevNode &&
@@ -3587,6 +3615,9 @@ window.currentInstance;
                                     concordInstance.op._walk_down(currentNode)
                                 )
                                     break;
+
+                                //Save text
+                                var text = concordInstance.op.getLineText();
 
                                 //Delete row
                                 keyCaptured = true;
