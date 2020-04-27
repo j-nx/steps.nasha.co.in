@@ -255,6 +255,31 @@ var ConcordUtil = {
         if (sel) sel.collapse(innerDivText, index);
         el.parentNode.focus();
     },
+    setCaret2(el, pos) {
+        //via https://stackoverflow.com/questions/36869503/set-caret-position-in-contenteditable-div-that-has-children
+
+        for (var node of el.childNodes) {
+            if (node.nodeType == 3) {
+                if (node.length >= pos) {
+                    var range = document.createRange(),
+                        sel = window.getSelection();
+                    range.setStart(node, pos);
+                    range.collapse(true);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                    return -1; // we are done
+                } else {
+                    pos -= node.length;
+                }
+            } else {
+                pos = this.setCaret2(node, pos);
+                if (pos == -1) {
+                    return -1;
+                }
+            }
+        }
+        return pos; // recursion
+    },
     getLineInfo: function (caret, element) {
         var d = $(element),
             l = parseInt(d.css('lineHeight')),
@@ -1930,7 +1955,6 @@ function ConcordOp(root, concordInstance, _cursor) {
         this.stylize('italic');
     };
     this.stylize = function (style) {
-        return; // Temporarily disabled
         const styles = [];
 
         const checkStyle = (s) => {
@@ -3600,7 +3624,10 @@ window.currentInstance;
                                 !isTextSelected
                             ) {
                                 //Save text (do not move)
-                                var text = concordInstance.op.getLineText();
+                                var text = concordInstance.op.getLineText(
+                                    null,
+                                    true
+                                );
 
                                 //Check if the previous sibling is a parent and has subs expanded
                                 if (
@@ -3634,9 +3661,15 @@ window.currentInstance;
                                 var caretPosition = concordInstance.op.getLineText()
                                     .length;
                                 concordInstance.op.setLineText(
-                                    concordInstance.op.getLineText() + text
+                                    ConcordUtil.consolidateTags(
+                                        concordInstance.op.getLineText(
+                                            null,
+                                            true
+                                        ),
+                                        text
+                                    )
                                 );
-                                ConcordUtil.setCaret(
+                                ConcordUtil.setCaret2(
                                     concordInstance.op
                                         .getCursor()
                                         .children('.concord-wrapper')
