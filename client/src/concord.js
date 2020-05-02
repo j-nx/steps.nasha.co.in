@@ -1958,8 +1958,10 @@ function ConcordOp(root, concordInstance, _cursor) {
         const styles = [];
 
         const checkStyle = (s) => {
-            if (document.queryCommandState(s) && style != s) {
-                document.execCommand(s);
+            const hasStyle = document.queryCommandState(s);
+            if (style === s) {
+                if (hasStyle === false) styles.push(s);
+            } else if (hasStyle) {
                 styles.push(s);
             }
         };
@@ -1967,8 +1969,8 @@ function ConcordOp(root, concordInstance, _cursor) {
         checkStyle('bold');
         checkStyle('italic');
         checkStyle('underline');
-        styles.push(style);
         styles.sort();
+        document.execCommand('removeFormat');
 
         this.saveState();
         if (this.inTextMode()) {
@@ -3159,10 +3161,7 @@ function ConcordOp(root, concordInstance, _cursor) {
         this.markChanged();
     };
     this.xmlToOutline = function (xmlText, flSetFocus) {
-        //2/22/14 by DW -- new param, flSetFocus
-
         if (flSetFocus == undefined) {
-            //2/22/14 by DW
             flSetFocus = true;
         }
 
@@ -3851,11 +3850,11 @@ window.currentInstance;
                                 if (isStrike)
                                     caretPosition =
                                         caretPosition + strikeTagLen;
-                                var newLineText = lineText.substr(
+                                var topLineText = lineText.substr(
                                     caretPosition,
                                     lineText.length
                                 );
-                                var oldLineText = lineText.substring(
+                                var bottomLineText = lineText.substring(
                                     0,
                                     caretPosition
                                 );
@@ -3863,27 +3862,31 @@ window.currentInstance;
                                     ? right
                                     : down;
                             } else {
-                                /*  Temporary workaround for doing a line break inside bold,u,i:
-                                    On breaking styled text --> Strip out all style tags
-                                */
+                                const textNode =
+                                    currentCursor[0].firstChild.children[1]
+                                        .innerHTML;
 
-                                var newLineText = lineText.substring(
-                                    0,
+                                const [top, bottom] = sliceHtmlText(
+                                    textNode,
                                     caretPosition
-                                ); //1st
-                                var oldLineText = lineText.substring(
-                                    caretPosition,
-                                    lineText.length
-                                ); //2nd
+                                );
+
+                                topLineText = !top
+                                    ? ''
+                                    : top
+                                          .replace('<ol></ol>', '')
+                                          .replace('<br>', ''); // To remove Child holder
+                                bottomLineText = bottom || '';
+
                                 direction = up;
                                 isActionAllowed =
                                     !isStrike || caretPosition == 0;
                             }
 
                             if (isActionAllowed) {
-                                concordInstance.op.setLineText(oldLineText);
+                                concordInstance.op.setLineText(bottomLineText);
                                 var node = concordInstance.op.insert(
-                                    newLineText,
+                                    topLineText,
                                     direction
                                 );
 
