@@ -3623,10 +3623,12 @@ window.currentInstance;
                                 !isTextSelected
                             ) {
                                 //Save text (do not move)
-                                var text = concordInstance.op.getLineText(
+                                let text = concordInstance.op.getLineText(
                                     null,
                                     true
                                 );
+
+                                if (text === '<br>') text = '';
 
                                 //Check if the previous sibling is a parent and has subs expanded
                                 if (
@@ -3845,27 +3847,28 @@ window.currentInstance;
                             var isCaretAtEndOfLine =
                                 caretPosition ==
                                 lineText.length - (isStrike ? strikeTagLen : 0); //17 = length of strike tags
+                            let topLineText;
+                            let bottomLineText;
+
+                            /* Newlining <abc with styles has issues */
+                            const textNode = concordInstance.editor.unescape(
+                                currentCursor[0].firstChild.children[1]
+                                    .innerHTML
+                            );
 
                             if (isCaretAtEndOfLine) {
                                 if (isStrike)
                                     caretPosition =
                                         caretPosition + strikeTagLen;
-                                var topLineText = lineText.substr(
-                                    caretPosition,
-                                    lineText.length
-                                );
-                                var bottomLineText = lineText.substring(
-                                    0,
+
+                                [bottomLineText, topLineText] = sliceHtmlText(
+                                    textNode,
                                     caretPosition
                                 );
                                 direction = concordInstance.op.subsExpanded()
                                     ? right
                                     : down;
                             } else {
-                                const textNode =
-                                    currentCursor[0].firstChild.children[1]
-                                        .innerHTML;
-
                                 const [top, bottom] = sliceHtmlText(
                                     textNode,
                                     caretPosition
@@ -3873,9 +3876,7 @@ window.currentInstance;
 
                                 topLineText = !top
                                     ? ''
-                                    : top
-                                          .replace('<ol></ol>', '')
-                                          .replace('<br>', ''); // To remove Child holder
+                                    : top.replace('<ol></ol>', ''); // To remove Child holder
                                 bottomLineText = bottom || '';
 
                                 direction = up;

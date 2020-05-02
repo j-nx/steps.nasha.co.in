@@ -333,13 +333,20 @@ function secondsSince(when) {
  * Assumes that the input string is well formed
  * This code only works because of the unit tests behind it
  */
-function sliceHtmlText(str, index) {
+function sliceHtmlText(str, index, allowedTags = ['<b>', '<i>', '<u>']) {
     // Up until index, how many incomplete tags exist
     if (str.length === 0) return [str, ''];
     if (index === 0) return ['', str];
     if (index > str.length) return { a: str, b: undefined };
 
-    if (str.includes('<') === false)
+    let includesTags = allowedTags && allowedTags.length > 0 ? false : true;
+    for (let i = 0; i < allowedTags.length; i++) {
+        if (str.includes(allowedTags[i])) {
+            includesTags = true;
+            break;
+        }
+    }
+    if (includesTags === false || str.includes('<') === false)
         return [str.substring(0, index), str.substring(index)];
 
     const openTags = [];
@@ -404,10 +411,13 @@ function sliceHtmlText(str, index) {
     let a = str.substring(0, i);
     let b = str.substring(i);
 
+    // Check if 2nd line is </b> / empty (Only applies to single char tags)
+    if (b.length > 3 && b[0] === '<' && b[1] === '/' && b[3] === '>') b = '';
+
     for (let ti = openTags.length - 1; ti >= 0; ti--) {
         const t = openTags[ti];
         a += `</${t}>`;
-        b = `<${t}>` + b;
+        if (b) b = `<${t}>` + b;
     }
 
     return [a, b];

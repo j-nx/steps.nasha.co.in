@@ -80,21 +80,24 @@ describe('Outliner Functions', function () {
 
             [a, b] = sliceHtmlText(
                 '<div>Hello <strong>There</strong></div>',
-                8
+                8,
+                []
             );
             expect(a).toBe('<div>Hello <strong>Th</strong></div>');
             expect(b).toBe('<div><strong>ere</strong></div>');
 
             [a, b] = sliceHtmlText(
                 '<div>He<b>l</b>lo <strong>There</strong></div>',
-                4
+                4,
+                []
             );
             expect(a).toBe('<div>He<b>l</b>l</div>');
             expect(b).toBe('<div>o <strong>There</strong></div>');
 
             [a, b] = sliceHtmlText(
                 '<div>Hello <strong>There</strong></div>',
-                4
+                4,
+                []
             );
             expect(a).toBe('<div>Hell</div>');
             expect(b).toBe('<div>o <strong>There</strong></div>');
@@ -118,6 +121,10 @@ describe('Outliner Functions', function () {
             [a, b] = sliceHtmlText('<b><i>BI<u>U</u></i></b>', 2);
             expect(a).toBe('<b><i>BI</i></b>');
             expect(b).toBe('<b><i><u>U</u></i></b>');
+
+            [a, b] = sliceHtmlText('<b><i>BILLO!!!</i></b>', 8);
+            expect(a).toBe('<b><i>BILLO!!!</i></b>');
+            expect(b).toBe('');
         });
     });
 });
