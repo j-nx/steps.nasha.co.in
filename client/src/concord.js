@@ -252,8 +252,33 @@ var ConcordUtil = {
         //V1 - Not IE<9 (+FF?) friendly
         var sel = window.getSelection();
         var innerDivText = el.firstChild;
-        sel.collapse(innerDivText, index);
+        if (sel) sel.collapse(innerDivText, index);
         el.parentNode.focus();
+    },
+    setCaret2(el, pos) {
+        //via https://stackoverflow.com/questions/36869503/set-caret-position-in-contenteditable-div-that-has-children
+
+        for (var node of el.childNodes) {
+            if (node.nodeType == 3) {
+                if (node.length >= pos) {
+                    var range = document.createRange(),
+                        sel = window.getSelection();
+                    range.setStart(node, pos);
+                    range.collapse(true);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                    return -1; // we are done
+                } else {
+                    pos -= node.length;
+                }
+            } else {
+                pos = this.setCaret2(node, pos);
+                if (pos == -1) {
+                    return -1;
+                }
+            }
+        }
+        return pos; // recursion
     },
     getLineInfo: function (caret, element) {
         var d = $(element),
@@ -372,6 +397,25 @@ var ConcordUtil = {
             ' ' +
             date.getFullYear()
         );
+    },
+    getIcon: function (iconName) {
+        return '<span class="node-icon icon-' + iconName + '"></i>';
+    },
+    consolidateTags: function (a, b) {
+        const bTag = '<b';
+
+        const checkTag = (tagOpen, tagClose, aM, bM) => {
+            if (aM.endsWith(tagClose) && bM.startsWith(tagOpen)) {
+                a = aM.substring(0, aM.length - tagClose.length);
+                b = bM.substring(tagOpen.length);
+            }
+        };
+
+        checkTag('<b>', '</b>', a, b);
+        checkTag('<i>', '</i>', a, b);
+        checkTag('<u>', '</u>', a, b);
+
+        return a + b;
     }
 };
 
@@ -677,7 +721,7 @@ function ConcordEditor(root, concordInstance) {
         var node = $('<li></li>');
         node.addClass('concord-node');
         var wrapper = $("<div class='concord-wrapper'></div>");
-        var icon = '<i' + ' class="node-icon icon-' + iconName + '"><' + '/i>';
+        var icon = ConcordUtil.getIcon(iconName);
         wrapper.append(icon);
         wrapper.addClass('type-icon');
         var text = $("<div class='concord-text' contenteditable='true'></div>");
@@ -1005,7 +1049,7 @@ function ConcordEditor(root, concordInstance) {
                 iconName = nodeIcon;
             }
         }
-        var icon = '<i' + ' class="node-icon icon-' + iconName + '"><' + '/i>';
+        var icon = '<span class="node-icon icon-' + iconName + '"></span>';
         wrapper.append(icon);
         wrapper.addClass('type-icon');
         if (attributes['isComment'] == 'true') {
@@ -1154,6 +1198,7 @@ function ConcordEditor(root, concordInstance) {
             // Render HTML if op.getRenderMode() returns true - 2/17/13 by KS
             var allowedTags = [
                 'b',
+                'u',
                 'strong',
                 'i',
                 'em',
@@ -1901,18 +1946,44 @@ function ConcordOp(root, concordInstance, _cursor) {
         }
     };
     this.bold = function () {
-        /*        this.saveState();
-                if (this.inTextMode()) {
-                    document.execCommand("bold");
-                } else {
-                    this.focusCursor();
-                    document.execCommand("selectAll");
-                    document.execCommand("bold");
-                    document.execCommand("unselect");
-                    this.blurCursor();
-                    concordInstance.pasteBinFocus();
-                }
-                this.markChanged();*/
+        this.stylize('bold');
+    };
+    this.underline = function () {
+        this.stylize('underline');
+    };
+    this.italic = function () {
+        this.stylize('italic');
+    };
+    this.stylize = function (style) {
+        const styles = [];
+
+        const checkStyle = (s) => {
+            const hasStyle = document.queryCommandState(s);
+            if (style === s) {
+                if (hasStyle === false) styles.push(s);
+            } else if (hasStyle) {
+                styles.push(s);
+            }
+        };
+
+        checkStyle('bold');
+        checkStyle('italic');
+        checkStyle('underline');
+        styles.sort();
+        document.execCommand('removeFormat');
+
+        this.saveState();
+        if (this.inTextMode()) {
+            styles.forEach((style) => document.execCommand(style));
+        } else {
+            this.focusCursor();
+            document.execCommand('selectAll');
+            styles.forEach((style) => document.execCommand(style));
+            document.execCommand('unselect');
+            this.blurCursor();
+            concordInstance.pasteBinFocus();
+        }
+        this.markChanged();
     };
     this.changed = function () {
         return root.data('changed') == true;
@@ -2165,22 +2236,25 @@ function ConcordOp(root, concordInstance, _cursor) {
         headers['title'] = this.getTitle();
         return headers;
     };
-    this.getLineText = function (n) {
+    this.getLineText = function (n, getHtml = false) {
         var node = n;
         if (!node) node = this.getCursor();
-        if (node.length == 1) {
-            var text = node
-                .children('.concord-wrapper:first')
-                .children('.concord-text:first')
-                .html();
-            var textMatches = text.match(/^(.+)<br>\s*$/);
-            if (textMatches) {
-                text = textMatches[1];
-            }
-            return concordInstance.editor.unescape(text);
-        } else {
-            return null;
+        if (node.length === 0) return null;
+        const textNode = node
+            .children('.concord-wrapper:first')
+            .children('.concord-text:first');
+
+        var text = textNode
+            ? getHtml
+                ? textNode[0].innerHTML
+                : textNode[0].innerText
+            : '';
+
+        var textMatches = text.match(/^(.+)<br>\s*$/);
+        if (textMatches) {
+            text = textMatches[1];
         }
+        return concordInstance.editor.unescape(text);
     };
     this.getRenderMode = function () {
         if (root.data('renderMode') !== undefined) {
@@ -2324,7 +2398,7 @@ function ConcordOp(root, concordInstance, _cursor) {
         }
         node.addClass('concord-level-' + level);
         var wrapper = $("<div class='concord-wrapper'></div>");
-        var icon = '<i' + ' class="node-icon icon-' + iconName + '"><' + '/i>';
+        var icon = ConcordUtil.getIcon(iconName);
         wrapper.append(icon);
         wrapper.addClass('type-icon');
         var text = $("<div class='concord-text' contenteditable='true'></div>");
@@ -2547,20 +2621,6 @@ function ConcordOp(root, concordInstance, _cursor) {
     };
     this.inTextMode = function () {
         return root.hasClass('textMode');
-    };
-    this.italic = function () {
-        /*        this.saveState();
-                if (this.inTextMode()) {
-                    document.execCommand("italic");
-                } else {
-                    this.focusCursor();
-                    document.execCommand("selectAll");
-                    document.execCommand("italic");
-                    document.execCommand("unselect");
-                    this.blurCursor();
-                    concordInstance.pasteBinFocus();
-                }
-                this.markChanged();*/
     };
     this.level = function () {
         return this.getCursor().parents('.concord-node').length + 1;
@@ -3101,10 +3161,7 @@ function ConcordOp(root, concordInstance, _cursor) {
         this.markChanged();
     };
     this.xmlToOutline = function (xmlText, flSetFocus) {
-        //2/22/14 by DW -- new param, flSetFocus
-
         if (flSetFocus == undefined) {
-            //2/22/14 by DW
             flSetFocus = true;
         }
 
@@ -3276,12 +3333,7 @@ function ConcordOpAttributes(concordInstance, cursor) {
                     iconName = value;
                 }
                 if (iconName) {
-                    var icon =
-                        '<i' +
-                        ' class="node-icon icon-' +
-                        iconName +
-                        '"><' +
-                        '/i>';
+                    var icon = ConcordUtil.getIcon(iconName);
                     wrapper.children('.node-icon:first').replaceWith(icon);
                 }
             }
@@ -3330,12 +3382,7 @@ function ConcordOpAttributes(concordInstance, cursor) {
                     iconName = value;
                 }
                 if (iconName) {
-                    var icon =
-                        '<i' +
-                        ' class="node-icon icon-' +
-                        iconName +
-                        '"><' +
-                        '/i>';
+                    var icon = ConcordUtil.getIcon(iconName);
                     wrapper.children('.node-icon:first').replaceWith(icon);
                 }
             }
@@ -3397,8 +3444,7 @@ function ConcordOpAttributes(concordInstance, cursor) {
                 iconName = value;
             }
             if (iconName) {
-                var icon =
-                    '<i' + ' class="node-icon icon-' + iconName + '"><' + '/i>';
+                var icon = ConcordUtil.getIcon(iconName);
                 wrapper.children('.node-icon:first').replaceWith(icon);
             }
         }
@@ -3576,8 +3622,13 @@ window.currentInstance;
                                 !isParent &&
                                 !isTextSelected
                             ) {
-                                //Save text
-                                var text = concordInstance.op.getLineText();
+                                //Save text (do not move)
+                                let text = concordInstance.op.getLineText(
+                                    null,
+                                    true
+                                );
+
+                                if (text === '<br>') text = '';
 
                                 //Check if the previous sibling is a parent and has subs expanded
                                 if (
@@ -3611,9 +3662,15 @@ window.currentInstance;
                                 var caretPosition = concordInstance.op.getLineText()
                                     .length;
                                 concordInstance.op.setLineText(
-                                    concordInstance.op.getLineText() + text
+                                    ConcordUtil.consolidateTags(
+                                        concordInstance.op.getLineText(
+                                            null,
+                                            true
+                                        ),
+                                        text
+                                    )
                                 );
-                                ConcordUtil.setCaret(
+                                ConcordUtil.setCaret2(
                                     concordInstance.op
                                         .getCursor()
                                         .children('.concord-wrapper')
@@ -3645,7 +3702,6 @@ window.currentInstance;
                                             prevNodeText == null
                                         )
                                             break;
-                                        var currNodeText = concordInstance.op.getLineText();
                                         var sel = window.getSelection();
 
                                         concordInstance.op.setLineText(
@@ -3678,6 +3734,7 @@ window.currentInstance;
                     }
                     break;
                 case 9:
+                    // Tab
                     keyCaptured = true;
                     event.preventDefault();
                     event.stopPropagation();
@@ -3707,15 +3764,7 @@ window.currentInstance;
                     if (commandKey) {
                         keyCaptured = true;
                         event.preventDefault();
-                        concordInstance.op.reorg(up);
-                    }
-                    break;
-                case 68:
-                    //CMD+D
-                    if (commandKey) {
-                        keyCaptured = true;
-                        event.preventDefault();
-                        concordInstance.op.reorg(down);
+                        concordInstance.op.underline(up);
                     }
                     break;
                 case 76:
@@ -3750,7 +3799,7 @@ window.currentInstance;
                         concordInstance.op.demote();
                     }
                     break;
-                case 13:
+                case 13: // Enter
                     {
                         keyCaptured = true;
                         if (
@@ -3798,40 +3847,47 @@ window.currentInstance;
                             var isCaretAtEndOfLine =
                                 caretPosition ==
                                 lineText.length - (isStrike ? strikeTagLen : 0); //17 = length of strike tags
+                            let topLineText;
+                            let bottomLineText;
+
+                            /* Newlining <abc with styles has issues */
+                            const textNode = concordInstance.editor.unescape(
+                                currentCursor[0].firstChild.children[1]
+                                    .innerHTML
+                            );
 
                             if (isCaretAtEndOfLine) {
                                 if (isStrike)
                                     caretPosition =
                                         caretPosition + strikeTagLen;
-                                var newLineText = lineText.substr(
-                                    caretPosition,
-                                    lineText.length
-                                );
-                                var oldLineText = lineText.substring(
-                                    0,
+
+                                [bottomLineText, topLineText] = sliceHtmlText(
+                                    textNode,
                                     caretPosition
                                 );
                                 direction = concordInstance.op.subsExpanded()
                                     ? right
                                     : down;
                             } else {
-                                var newLineText = lineText.substring(
-                                    0,
+                                const [top, bottom] = sliceHtmlText(
+                                    textNode,
                                     caretPosition
-                                ); //1st
-                                var oldLineText = lineText.substring(
-                                    caretPosition,
-                                    lineText.length
-                                ); //2nd
+                                );
+
+                                topLineText = !top
+                                    ? ''
+                                    : top.replace('<ol></ol>', ''); // To remove Child holder
+                                bottomLineText = bottom || '';
+
                                 direction = up;
                                 isActionAllowed =
                                     !isStrike || caretPosition == 0;
                             }
 
                             if (isActionAllowed) {
-                                concordInstance.op.setLineText(oldLineText);
+                                concordInstance.op.setLineText(bottomLineText);
                                 var node = concordInstance.op.insert(
-                                    newLineText,
+                                    topLineText,
                                     direction
                                 );
 
