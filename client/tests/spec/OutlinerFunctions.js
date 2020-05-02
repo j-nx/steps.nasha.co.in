@@ -69,6 +69,56 @@ describe('Outliner Functions', function () {
             );
             expect(ans).toBe('<b><u>BUBU</u></b>');
         });
+
+        it('should slice node correctly', function () {
+            const node = document.createElement('div');
+            node.innerHTML = '';
+
+            let [a, b] = sliceHtmlText('Hello There', 4);
+            expect(a).toBe('Hell');
+            expect(b).toBe('o There');
+
+            [a, b] = sliceHtmlText(
+                '<div>Hello <strong>There</strong></div>',
+                8
+            );
+            expect(a).toBe('<div>Hello <strong>Th</strong></div>');
+            expect(b).toBe('<div><strong>ere</strong></div>');
+
+            [a, b] = sliceHtmlText(
+                '<div>He<b>l</b>lo <strong>There</strong></div>',
+                4
+            );
+            expect(a).toBe('<div>He<b>l</b>l</div>');
+            expect(b).toBe('<div>o <strong>There</strong></div>');
+
+            [a, b] = sliceHtmlText(
+                '<div>Hello <strong>There</strong></div>',
+                4
+            );
+            expect(a).toBe('<div>Hell</div>');
+            expect(b).toBe('<div>o <strong>There</strong></div>');
+
+            [a, b] = sliceHtmlText('<b>B</b><i>I</i>', 1);
+            expect(a).toBe('<b>B</b>');
+            expect(b).toBe('<i>I</i>');
+
+            [a, b] = sliceHtmlText('<b>B</b><i>I</i>', 2);
+            expect(a).toBe('<b>B</b><i>I</i>');
+            expect(b).toBe('');
+
+            [a, b] = sliceHtmlText('<b>B</b><i>I</i>', 0);
+            expect(a).toBe('');
+            expect(b).toBe('<b>B</b><i>I</i>');
+
+            [a, b] = sliceHtmlText('<b><i>BI</i></b>', 1);
+            expect(a).toBe('<b><i>B</i></b>');
+            expect(b).toBe('<b><i>I</i></b>');
+
+            [a, b] = sliceHtmlText('<b><i>BI<u>U</u></i></b>', 2);
+            expect(a).toBe('<b><i>BI</i></b>');
+            expect(b).toBe('<b><i><u>U</u></i></b>');
+        });
     });
 });
 

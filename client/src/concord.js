@@ -255,6 +255,31 @@ var ConcordUtil = {
         if (sel) sel.collapse(innerDivText, index);
         el.parentNode.focus();
     },
+    setCaret2(el, pos) {
+        //via https://stackoverflow.com/questions/36869503/set-caret-position-in-contenteditable-div-that-has-children
+
+        for (var node of el.childNodes) {
+            if (node.nodeType == 3) {
+                if (node.length >= pos) {
+                    var range = document.createRange(),
+                        sel = window.getSelection();
+                    range.setStart(node, pos);
+                    range.collapse(true);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                    return -1; // we are done
+                } else {
+                    pos -= node.length;
+                }
+            } else {
+                pos = this.setCaret2(node, pos);
+                if (pos == -1) {
+                    return -1;
+                }
+            }
+        }
+        return pos; // recursion
+    },
     getLineInfo: function (caret, element) {
         var d = $(element),
             l = parseInt(d.css('lineHeight')),
@@ -1930,12 +1955,13 @@ function ConcordOp(root, concordInstance, _cursor) {
         this.stylize('italic');
     };
     this.stylize = function (style) {
-        return; // Temporarily disabled
         const styles = [];
 
         const checkStyle = (s) => {
-            if (document.queryCommandState(s) && style != s) {
-                document.execCommand(s);
+            const hasStyle = document.queryCommandState(s);
+            if (style === s) {
+                if (hasStyle === false) styles.push(s);
+            } else if (hasStyle) {
                 styles.push(s);
             }
         };
@@ -1943,8 +1969,8 @@ function ConcordOp(root, concordInstance, _cursor) {
         checkStyle('bold');
         checkStyle('italic');
         checkStyle('underline');
-        styles.push(style);
         styles.sort();
+        document.execCommand('removeFormat');
 
         this.saveState();
         if (this.inTextMode()) {
@@ -3135,10 +3161,7 @@ function ConcordOp(root, concordInstance, _cursor) {
         this.markChanged();
     };
     this.xmlToOutline = function (xmlText, flSetFocus) {
-        //2/22/14 by DW -- new param, flSetFocus
-
         if (flSetFocus == undefined) {
-            //2/22/14 by DW
             flSetFocus = true;
         }
 
@@ -3600,7 +3623,10 @@ window.currentInstance;
                                 !isTextSelected
                             ) {
                                 //Save text (do not move)
-                                var text = concordInstance.op.getLineText();
+                                var text = concordInstance.op.getLineText(
+                                    null,
+                                    true
+                                );
 
                                 //Check if the previous sibling is a parent and has subs expanded
                                 if (
@@ -3634,9 +3660,15 @@ window.currentInstance;
                                 var caretPosition = concordInstance.op.getLineText()
                                     .length;
                                 concordInstance.op.setLineText(
-                                    concordInstance.op.getLineText() + text
+                                    ConcordUtil.consolidateTags(
+                                        concordInstance.op.getLineText(
+                                            null,
+                                            true
+                                        ),
+                                        text
+                                    )
                                 );
-                                ConcordUtil.setCaret(
+                                ConcordUtil.setCaret2(
                                     concordInstance.op
                                         .getCursor()
                                         .children('.concord-wrapper')
@@ -3818,11 +3850,11 @@ window.currentInstance;
                                 if (isStrike)
                                     caretPosition =
                                         caretPosition + strikeTagLen;
-                                var newLineText = lineText.substr(
+                                var topLineText = lineText.substr(
                                     caretPosition,
                                     lineText.length
                                 );
-                                var oldLineText = lineText.substring(
+                                var bottomLineText = lineText.substring(
                                     0,
                                     caretPosition
                                 );
@@ -3830,27 +3862,31 @@ window.currentInstance;
                                     ? right
                                     : down;
                             } else {
-                                /*  Temporary workaround for doing a line break inside bold,u,i:
-                                    On breaking styled text --> Strip out all style tags
-                                */
+                                const textNode =
+                                    currentCursor[0].firstChild.children[1]
+                                        .innerHTML;
 
-                                var newLineText = lineText.substring(
-                                    0,
+                                const [top, bottom] = sliceHtmlText(
+                                    textNode,
                                     caretPosition
-                                ); //1st
-                                var oldLineText = lineText.substring(
-                                    caretPosition,
-                                    lineText.length
-                                ); //2nd
+                                );
+
+                                topLineText = !top
+                                    ? ''
+                                    : top
+                                          .replace('<ol></ol>', '')
+                                          .replace('<br>', ''); // To remove Child holder
+                                bottomLineText = bottom || '';
+
                                 direction = up;
                                 isActionAllowed =
                                     !isStrike || caretPosition == 0;
                             }
 
                             if (isActionAllowed) {
-                                concordInstance.op.setLineText(oldLineText);
+                                concordInstance.op.setLineText(bottomLineText);
                                 var node = concordInstance.op.insert(
-                                    newLineText,
+                                    topLineText,
                                     direction
                                 );
 
