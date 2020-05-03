@@ -3828,7 +3828,10 @@ window.currentInstance;
                             if caret in end position - do not move current node, focus on new (below)
                             */
 
-                            /* Todo: Newlining <abc with styles has issues */
+                            /* Todo: 
+                            1 Newlining  <abc with styles has issues 
+                            2 Applying style across mixed-styles text will only maintain full-selection's scommon styles
+                            */
                             var currentCursor = concordInstance.op.getCursor();
                             var lineText = concordInstance.op.getLineText();
                             const textNode = concordInstance.editor.unescape(
