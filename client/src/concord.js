@@ -1969,6 +1969,8 @@ function ConcordOp(root, concordInstance, _cursor) {
         checkStyle('bold');
         checkStyle('italic');
         checkStyle('underline');
+        checkStyle('strikeThrough');
+
         styles.sort();
         document.execCommand('removeFormat');
 
@@ -2950,17 +2952,7 @@ function ConcordOp(root, concordInstance, _cursor) {
     };
     this.strikethrough = function () {
         this.saveState();
-        if (this.inTextMode()) {
-            document.execCommand('strikeThrough');
-        } else {
-            this.focusCursor();
-            document.execCommand('selectAll');
-            document.execCommand('strikeThrough');
-            document.execCommand('unselect');
-            this.blurCursor();
-            concordInstance.pasteBinFocus();
-        }
-        this.markChanged();
+        this.stylize('strikeThrough');
     };
     this.strikethroughLine = function () {
         var el = this.getCursor()
@@ -3835,36 +3827,34 @@ window.currentInstance;
                             if caret in middle position - move current node + children to next, focus on current (below)
                             if caret in end position - do not move current node, focus on new (below)
                             */
-                            var lineText = concordInstance.op.getLineText();
+
+                            /* Todo: Newlining <abc with styles has issues */
                             var currentCursor = concordInstance.op.getCursor();
-                            var caretPosition = ConcordUtil.getCaret(
-                                event.target
-                            );
-
-                            var isActionAllowed = true;
-                            var isStrike = concordInstance.op.isStrikethrough();
-                            var strikeTagLen = 17;
-                            var isCaretAtEndOfLine =
-                                caretPosition ==
-                                lineText.length - (isStrike ? strikeTagLen : 0); //17 = length of strike tags
-                            let topLineText;
-                            let bottomLineText;
-
-                            /* Newlining <abc with styles has issues */
+                            var lineText = concordInstance.op.getLineText();
                             const textNode = concordInstance.editor.unescape(
                                 currentCursor[0].firstChild.children[1]
                                     .innerHTML
                             );
+                            var caretPosition = ConcordUtil.getCaret(
+                                event.target
+                            );
+
+                            let topLineText;
+                            let bottomLineText;
+                            var isActionAllowed = true;
+                            var isStrike = concordInstance.op.isStrikethrough();
+
+                            var isCaretAtEndOfLine =
+                                caretPosition === lineText.length;
 
                             if (isCaretAtEndOfLine) {
-                                if (isStrike)
-                                    caretPosition =
-                                        caretPosition + strikeTagLen;
-
                                 [bottomLineText, topLineText] = sliceHtmlText(
                                     textNode,
                                     caretPosition
                                 );
+
+                                caretPosition = 0;
+
                                 direction = concordInstance.op.subsExpanded()
                                     ? right
                                     : down;
