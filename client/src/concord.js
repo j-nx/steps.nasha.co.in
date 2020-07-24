@@ -3937,12 +3937,6 @@ window.currentInstance;
 
                     //SHIFT+UP
                     if (shiftKey && !altKey) {
-                        keyCaptured = true;
-                        event.preventDefault();
-                        ConcordUtil.selectMultipleNodes(
-                            'up',
-                            concordInstance.op
-                        );
                         break;
                     }
 
@@ -4024,12 +4018,6 @@ window.currentInstance;
 
                     //SHIFT+DOWN
                     if (shiftKey && !altKey) {
-                        keyCaptured = true;
-                        event.preventDefault();
-                        ConcordUtil.selectMultipleNodes(
-                            'down',
-                            concordInstance.op
-                        );
                         break;
                     }
 
