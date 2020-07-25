@@ -1120,13 +1120,15 @@ function ConcordEditor(root, concordInstance) {
                 return;
             }
             var h = concordInstance.pasteBin.html();
+
             h = h.replace(
                 new RegExp(
                     '<(div|p|blockquote|pre|li|br|dd|dt|code|h\\d)[^>]*(/)?>',
                     'gi'
                 ),
-                '\n'
+                ''
             );
+
             h = $('<div/>').html(h).text();
             var clipboardMatch = false;
             if (concordClipboard !== undefined) {
