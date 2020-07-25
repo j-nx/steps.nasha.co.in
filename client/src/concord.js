@@ -182,6 +182,9 @@ var ConcordUtil = {
     },
     getCaret: function (element) {
         //http://jsfiddle.net/cpatik/3QAeC/
+
+        // Does not return the correct value with shift selection, when cursor is at the start or at the end of a line
+
         var caretOffset = 0;
         if (w3) {
             var range = window.getSelection().getRangeAt(0);
@@ -1117,13 +1120,15 @@ function ConcordEditor(root, concordInstance) {
                 return;
             }
             var h = concordInstance.pasteBin.html();
+
             h = h.replace(
                 new RegExp(
                     '<(div|p|blockquote|pre|li|br|dd|dt|code|h\\d)[^>]*(/)?>',
                     'gi'
                 ),
-                '\n'
+                ''
             );
+
             h = $('<div/>').html(h).text();
             var clipboardMatch = false;
             if (concordClipboard !== undefined) {
@@ -1969,6 +1974,8 @@ function ConcordOp(root, concordInstance, _cursor) {
         checkStyle('bold');
         checkStyle('italic');
         checkStyle('underline');
+        checkStyle('strikeThrough');
+
         styles.sort();
         document.execCommand('removeFormat');
 
@@ -2950,17 +2957,7 @@ function ConcordOp(root, concordInstance, _cursor) {
     };
     this.strikethrough = function () {
         this.saveState();
-        if (this.inTextMode()) {
-            document.execCommand('strikeThrough');
-        } else {
-            this.focusCursor();
-            document.execCommand('selectAll');
-            document.execCommand('strikeThrough');
-            document.execCommand('unselect');
-            this.blurCursor();
-            concordInstance.pasteBinFocus();
-        }
-        this.markChanged();
+        this.stylize('strikeThrough');
     };
     this.strikethroughLine = function () {
         var el = this.getCursor()
@@ -3551,6 +3548,12 @@ window.currentInstance;
             var altKey = event.altKey;
             var shiftKey = event.shiftKey;
             if (altKey) event.preventDefault();
+
+            let currentCursor = concordInstance.op.getCursor();
+            let lineText = concordInstance.op.getLineText();
+            let caretPosition = ConcordUtil.getCaret(event.target);
+            let isCaretAtEndOfLine = caretPosition >= lineText.trimEnd().length;
+
             switch (event.which) {
                 case 8:
                     //Backspace
@@ -3570,9 +3573,6 @@ window.currentInstance;
                             var sel = window.getSelection();
                             var isTextSelected =
                                 sel.anchorOffset != sel.focusOffset;
-                            var caretPosition = ConcordUtil.getCaret(
-                                event.target
-                            );
                             var currentNode = concordInstance.op.getCursor();
                             var prevNode = currentNode
                                 ? currentNode.prev()
@@ -3659,7 +3659,7 @@ window.currentInstance;
                                 */
 
                                 //Append text to previous (now focused) row and set caret
-                                var caretPosition = concordInstance.op.getLineText()
+                                var newCaretPosition = concordInstance.op.getLineText()
                                     .length;
                                 concordInstance.op.setLineText(
                                     ConcordUtil.consolidateTags(
@@ -3675,7 +3675,7 @@ window.currentInstance;
                                         .getCursor()
                                         .children('.concord-wrapper')
                                         .children('.concord-text')[0],
-                                    caretPosition
+                                    newCaretPosition
                                 );
                             }
                             /*
@@ -3835,36 +3835,30 @@ window.currentInstance;
                             if caret in middle position - move current node + children to next, focus on current (below)
                             if caret in end position - do not move current node, focus on new (below)
                             */
-                            var lineText = concordInstance.op.getLineText();
-                            var currentCursor = concordInstance.op.getCursor();
-                            var caretPosition = ConcordUtil.getCaret(
-                                event.target
-                            );
 
-                            var isActionAllowed = true;
-                            var isStrike = concordInstance.op.isStrikethrough();
-                            var strikeTagLen = 17;
-                            var isCaretAtEndOfLine =
-                                caretPosition ==
-                                lineText.length - (isStrike ? strikeTagLen : 0); //17 = length of strike tags
-                            let topLineText;
-                            let bottomLineText;
+                            /* Todo: 
+                            1 Newlining  <abc with styles has issues 
+                            2 Applying style across mixed-styles text will only maintain full-selection's scommon styles
+                            */
 
-                            /* Newlining <abc with styles has issues */
                             const textNode = concordInstance.editor.unescape(
                                 currentCursor[0].firstChild.children[1]
                                     .innerHTML
                             );
 
-                            if (isCaretAtEndOfLine) {
-                                if (isStrike)
-                                    caretPosition =
-                                        caretPosition + strikeTagLen;
+                            let topLineText;
+                            let bottomLineText;
+                            var isActionAllowed = true;
+                            var isStrike = concordInstance.op.isStrikethrough();
 
+                            if (isCaretAtEndOfLine) {
                                 [bottomLineText, topLineText] = sliceHtmlText(
                                     textNode,
                                     caretPosition
                                 );
+
+                                caretPosition = 0;
+
                                 direction = concordInstance.op.subsExpanded()
                                     ? right
                                     : down;
@@ -3944,12 +3938,14 @@ window.currentInstance;
 
                     //SHIFT+UP
                     if (shiftKey && !altKey) {
-                        keyCaptured = true;
-                        event.preventDefault();
-                        ConcordUtil.selectMultipleNodes(
-                            'up',
-                            concordInstance.op
-                        );
+                        if (caretPosition === 0 || isCaretAtEndOfLine) {
+                            keyCaptured = true;
+                            event.preventDefault();
+                            ConcordUtil.selectMultipleNodes(
+                                'up',
+                                concordInstance.op
+                            );
+                        }
                         break;
                     }
 
@@ -4031,12 +4027,14 @@ window.currentInstance;
 
                     //SHIFT+DOWN
                     if (shiftKey && !altKey) {
-                        keyCaptured = true;
-                        event.preventDefault();
-                        ConcordUtil.selectMultipleNodes(
-                            'down',
-                            concordInstance.op
-                        );
+                        if (caretPosition === 0 || isCaretAtEndOfLine) {
+                            keyCaptured = true;
+                            event.preventDefault();
+                            ConcordUtil.selectMultipleNodes(
+                                'down',
+                                concordInstance.op
+                            );
+                        }
                         break;
                     }
 

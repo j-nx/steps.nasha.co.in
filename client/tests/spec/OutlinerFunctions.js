@@ -125,6 +125,13 @@ describe('Outliner Functions', function () {
             [a, b] = sliceHtmlText('<b><i>BILLO!!!</i></b>', 8);
             expect(a).toBe('<b><i>BILLO!!!</i></b>');
             expect(b).toBe('');
+
+            [a, b] = sliceHtmlText(
+                '<b><strike>Hello <i>There</i></strike></b>',
+                11
+            );
+            expect(a).toBe('<b><strike>Hello <i>There</i></strike></b>');
+            expect(b).toBe('');
         });
     });
 });

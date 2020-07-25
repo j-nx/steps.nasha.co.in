@@ -413,6 +413,8 @@ function sliceHtmlText(str, index, allowedTags = ['<b>', '<i>', '<u>']) {
 
     // Check if 2nd line is </b> / empty (Only applies to single char tags)
     if (b.length > 3 && b[0] === '<' && b[1] === '/' && b[3] === '>') b = '';
+    // Strike only allows new-line at last character
+    if (b.includes('</strike>')) b = '';
 
     for (let ti = openTags.length - 1; ti >= 0; ti--) {
         const t = openTags[ti];
