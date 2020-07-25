@@ -182,6 +182,9 @@ var ConcordUtil = {
     },
     getCaret: function (element) {
         //http://jsfiddle.net/cpatik/3QAeC/
+
+        // Does not return the correct value with shift selection, when cursor is at the start or at the end of a line
+
         var caretOffset = 0;
         if (w3) {
             var range = window.getSelection().getRangeAt(0);
@@ -3543,6 +3546,12 @@ window.currentInstance;
             var altKey = event.altKey;
             var shiftKey = event.shiftKey;
             if (altKey) event.preventDefault();
+
+            let currentCursor = concordInstance.op.getCursor();
+            let lineText = concordInstance.op.getLineText();
+            let caretPosition = ConcordUtil.getCaret(event.target);
+            let isCaretAtEndOfLine = caretPosition >= lineText.trimEnd().length;
+
             switch (event.which) {
                 case 8:
                     //Backspace
@@ -3562,9 +3571,6 @@ window.currentInstance;
                             var sel = window.getSelection();
                             var isTextSelected =
                                 sel.anchorOffset != sel.focusOffset;
-                            var caretPosition = ConcordUtil.getCaret(
-                                event.target
-                            );
                             var currentNode = concordInstance.op.getCursor();
                             var prevNode = currentNode
                                 ? currentNode.prev()
@@ -3651,7 +3657,7 @@ window.currentInstance;
                                 */
 
                                 //Append text to previous (now focused) row and set caret
-                                var caretPosition = concordInstance.op.getLineText()
+                                var newCaretPosition = concordInstance.op.getLineText()
                                     .length;
                                 concordInstance.op.setLineText(
                                     ConcordUtil.consolidateTags(
@@ -3667,7 +3673,7 @@ window.currentInstance;
                                         .getCursor()
                                         .children('.concord-wrapper')
                                         .children('.concord-text')[0],
-                                    caretPosition
+                                    newCaretPosition
                                 );
                             }
                             /*
@@ -3832,23 +3838,16 @@ window.currentInstance;
                             1 Newlining  <abc with styles has issues 
                             2 Applying style across mixed-styles text will only maintain full-selection's scommon styles
                             */
-                            var currentCursor = concordInstance.op.getCursor();
-                            var lineText = concordInstance.op.getLineText();
+
                             const textNode = concordInstance.editor.unescape(
                                 currentCursor[0].firstChild.children[1]
                                     .innerHTML
-                            );
-                            var caretPosition = ConcordUtil.getCaret(
-                                event.target
                             );
 
                             let topLineText;
                             let bottomLineText;
                             var isActionAllowed = true;
                             var isStrike = concordInstance.op.isStrikethrough();
-
-                            var isCaretAtEndOfLine =
-                                caretPosition === lineText.length;
 
                             if (isCaretAtEndOfLine) {
                                 [bottomLineText, topLineText] = sliceHtmlText(
@@ -3937,6 +3936,14 @@ window.currentInstance;
 
                     //SHIFT+UP
                     if (shiftKey && !altKey) {
+                        if (caretPosition === 0 || isCaretAtEndOfLine) {
+                            keyCaptured = true;
+                            event.preventDefault();
+                            ConcordUtil.selectMultipleNodes(
+                                'up',
+                                concordInstance.op
+                            );
+                        }
                         break;
                     }
 
@@ -4018,6 +4025,14 @@ window.currentInstance;
 
                     //SHIFT+DOWN
                     if (shiftKey && !altKey) {
+                        if (caretPosition === 0 || isCaretAtEndOfLine) {
+                            keyCaptured = true;
+                            event.preventDefault();
+                            ConcordUtil.selectMultipleNodes(
+                                'down',
+                                concordInstance.op
+                            );
+                        }
                         break;
                     }
 
