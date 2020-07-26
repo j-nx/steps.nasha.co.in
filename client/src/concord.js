@@ -1126,8 +1126,10 @@ function ConcordEditor(root, concordInstance) {
                     '<(div|p|blockquote|pre|li|br|dd|dt|code|h\\d)[^>]*(/)?>',
                     'gi'
                 ),
-                ''
+                '\n'
             );
+
+            if (h[0] === '\n') h = h.substring(1); // Remove first new line character
 
             h = $('<div/>').html(h).text();
             var clipboardMatch = false;
@@ -2554,8 +2556,16 @@ function ConcordOp(root, concordInstance, _cursor) {
             this.saveState();
             this.setTextMode(false);
             var cursor = this.getCursor();
-            nodes.children().insertAfter(cursor);
-            this.setCursor(cursor.next());
+
+            if (cursor.text() === '') {
+                nodes.children().insertBefore(cursor);
+                this.setCursor(cursor.prev());
+            } else {
+                nodes.children().insertAfter(cursor);
+                this.setCursor(cursor.next());
+            }
+            this.setTextMode(true);
+
             concordInstance.root.removeData('clipboard');
             this.markChanged();
             concordInstance.editor.recalculateLevels();
@@ -2936,7 +2946,7 @@ function ConcordOp(root, concordInstance, _cursor) {
                 concordInstance.editor.editorMode();
                 concordInstance.editor.edit(this.getCursor());
             }
-            concord.bringIntoView($(event.target));
+            if (event) concord.bringIntoView($(event.target));
         } else {
             root.removeClass('textMode');
             root.find('.editing').removeClass('editing');
