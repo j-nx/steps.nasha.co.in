@@ -47,7 +47,7 @@
                     'Fatal Error: Failed to get note indices ' + code
                 );
                 callback(code);
-            },
+            }
         });
     };
 
@@ -71,7 +71,7 @@
             error: function (code) {
                 console.error('Failed to retrieve note ' + key + ' \n' + code);
                 errorCallback(code);
-            },
+            }
         });
     };
 
@@ -89,7 +89,7 @@
             error: function (errorCode) {
                 console.error('Failed to save note. \n' + errorCode);
                 errorCallback(errorCode);
-            },
+            }
         });
     };
 
@@ -112,7 +112,7 @@
             error: function (errorCode) {
                 console.error('Failed to update note. \n' + errorCode);
                 errorCallback(errorCode, { status: errorCode });
-            },
+            }
         });
     };
 
@@ -129,7 +129,7 @@
             error: function (errorCode) {
                 console.error('Failed to delete note. \n' + errorCode);
                 errorCallback(errorCode, { status: errorCode });
-            },
+            }
         });
     };
 
@@ -174,7 +174,7 @@ function NoteService(concord) {
 
     this.m = {
         sessionExpired: 'Session expired.',
-        unauthorized: 'Authorization failed.',
+        unauthorized: 'Authorization failed.'
     };
 
     var pendingNotes = 0; //counter to track # notes requested / saving
@@ -235,7 +235,7 @@ function NoteService(concord) {
         this.np.login(
             {
                 username: u,
-                password: p,
+                password: p
             },
             this.onLoginResponse
         );
@@ -640,7 +640,7 @@ function NoteStore() {
                 return;
             }
             this.selectedNoteKey = null;
-        },
+        }
     });
 
     this.getNote = function (key) {
@@ -746,14 +746,14 @@ function Note(v, k, ver, date) {
             val = v;
             setTitle();
         },
-        enumerable: true,
+        enumerable: true
     });
 
     Object.defineProperty(this, 'title', {
         get: function () {
             return _title;
         },
-        enumerable: true,
+        enumerable: true
     });
 
     setTitle();
@@ -768,7 +768,7 @@ function Note(v, k, ver, date) {
         saving: 'Saving',
         updating: 'Updating',
         saved: 'Saved',
-        failed: 'Error',
+        failed: 'Error'
     };
 
     var navigationKeystrokes = new Set([16, 17, 37, 38, 39, 40]);
@@ -838,8 +838,8 @@ function Note(v, k, ver, date) {
     myApp.service('context', function () {
         var context = {
             hello: {
-                isVisible: false,
-            },
+                isVisible: false
+            }
         };
         return context;
     });
@@ -849,7 +849,7 @@ function Note(v, k, ver, date) {
         'context',
         function ($scope, context) {
             $scope.context = context;
-        },
+        }
     ]);
 
     myApp.controller('MainCtrl', [
@@ -873,55 +873,55 @@ function Note(v, k, ver, date) {
                 submit: 'Sign In',
                 loggingIn: 'Logging in...',
                 failed: 'Login Failed, Retry',
-                loggedIn: 'Logged in! Fetching data...',
+                loggedIn: 'Logged in! Fetching data...'
             };
             var defaultloadingSuffix = '...';
 
             $scope.shortcuts = [
                 {
                     function: 'Indent',
-                    code: 'Tab',
+                    code: 'Tab'
                 },
                 {
                     function: 'Un-indent',
-                    code: 'Shift + Tab',
+                    code: 'Shift + Tab'
                 },
                 {
                     function: 'Move note',
-                    code: 'Shift + Alt + Up/Down',
+                    code: 'Shift + Alt + Up/Down'
                 },
                 {
                     function: 'Expand / Collapse Current',
-                    code: 'Ctrl + Space',
+                    code: 'Ctrl + Space'
                 },
                 {
                     function: 'Expand / Collapse Current Tree',
-                    code: 'Alt + Down/Up',
+                    code: 'Alt + Down/Up'
                 },
                 {
                     function: 'Collapse All',
-                    code: 'Alt + 1',
+                    code: 'Alt + 1'
                 },
                 {
                     function: 'Expand All',
-                    code: 'Alt + Shift + 1',
+                    code: 'Alt + Shift + 1'
                 },
                 {
                     function: 'Select',
-                    code: 'Click Bullet / Shift + Up/Down',
+                    code: 'Click Bullet / Shift + Up/Down'
                 },
                 {
                     function: 'Delete',
-                    code: 'Shift + Ctrl + Backspace',
+                    code: 'Shift + Ctrl + Backspace'
                 },
                 {
                     function: 'Insert Date',
-                    code: 'Ctrl + ;',
+                    code: 'Ctrl + ;'
                 },
                 {
                     function: 'Mark Complete',
-                    code: 'Ctrl + Enter',
-                },
+                    code: 'Ctrl + Enter'
+                }
             ];
 
             $scope.setDefaults = function () {
@@ -941,7 +941,7 @@ function Note(v, k, ver, date) {
                 $scope.loadingCountdownMessage = defaultloadingSuffix;
                 $scope.user = {
                     email: '',
-                    password: '',
+                    password: ''
                 };
             };
 
@@ -1268,6 +1268,6 @@ function Note(v, k, ver, date) {
                     }, 3500);
                 };
             }
-        },
+        }
     ]);
 }
