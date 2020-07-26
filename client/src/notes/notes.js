@@ -1069,7 +1069,10 @@ function Note(v, k, ver, date) {
             $scope.resetTimeout = function () {
                 if ($scope.idleTimeout == false) return;
                 $scope.hideDisabledDialog();
-                ns.loadNotes(true);
+                $scope.startMainRefresh();
+                api.initialize(() => {
+                    ns.loadNotes(true);
+                });
             };
 
             /* Working overlay */
