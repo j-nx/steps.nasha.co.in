@@ -1,7 +1,7 @@
 function API() {
     this.api = new gApi();
 
-    this.initialize = onInitComplete => {
+    this.initialize = (onInitComplete) => {
         this.api.initialize(onInitComplete);
     };
 
@@ -18,27 +18,27 @@ function API() {
     };
 
     // returns [{key, version, modifiedTime}]
-    this.retrieveIndex = obj => {
+    this.retrieveIndex = (obj) => {
         console.debug('Fetching Index');
         this.api.retrieveIndex(obj.success, obj.error);
     };
 
-    this.retrieveNote = obj => {
+    this.retrieveNote = (obj) => {
         console.debug('Retrieving Note');
         this.api.retrieveNote(obj.key, obj.success, obj.error);
     };
 
-    this.createNote = obj => {
+    this.createNote = (obj) => {
         console.debug('Creating Note');
         this.api.createFile(obj.body, obj.success, obj.error);
     };
 
-    this.updateNote = obj => {
+    this.updateNote = (obj) => {
         console.debug('Updating Note');
         this.api.updateFile(obj.key, obj.body, obj.success, obj.error);
     };
 
-    this.deleteNote = obj => {
+    this.deleteNote = (obj) => {
         console.debug('Deleting Note');
         this.api.deleteFile(obj.key, obj.success, obj.error);
     };
@@ -61,7 +61,7 @@ function gApi() {
 
     this.onInitComplete = undefined;
 
-    this.initialize = onInitComplete => {
+    this.initialize = (onInitComplete) => {
         this.onInitComplete = onInitComplete;
         // Load the API client and auth2 library
         gapi.load('client:auth2', this.initClient);
@@ -81,11 +81,11 @@ function gApi() {
 
     this.retrieveIndex = (successCallback, failCallback) => {
         const that = this;
-        var retrievePageOfFiles = function(request, result) {
-            request.execute(function(resp) {
+        var retrievePageOfFiles = function (request, result) {
+            request.execute(function (resp) {
                 const files = [];
                 if (resp.files)
-                    resp.files.forEach(r => {
+                    resp.files.forEach((r) => {
                         files.push({
                             key: r.id,
                             version: r.version,
@@ -112,10 +112,10 @@ function gApi() {
             alt: 'media'
         });
         request.then(
-            function(response) {
+            function (response) {
                 successCallback(response.body);
             },
-            function(error) {
+            function (error) {
                 console.error(error);
                 failCallback(error);
             }
@@ -154,15 +154,15 @@ function gApi() {
                     body: form
                 }
             )
-                .then(res => {
+                .then((res) => {
                     return res.json();
                 })
-                .then(function(resp) {
+                .then(function (resp) {
                     that.getFilesMetadata([{ id: resp.id }])
-                        .then(fileList => successCallback(fileList[0]))
-                        .catch(e => failCallback(e));
+                        .then((fileList) => successCallback(fileList[0]))
+                        .catch((e) => failCallback(e));
                 })
-                .catch(error => {
+                .catch((error) => {
                     console.error('Error:', error);
                     failCallback(error);
                 });
@@ -202,17 +202,17 @@ function gApi() {
                 fields: 'files(id, version, modifiedTime)'
             }
         )
-            .then(res => {
+            .then((res) => {
                 return res.json();
             })
-            .then(function(resp) {
+            .then(function (resp) {
                 if (resp.code && resp.code != 200) failCallback(resp.code);
                 else
                     that.getFilesMetadata([{ id: resp.id }])
-                        .then(fileList => successCallback(fileList[0]))
-                        .catch(e => failCallback(e));
+                        .then((fileList) => successCallback(fileList[0]))
+                        .catch((e) => failCallback(e));
             })
-            .catch(function(error) {
+            .catch(function (error) {
                 if (error.toString() === 'TypeError: Failed to fetch')
                     error = 0; // disconnected
                 failCallback(error);
@@ -224,7 +224,7 @@ function gApi() {
             fileId: key
         });
 
-        request.execute(function(resp) {
+        request.execute(function (resp) {
             if (resp.code && resp.code != 200) failCallback(resp.code);
             else successCallback(key);
         });
@@ -235,7 +235,7 @@ function gApi() {
     this.initClient = () => {
         const that = this;
 
-        const success = function() {
+        const success = function () {
             console.log('Initalized Google');
             // Listen for sign-in state changes.
             gapi.auth2
@@ -249,7 +249,7 @@ function gApi() {
             );
         }.bind(this);
 
-        const error = function(e) {
+        const error = function (e) {
             console.error('Error Occured when initializing Google ' + e);
             this.onInitComplete();
         };
@@ -269,7 +269,7 @@ function gApi() {
         const isSignedIn = this.isLoggedIn();
         if (isSignedIn) {
             console.debug('Sign in success!');
-            this.getRemoteFolderId().then(id => {
+            this.getRemoteFolderId().then((id) => {
                 this.folderId = id;
                 this.onInitComplete();
             });
@@ -282,8 +282,8 @@ function gApi() {
     this.getRemoteFolderId = () => {
         let id = undefined;
 
-        const promise = function(resolve, reject) {
-            const getFoldersSuccess = function(response) {
+        const promise = function (resolve, reject) {
+            const getFoldersSuccess = function (response) {
                 var files = response.result.files;
                 if (files && files.length > 0) {
                     for (var i = 0; i < files.length; i++) {
@@ -302,7 +302,7 @@ function gApi() {
                 else createFolder();
             }.bind(this);
 
-            const createFolder = function() {
+            const createFolder = function () {
                 this.createFolder().then(
                     function s(id) {
                         resolve(id);
@@ -328,7 +328,7 @@ function gApi() {
     };
 
     this.createFolder = () => {
-        return new Promise(function(resolve, reject) {
+        return new Promise(function (resolve, reject) {
             var fileMetadata = {
                 name: 'steps-notes',
                 mimeType: 'application/vnd.google-apps.folder'
@@ -337,7 +337,7 @@ function gApi() {
                 .create({
                     resource: fileMetadata
                 })
-                .then(function(response) {
+                .then(function (response) {
                     if (response.status != 200) {
                         console.error('Error Creating folder');
                         reject(Error());
@@ -346,18 +346,18 @@ function gApi() {
                         resolve(response.result.id);
                     }
                 })
-                .catch(e => {
+                .catch((e) => {
                     console.error('Exception ' + e);
                     reject(Error());
                 });
         });
     };
 
-    this.getFilesMetadata = files => {
+    this.getFilesMetadata = (files) => {
         return new Promise((resolve, reject) => {
             const fileList = [];
             const promises = [];
-            files.forEach(f => {
+            files.forEach((f) => {
                 promises.push(
                     new Promise((resolve, reject) => {
                         gapi.client
@@ -371,7 +371,7 @@ function gApi() {
                                 method: 'GET'
                             })
                             .then(
-                                fInfo => {
+                                (fInfo) => {
                                     const r = fInfo.result;
                                     fileList.push({
                                         key: r.id,
@@ -382,11 +382,11 @@ function gApi() {
                                     });
                                     resolve();
                                 },
-                                error => {
+                                (error) => {
                                     reject(error);
                                 }
                             )
-                            .catch(e => reject(e));
+                            .catch((e) => reject(e));
                     })
                 );
             });
@@ -395,13 +395,14 @@ function gApi() {
     };
 
     this.uuidv4 = () => {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(
-            c
-        ) {
-            var r = (Math.random() * 16) | 0,
-                v = c == 'x' ? r : (r & 0x3) | 0x8;
-            return v.toString(16);
-        });
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
+            /[xy]/g,
+            function (c) {
+                var r = (Math.random() * 16) | 0,
+                    v = c == 'x' ? r : (r & 0x3) | 0x8;
+                return v.toString(16);
+            }
+        );
     };
 
     //#endregion
