@@ -275,18 +275,18 @@ function gApi() {
     this.updateSigninStatus = () => {
         const isSignedIn = this.isLoggedIn();
 
-        this.refreshToken().then((authResponse) => {
-            if (isSignedIn) {
+        if (isSignedIn) {
+            this.refreshToken().then((authResponse) => {
                 console.debug('Sign in success!');
                 this.getRemoteFolderId().then((id) => {
                     this.folderId = id;
                     this.onInitComplete();
                 });
-            } else {
-                this.onInitComplete();
-                console.log('Needs Sign in');
-            }
-        });
+            });
+        } else {
+            this.onInitComplete();
+            console.log('Needs Sign in');
+        }
     };
 
     this.getRemoteFolderId = () => {
