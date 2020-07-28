@@ -32,6 +32,9 @@ var TIMEOUT_AUTO_REFRESH = 10; //min
 var AUTOSAVE_DELAY = 5; //seconds
 var api;
 
+let interval_auto_refresh;
+let interval_auto_save;
+
 function initLocalStorage() {
     localStorage.ctOpmlSaves = 0;
 
@@ -73,13 +76,20 @@ function startup(outliner, noInitialize) {
             if (!store.note || !store.note.value) opXmlToOutline(initVal);
         }
 
-        self.setInterval(function () {
+        clearInterval(interval_auto_refresh);
+        clearInterval(interval_auto_save);
+
+        interval_auto_save = setInterval(function () {
             backgroundProcess();
         }, 5000);
 
         //Check if notes updated remotely after every x minutes (Poor man's push)
-        self.setInterval(function () {
-            if (appPrefs.readonly == false) ns.loadNotes();
+        interval_auto_refresh = setInterval(() => {
+            if (
+                appPrefs.readonly === false ||
+                ns.ngScope.isAppDisabled === false
+            )
+                ns.loadNotes();
         }, TIMEOUT_AUTO_REFRESH * 60000);
 
         ns = CreateNoteService(outliner);

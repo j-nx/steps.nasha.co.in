@@ -1,7 +1,7 @@
 function API() {
     this.api = new gApi();
 
-    this.initialize = (onInitComplete) => {
+    this.initialize = (onInitComplete = () => {}) => {
         this.api.initialize(onInitComplete);
     };
 
@@ -69,6 +69,13 @@ function gApi() {
 
     this.isLoggedIn = () => {
         return gapi.auth2.getAuthInstance().isSignedIn.get();
+    };
+
+    this.refreshToken = () => {
+        return gapi.auth2
+            .getAuthInstance()
+            .currentUser.get()
+            .reloadAuthResponse();
     };
 
     this.signIn = () => {
@@ -267,16 +274,19 @@ function gApi() {
 
     this.updateSigninStatus = () => {
         const isSignedIn = this.isLoggedIn();
-        if (isSignedIn) {
-            console.debug('Sign in success!');
-            this.getRemoteFolderId().then((id) => {
-                this.folderId = id;
+
+        this.refreshToken().then((authResponse) => {
+            if (isSignedIn) {
+                console.debug('Sign in success!');
+                this.getRemoteFolderId().then((id) => {
+                    this.folderId = id;
+                    this.onInitComplete();
+                });
+            } else {
                 this.onInitComplete();
-            });
-        } else {
-            this.onInitComplete();
-            console.log('Needs Sign in');
-        }
+                console.log('Needs Sign in');
+            }
+        });
     };
 
     this.getRemoteFolderId = () => {

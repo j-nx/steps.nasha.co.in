@@ -1070,9 +1070,7 @@ function Note(v, k, ver, date) {
                 if ($scope.idleTimeout == false) return;
                 $scope.hideDisabledDialog();
                 $scope.startMainRefresh();
-                api.initialize(() => {
-                    ns.loadNotes(true);
-                });
+                api.initialize(() => ns.loadNotes(true));
             };
 
             /* Working overlay */
