@@ -309,7 +309,8 @@ function NoteService(concord) {
     }.bind(this);
 
     this.loadNotes = function (forceRefresh) {
-        if (!store || !this.isCookieValid() || isAppDisabled()) return;
+        if (!store || !this.isCookieValid() || this.ngScope.isAppDisabled)
+            return;
 
         if (this.isModelReady() == false) return;
         if (!forceRefresh) forceRefresh = false;
@@ -318,7 +319,7 @@ function NoteService(concord) {
             this.ngScope.startMainRefresh();
             this.ngScope.showWorkingDialog();
         }
-
+        console.debug('Refreshing Notes');
         this.np.getNoteIndex(this.parseNoteIndex);
     }.bind(this);
 
@@ -510,7 +511,7 @@ function NoteService(concord) {
     this.canPersist = function () {
         if (appPrefs.readonly) return false;
         if (this.isModelReady() == false) return false;
-        if (isAppDisabled()) return false;
+        if (this.ngScope.isAppDisabled) return false;
         if (this.ngScope.showWorking) return false;
         return true;
     }.bind(this);
@@ -1071,7 +1072,16 @@ function Note(v, k, ver, date) {
                 if ($scope.idleTimeout == false) return;
                 $scope.hideDisabledDialog();
                 $scope.startMainRefresh();
-                api.initialize(() => ns.loadNotes(true));
+
+                const restartApp = () =>
+                    api.initialize(() => {
+                        clearTimers();
+                        startTimers();
+                        ns.loadNotes(true);
+                    });
+
+                // Allow things to come back to life if triggered immediately on wake from sleep
+                setTimeout(restartApp, 250);
             };
 
             /* Working overlay */
