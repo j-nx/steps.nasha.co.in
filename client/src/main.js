@@ -113,7 +113,7 @@ function opKeystrokeCallback(event) {
     if (navigationKeystrokes.has(event.which)) return;
 
     if (ns) ns.setNoteState(saveStates.modified);
-    idler.resetTimer();
+    if (idler) idler.resetTimer();
 }
 
 function hideSplash() {
@@ -152,15 +152,13 @@ function detectIdle() {
 
 function resetTimer(event) {
     opKeystrokeCallback(event);
-    if (idler) idler.resetTimer();
 }
 
 function isAppDisabled() {
+    if (!window.ns || !window.ns.ngScope) return false;
     return (
-        window.ns &&
-        window.ns.ngScope &&
-        (window.ns.ngScope.isAppDisabled === true ||
-            window.ns.ngScope.isAppDisabled === undefined)
+        window.ns.ngScope.isAppDisabled === true ||
+        window.ns.ngScope.isAppDisabled === undefined
     );
 }
 
