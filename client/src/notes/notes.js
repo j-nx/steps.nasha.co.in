@@ -1072,7 +1072,16 @@ function Note(v, k, ver, date) {
                 if ($scope.idleTimeout == false) return;
                 $scope.hideDisabledDialog();
                 $scope.startMainRefresh();
-                api.initialize(() => ns.loadNotes(true));
+
+                const restartApp = () =>
+                    api.initialize(() => {
+                        clearTimers();
+                        startTimers();
+                        ns.loadNotes(true);
+                    });
+
+                // Allow things to come back to life if triggered immediately on wake from sleep
+                setTimeout(restartApp, 250);
             };
 
             /* Working overlay */

@@ -1257,7 +1257,7 @@ function ConcordEditor(root, concordInstance) {
     this.unescape = function (s) {
         var h = s.replace(/</g, '&lt;').replace(/>/g, '&gt;');
         h = $('<div/>').html(h).text();
-        return h;
+        return h ? h : '';
     };
     this.getSelection = function () {
         var range = undefined;

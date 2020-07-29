@@ -68,27 +68,19 @@ function backgroundProcess() {
 
 function startup(outliner, noInitialize) {
     //Post Outline Initialization
+    console.debug('Starting up...');
+
+    clearTimers();
 
     const onAPIInitialized = () => {
         initLocalStorage();
+
         if (!noInitialize || noInitialize === false) {
             var initVal = initialOpmltext;
             if (!store.note || !store.note.value) opXmlToOutline(initVal);
         }
 
-        clearInterval(interval_auto_refresh);
-        clearInterval(interval_auto_save);
-
-        interval_auto_save = setInterval(function () {
-            backgroundProcess();
-        }, 5000);
-
-        //Check if notes updated remotely after every x minutes (Poor man's push)
-        interval_auto_refresh = setInterval(() => {
-            if (appPrefs.readonly === false) {
-                ns.loadNotes();
-            }
-        }, TIMEOUT_AUTO_REFRESH * 60000);
+        startTimers();
 
         ns = CreateNoteService(outliner);
         ns.start();
@@ -96,12 +88,7 @@ function startup(outliner, noInitialize) {
         idler = new detectIdle();
     };
 
-    if (
-        !window.ns ||
-        !window.ns.ngScope ||
-        window.ns.ngScope.isAppDisabled === true
-    )
-        return;
+    if (isAppDisabled()) return;
 
     api = new API();
     api.initialize(onAPIInitialized);
@@ -140,6 +127,8 @@ function detectIdle() {
         if (!ns) return;
         if (ns.ngScope.isLoggedIn() == false || ns.ngScope.isAppDisabled)
             return;
+
+        clearTimers();
         ns.ngScope.showDisabledDialog('Click to continue', true);
     }
 
@@ -156,6 +145,33 @@ function detectIdle() {
 
 function resetTimer(event) {
     opKeystrokeCallback(event);
+}
+
+function startTimers() {
+    // Automatic save note
+    interval_auto_save = setInterval(function () {
+        backgroundProcess();
+    }, 5000);
+
+    // Polling for new notes (Poor man's push)
+    interval_auto_refresh = setInterval(() => {
+        if (appPrefs.readonly === false && isAppDisabled() === false) {
+            ns.loadNotes();
+        }
+    }, TIMEOUT_AUTO_REFRESH * 60000);
+}
+
+function clearTimers() {
+    clearInterval(interval_auto_refresh);
+    clearInterval(interval_auto_save);
+}
+
+function isAppDisabled() {
+    if (!window.ns || !window.ns.ngScope) return false;
+    return (
+        window.ns.ngScope.isAppDisabled === true ||
+        window.ns.ngScope.isAppDisabled === undefined
+    );
 }
 
 document.addEventListener('touchstart', resetTimer, false);
