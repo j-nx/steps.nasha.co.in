@@ -86,7 +86,6 @@ function startup(outliner, noInitialize) {
         //Check if notes updated remotely after every x minutes (Poor man's push)
         interval_auto_refresh = setInterval(() => {
             if (appPrefs.readonly === false) {
-                console.debug('Auto-Refreshing Notes');
                 ns.loadNotes();
             }
         }, TIMEOUT_AUTO_REFRESH * 60000);

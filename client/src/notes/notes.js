@@ -318,7 +318,7 @@ function NoteService(concord) {
             this.ngScope.startMainRefresh();
             this.ngScope.showWorkingDialog();
         }
-
+        console.debug('Refreshing Notes');
         this.np.getNoteIndex(this.parseNoteIndex);
     }.bind(this);
 
