@@ -32,6 +32,9 @@ var TIMEOUT_AUTO_REFRESH = 10; //min
 var AUTOSAVE_DELAY = 5; //seconds
 var api;
 
+let interval_auto_refresh;
+let interval_auto_save;
+
 function initLocalStorage() {
     localStorage.ctOpmlSaves = 0;
 
@@ -73,13 +76,19 @@ function startup(outliner, noInitialize) {
             if (!store.note || !store.note.value) opXmlToOutline(initVal);
         }
 
-        self.setInterval(function () {
+        clearInterval(interval_auto_refresh);
+        clearInterval(interval_auto_save);
+
+        interval_auto_save = setInterval(function () {
             backgroundProcess();
         }, 5000);
 
         //Check if notes updated remotely after every x minutes (Poor man's push)
-        self.setInterval(function () {
-            if (appPrefs.readonly == false) ns.loadNotes();
+        interval_auto_refresh = setInterval(() => {
+            if (appPrefs.readonly === false) {
+                console.debug('Auto-Refreshing Notes');
+                ns.loadNotes();
+            }
         }, TIMEOUT_AUTO_REFRESH * 60000);
 
         ns = CreateNoteService(outliner);
@@ -87,6 +96,8 @@ function startup(outliner, noInitialize) {
 
         idler = new detectIdle();
     };
+
+    if (isAppDisabled()) return;
 
     api = new API();
     api.initialize(onAPIInitialized);
@@ -102,7 +113,7 @@ function opKeystrokeCallback(event) {
     if (navigationKeystrokes.has(event.which)) return;
 
     if (ns) ns.setNoteState(saveStates.modified);
-    idler.resetTimer();
+    if (idler) idler.resetTimer();
 }
 
 function hideSplash() {
@@ -141,7 +152,14 @@ function detectIdle() {
 
 function resetTimer(event) {
     opKeystrokeCallback(event);
-    if (idler) idler.resetTimer();
+}
+
+function isAppDisabled() {
+    if (!window.ns || !window.ns.ngScope) return false;
+    return (
+        window.ns.ngScope.isAppDisabled === true ||
+        window.ns.ngScope.isAppDisabled === undefined
+    );
 }
 
 document.addEventListener('touchstart', resetTimer, false);

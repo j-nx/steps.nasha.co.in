@@ -309,8 +309,7 @@ function NoteService(concord) {
     }.bind(this);
 
     this.loadNotes = function (forceRefresh) {
-        if (!store || !this.isCookieValid() || this.ngScope.isAppDisabled)
-            return;
+        if (!store || !this.isCookieValid() || isAppDisabled()) return;
 
         if (this.isModelReady() == false) return;
         if (!forceRefresh) forceRefresh = false;
@@ -345,6 +344,8 @@ function NoteService(concord) {
 
     /* Parse note index array and constructs note object from outline tagged note*/
     this.parseNoteIndex = function (outlineNotes) {
+        delay = 0;
+
         if (outlineNotes == undefined || outlineNotes.length == 0) {
             console.log('Unable to fetch any notes');
 
@@ -509,7 +510,7 @@ function NoteService(concord) {
     this.canPersist = function () {
         if (appPrefs.readonly) return false;
         if (this.isModelReady() == false) return false;
-        if (this.ngScope.isAppDisabled) return false;
+        if (isAppDisabled()) return false;
         if (this.ngScope.showWorking) return false;
         return true;
     }.bind(this);
@@ -1070,9 +1071,7 @@ function Note(v, k, ver, date) {
                 if ($scope.idleTimeout == false) return;
                 $scope.hideDisabledDialog();
                 $scope.startMainRefresh();
-                api.initialize(() => {
-                    ns.loadNotes(true);
-                });
+                api.initialize(() => ns.loadNotes(true));
             };
 
             /* Working overlay */
