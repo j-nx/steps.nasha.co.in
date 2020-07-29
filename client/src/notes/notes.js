@@ -309,8 +309,7 @@ function NoteService(concord) {
     }.bind(this);
 
     this.loadNotes = function (forceRefresh) {
-        if (!store || !this.isCookieValid() || this.ngScope.isAppDisabled)
-            return;
+        if (!store || !this.isCookieValid() || isAppDisabled()) return;
 
         if (this.isModelReady() == false) return;
         if (!forceRefresh) forceRefresh = false;
@@ -509,7 +508,7 @@ function NoteService(concord) {
     this.canPersist = function () {
         if (appPrefs.readonly) return false;
         if (this.isModelReady() == false) return false;
-        if (this.ngScope.isAppDisabled) return false;
+        if (isAppDisabled()) return false;
         if (this.ngScope.showWorking) return false;
         return true;
     }.bind(this);

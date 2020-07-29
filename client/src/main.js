@@ -85,11 +85,10 @@ function startup(outliner, noInitialize) {
 
         //Check if notes updated remotely after every x minutes (Poor man's push)
         interval_auto_refresh = setInterval(() => {
-            if (
-                appPrefs.readonly === false ||
-                ns.ngScope.isAppDisabled === false
-            )
+            if (appPrefs.readonly === false) {
+                console.debug('Auto-Refreshing Notes');
                 ns.loadNotes();
+            }
         }, TIMEOUT_AUTO_REFRESH * 60000);
 
         ns = CreateNoteService(outliner);
@@ -97,6 +96,8 @@ function startup(outliner, noInitialize) {
 
         idler = new detectIdle();
     };
+
+    if (isAppDisabled()) return;
 
     api = new API();
     api.initialize(onAPIInitialized);
@@ -152,6 +153,15 @@ function detectIdle() {
 function resetTimer(event) {
     opKeystrokeCallback(event);
     if (idler) idler.resetTimer();
+}
+
+function isAppDisabled() {
+    return (
+        window.ns &&
+        window.ns.ngScope &&
+        (window.ns.ngScope.isAppDisabled === true ||
+            window.ns.ngScope.isAppDisabled === undefined)
+    );
 }
 
 document.addEventListener('touchstart', resetTimer, false);
