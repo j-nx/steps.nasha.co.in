@@ -344,6 +344,8 @@ function NoteService(concord) {
 
     /* Parse note index array and constructs note object from outline tagged note*/
     this.parseNoteIndex = function (outlineNotes) {
+        delay = 0;
+
         if (outlineNotes == undefined || outlineNotes.length == 0) {
             console.log('Unable to fetch any notes');
 

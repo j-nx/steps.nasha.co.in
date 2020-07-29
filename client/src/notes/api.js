@@ -277,7 +277,7 @@ function gApi() {
 
         if (isSignedIn) {
             this.refreshToken().then((authResponse) => {
-                console.debug('Token Refreshed');
+                console.log('Token updated');
                 this.getRemoteFolderId().then((id) => {
                     this.folderId = id;
                     this.onInitComplete();
