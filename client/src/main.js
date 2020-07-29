@@ -96,7 +96,12 @@ function startup(outliner, noInitialize) {
         idler = new detectIdle();
     };
 
-    if (isAppDisabled()) return;
+    if (
+        !window.ns ||
+        !window.ns.ngScope ||
+        window.ns.ngScope.isAppDisabled === true
+    )
+        return;
 
     api = new API();
     api.initialize(onAPIInitialized);
@@ -151,14 +156,6 @@ function detectIdle() {
 
 function resetTimer(event) {
     opKeystrokeCallback(event);
-}
-
-function isAppDisabled() {
-    if (!window.ns || !window.ns.ngScope) return false;
-    return (
-        window.ns.ngScope.isAppDisabled === true ||
-        window.ns.ngScope.isAppDisabled === undefined
-    );
 }
 
 document.addEventListener('touchstart', resetTimer, false);
