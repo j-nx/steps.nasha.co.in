@@ -210,7 +210,6 @@ function NoteService(concord) {
             store = new NoteStore();
             store.save();
         } else if (this.isCookieValid()) {
-            // this.np.trySetAuthDetails(store.token, store.email); //Todo actually check
             try {
                 this.loadNotes(true);
                 hideSplash();
@@ -219,12 +218,12 @@ function NoteService(concord) {
                 this.launchNote(null, true);
             }
 
+            this.ngScope.hideLoginDialog();
             return;
         } else if (store.tokenSaveDateTime) return;
 
         this.ngScope.showHello();
         this.ngScope.showLoginDialog();
-
         hideSplash();
     }.bind(this);
 
@@ -1073,15 +1072,11 @@ function Note(v, k, ver, date) {
                 $scope.hideDisabledDialog();
                 $scope.startMainRefresh();
 
-                const restartApp = () =>
-                    api.initialize(() => {
-                        clearTimers();
-                        startTimers();
-                        ns.loadNotes(true);
-                    });
-
-                // Allow things to come back to life if triggered immediately on wake from sleep
-                setTimeout(restartApp, 250);
+                api.initialize(() => {
+                    clearTimers();
+                    startTimers();
+                    ns.loadNotes(true);
+                });
             };
 
             /* Working overlay */
