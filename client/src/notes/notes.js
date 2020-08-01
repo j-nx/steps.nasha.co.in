@@ -926,10 +926,6 @@ function Note(v, k, ver, date) {
             ];
 
             $scope.setDefaults = function () {
-                let urlParams = new URLSearchParams(window.location.search);
-                let isDebug = urlParams.has('debug');
-                console.debug('Debug Mode: ', isDebug);
-
                 $scope.loginButtonText = loginStates.submit;
                 $scope.sessionAlert = '';
                 $scope.showLoginInfo = false;

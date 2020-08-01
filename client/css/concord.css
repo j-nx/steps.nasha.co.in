@@ -226,7 +226,7 @@ strike {
 
 .debugView {
     position: fixed;
-    bottom: 0;
+    bottom: 45px;
     left: 0;
     background-color: rgba(0, 0, 0, 0.5);
     height: 200px;

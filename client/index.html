@@ -165,6 +165,11 @@
     <script>
         var isLoaded = false;
         
+        var isDebug = false; 
+        let urlParams = new URLSearchParams(window.location.search);
+        isDebug = urlParams.has('debug');
+        console.debug('Debug Mode: ', isDebug);
+        
         window.onload = function() {
             if (isLoaded) return;
             if (BrowserValid() == false) return;
@@ -179,12 +184,13 @@
             });
 
             startup(outliner);
+            createDebugOverrides();
+
             isLoaded = true;
         };
 
         window.onerror = function myErrorHandler(errorMsg, url, lineNumber) {
-            if (!ns) return false;
-            ns.ngScope.logDebug(`Error: ${errorMsg}`);
+            log(`Error: ${errorMsg}`);
             return false;
         }
 
@@ -194,6 +200,30 @@
             document.getElementById("appBlock").style.display = "inline";
             return false;
         };
+
+        //#region Debug Code
+        {
+            function log(msg) {
+                if (!ns) return false;
+                ns.ngScope.logDebug(`${msg}`); 
+            }
+            
+            function createLog(fn) {
+                return (msg) => {
+                    log(`${new Date().toLocaleString()} - ${msg}`)
+                }
+            }
+
+            function createDebugOverrides() {
+                if (isDebug) {
+                    const fns = ['log', 'debug', 'error', 'warn']
+                    fns.forEach(fn => {
+                        window.console[fn] = createLog(fn);     
+                    });
+                }
+            }
+        }
+        //#endregion 
     </script>
 
     <!-- APP MAIN -->
