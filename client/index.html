@@ -161,7 +161,11 @@
     <link href='css/fonts/fira-sans/css/fira-sans.css' rel='stylesheet' type='text/css'>
     <!-- Startup -->
     <script>
+        var isLoaded = false;
+
         window.onload = function() {
+            if (isLoaded) return;
+            
             if (BrowserValid() == false) return;
             document.body.setAttribute('spellcheck', false);
 
@@ -173,7 +177,7 @@
             });
 
             startup(outliner);
-
+            isLoaded = true;
         };
 
         function BrowserValid() {
@@ -182,7 +186,6 @@
             document.getElementById("appBlock").style.display = "inline";
             return false;
         };
-
     </script>
 
     <!-- APP MAIN -->
