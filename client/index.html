@@ -169,10 +169,10 @@
         let urlParams = new URLSearchParams(window.location.search);
         isDebug = urlParams.has('debug');
         console.debug('Debug Mode: ', isDebug);
-        
+
         window.onload = function() {
             if (isLoaded) return;
-            if (BrowserValid() == false) return;
+            if (isBrowserValid() == false) return;
 
             document.body.setAttribute('spellcheck', false);
 
@@ -194,7 +194,7 @@
             return false;
         }
 
-        function BrowserValid() {
+        function isBrowserValid() {
             if (!bowser) return false;
             if (bowser.chrome || bowser.firefox || bowser.safari || bowser.ios) return true;
             document.getElementById("appBlock").style.display = "inline";
@@ -205,7 +205,7 @@
         let startupLog = [];
         {
             function log(msg) {
-                const store = (m) => ns.ngScope.logDebug(m);
+                const write = (m) => ns.ngScope.logDebug(m);
 
                 if (!ns) { startupLog.push(msg); return;};
                 if (startupLog.length) { write(startupLog.join('\r\n')); startupLog = []; }
