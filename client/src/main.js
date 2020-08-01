@@ -26,14 +26,17 @@ var whenLastKeystroke = new Date(),
 var ns;
 var store;
 var idler;
-var TIMEOUT = 20; //min
-var TIMEOUT_MOBILE = 3; //min
-var TIMEOUT_AUTO_REFRESH = 10; //min
-var AUTOSAVE_DELAY = 5; //seconds
 var api;
+var lastRefresh; // Epoch
 
+let TIMEOUT = 20; //min
+let TIMEOUT_MOBILE = 1; //min
+let TIMEOUT_AUTO_REFRESH = 10; //min
+let REFRESH_INTERVAL = TIMEOUT_AUTO_REFRESH * 60000;
+let AUTOSAVE_DELAY = 5; //seconds
 let interval_auto_refresh;
 let interval_auto_save;
+let interval_away_time;
 
 function initLocalStorage() {
     localStorage.ctOpmlSaves = 0;
@@ -84,8 +87,6 @@ function startup(outliner, noInitialize) {
 
         ns = CreateNoteService(outliner);
         ns.start();
-
-        idler = new detectIdle();
     };
 
     if (isAppDisabled()) return;
@@ -117,53 +118,77 @@ function hideSplash() {
 
 function detectIdle() {
     if (appPrefs.readonly) return;
-    var timeoutInterval = TIMEOUT * 60000;
-    if ($.browser.mobile) timeoutInterval = TIMEOUT_MOBILE * 60000;
 
-    var t;
+    const timeoutInterval = $.browser.mobile
+        ? TIMEOUT_MOBILE * 60000
+        : TIMEOUT * 60000;
+
     document.onkeypress = this.resetTimer;
 
-    function away() {
+    const away = function () {
         if (!ns) return;
         if (ns.ngScope.isLoggedIn() == false || ns.ngScope.isAppDisabled)
             return;
 
+        console.debug('Setting Away Mode');
         clearTimers();
         ns.ngScope.showDisabledDialog('Click to continue', true);
-    }
+    };
 
-    this.resetTimerInternal = function () {
-        clearInterval(t);
-        t = setInterval(function () {
+    this.resetTimer = function () {
+        clearInterval(interval_away_time);
+        interval_away_time = setInterval(function () {
             away();
         }, timeoutInterval);
     }.bind(this);
 
-    this.resetTimer = _.debounce(this.resetTimerInternal, 300).bind(this);
     this.resetTimer();
-}
 
-function resetTimer(event) {
-    opKeystrokeCallback(event);
+    // SetInterval Has very unpredictable behavior on mobile (esp one plus), made worse with debounce
+    // this.resetTimer = _.debounce(resetTimerInternal, 300).bind(this);
+    // this.resetTimer();
 }
 
 function startTimers() {
     // Automatic save note
     interval_auto_save = setInterval(function () {
         backgroundProcess();
-    }, 5000);
+    }, AUTOSAVE_DELAY * 1000);
 
     // Polling for new notes (Poor man's push)
     interval_auto_refresh = setInterval(() => {
         if (appPrefs.readonly === false && isAppDisabled() === false) {
+            if (isOnWake()) {
+                console.log('On Wake detected');
+                clearTimers();
+                return;
+            }
+
+            lastRefresh = Date.now();
+            console.debug('Auto-Refresh Triggered');
             ns.loadNotes();
         }
-    }, TIMEOUT_AUTO_REFRESH * 60000);
+    }, REFRESH_INTERVAL);
+
+    // Start Idler
+    idler = new detectIdle();
 }
 
 function clearTimers() {
     clearInterval(interval_auto_refresh);
     clearInterval(interval_auto_save);
+    clearInterval(interval_away_time);
+    lastRefresh = undefined;
+    console.debug('Timers cleared');
+}
+
+function isOnWake() {
+    /** Check if wake from sleep
+     * by checking if the last refresh is overdue  */
+    if (!lastRefresh) return false;
+    const now = Date.now();
+
+    return lastRefresh && now - lastRefresh > REFRESH_INTERVAL + 120000;
 }
 
 function isAppDisabled() {
@@ -174,5 +199,5 @@ function isAppDisabled() {
     );
 }
 
-document.addEventListener('touchstart', resetTimer, false);
-document.addEventListener('click', resetTimer);
+document.addEventListener('touchstart', opKeystrokeCallback, false);
+document.addEventListener('click', opKeystrokeCallback);
