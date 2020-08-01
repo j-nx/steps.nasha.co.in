@@ -202,10 +202,15 @@
         };
 
         //#region Debug Code
+        let startupLog = [];
         {
             function log(msg) {
-                if (!ns) return false;
-                ns.ngScope.logDebug(`${msg}`); 
+                const store = (m) => ns.ngScope.logDebug(m);
+
+                if (!ns) { startupLog.push(msg); return;};
+                if (startupLog.length) { write(startupLog.join('\r\n')); startupLog = []; }
+
+                write(`${msg}`); 
             }
             
             function createLog(fn) {
