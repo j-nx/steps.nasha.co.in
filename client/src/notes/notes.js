@@ -949,7 +949,7 @@ function Note(v, k, ver, date) {
                     email: '',
                     password: ''
                 };
-                $scope.log = 'Log Messages --------------';
+                $scope.log = `Version: ${appVersionHash} \r\nLog Messages --------------`;
             };
 
             $scope.hidePopUps = function () {
@@ -1287,7 +1287,6 @@ function Note(v, k, ver, date) {
             /* Debug */
             {
                 $scope.logDebug = function (message) {
-                    // $scope.log = $scope.log.join('\n', message);
                     $scope.log += '\r\n' + message;
                     $scope.update();
                 };

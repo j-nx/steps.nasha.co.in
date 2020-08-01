@@ -148,13 +148,15 @@
     <script src="src/notes/notes.js"></script>
     <script src="src/notes/api.js"></script>
     <script>
-        var DEBUG = false;
-
+        var appVersionHash = 'Development';
     </script>
     <!-- /build -->
 
     <!-- build:template
     <script src="script.min.js?v=<%= version %>"></script>
+    <script>
+        var appVersionHash = '<%= version %>';
+    </script>
     /build -->
 
     <link href="css/fonts/font-awesome/css/font-awesome.min.css" rel="stylesheet">
@@ -162,7 +164,7 @@
     <!-- Startup -->
     <script>
         var isLoaded = false;
-
+        
         window.onload = function() {
             if (isLoaded) return;
             if (BrowserValid() == false) return;
