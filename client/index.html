@@ -166,6 +166,7 @@
         window.onload = function() {
             if (isLoaded) return;
             if (BrowserValid() == false) return;
+
             document.body.setAttribute('spellcheck', false);
 
             var outliner = $("#outliner").concord({
@@ -178,6 +179,12 @@
             startup(outliner);
             isLoaded = true;
         };
+
+        window.onerror = function myErrorHandler(errorMsg, url, lineNumber) {
+            if (!ns) return false;
+            ns.ngScope.logDebug(`Error: ${errorMsg}`);
+            return false;
+        }
 
         function BrowserValid() {
             if (!bowser) return false;
@@ -357,6 +364,7 @@
                 <div ng-click="toggleHello()" ng-hide="isLoggedIn()" style="cursor:pointer;text-shadow:1px 1px white;">Login</div>
             </div>
         </section>
+        <div class="debugView" ng-Show="isDebug">{{log}}</div>
     </div>
 
     <!--Disable while tuning performance

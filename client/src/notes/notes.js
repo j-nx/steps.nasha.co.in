@@ -926,12 +926,17 @@ function Note(v, k, ver, date) {
             ];
 
             $scope.setDefaults = function () {
+                let urlParams = new URLSearchParams(window.location.search);
+                let isDebug = urlParams.has('debug');
+                console.debug('Debug Mode: ', isDebug);
+
                 $scope.loginButtonText = loginStates.submit;
                 $scope.sessionAlert = '';
                 $scope.showLoginInfo = false;
                 $scope.showOverlay = false;
                 $scope.showLogin = false;
                 $scope.isAppDisabled = false;
+                $scope.isDebug = isDebug;
                 $scope.appDisabledMessage = '';
                 $scope.showShortcuts = false;
                 $scope.showBarMenu = false;
@@ -944,6 +949,7 @@ function Note(v, k, ver, date) {
                     email: '',
                     password: ''
                 };
+                $scope.log = 'Log Messages --------------';
             };
 
             $scope.hidePopUps = function () {
@@ -973,6 +979,7 @@ function Note(v, k, ver, date) {
             };
 
             $scope.setDefaults();
+
             $scope.initialize = function () {
                 if (ns.outliner) {
                     var nse = ns.outliner.events;
@@ -1002,6 +1009,7 @@ function Note(v, k, ver, date) {
                     if (ns) return ns.np.isLoggedIn();
                     return false;
                 };
+
                 $scope.login = function () {
                     ns.ngScope = $scope;
 
@@ -1273,6 +1281,15 @@ function Note(v, k, ver, date) {
                     $timeout(function () {
                         $scope.readyToDelete = false;
                     }, 3500);
+                };
+            }
+
+            /* Debug */
+            {
+                $scope.logDebug = function (message) {
+                    // $scope.log = $scope.log.join('\n', message);
+                    $scope.log += '\r\n' + message;
+                    $scope.update();
                 };
             }
         }
