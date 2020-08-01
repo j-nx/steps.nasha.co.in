@@ -206,8 +206,15 @@ strike {
     width: 100%;
 }
 
-.overlay {
+.overlay,
+.debugView {
     position: fixed;
+    z-index: 502;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.overlay {
     background-color: rgba(0, 0, 0, 0.84);
     /* color with alpha transparency */
     top: 0;
@@ -215,9 +222,20 @@ strike {
     left: 0;
     bottom: 0;
     right: 0;
-    z-index: 502;
-    height: 100%;
-    overflow-y: auto;
+}
+
+.debugView {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    height: 200px;
+    width: 100%;
+    padding: 2px;
+    color: #dad664;
+    font-size: 10px;
+    white-space: pre-line; /* For new line */
+    overflow-y: scroll;
 }
 
 .loginpopup,
