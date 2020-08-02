@@ -29,14 +29,16 @@ var idler;
 var api;
 var lastRefresh; // Epoch
 
-let TIMEOUT = 20; //min
-let TIMEOUT_MOBILE = 1; //min
-let TIMEOUT_AUTO_REFRESH = 10; //min
+let TIMEOUT = 20; // min
+let TIMEOUT_MOBILE = 1; // min
+let TIMEOUT_AUTO_REFRESH = 10; // min
 let REFRESH_INTERVAL = TIMEOUT_AUTO_REFRESH * 60000;
-let AUTOSAVE_DELAY = 5; //seconds
-let interval_auto_refresh;
-let interval_auto_save;
-let interval_away_time;
+let AUTOSAVE_DELAY = 5; // seconds
+let interval_auto_refresh; // polling update
+let interval_auto_save; // automatically save note
+let interval_away_time; // auto-lock screen PC
+let mobile_lastSeen;
+let isMobile = $.browser.mobile;
 
 function initLocalStorage() {
     localStorage.ctOpmlSaves = 0;
@@ -119,27 +121,24 @@ function hideSplash() {
 function detectIdle() {
     if (appPrefs.readonly) return;
 
-    const timeoutInterval = $.browser.mobile
-        ? TIMEOUT_MOBILE * 60000
-        : TIMEOUT * 60000;
-
     document.onkeypress = this.resetTimer;
 
-    const away = function () {
+    this.away = function () {
         if (!ns) return;
         if (ns.ngScope.isLoggedIn() == false || ns.ngScope.isAppDisabled)
             return;
 
-        console.debug('Setting Away Mode');
+        console.debug('Activating Away Mode');
         clearTimers();
         ns.ngScope.showDisabledDialog('Click to continue', true);
-    };
+    }.bind(this);
 
     this.resetTimer = function () {
+        if (isMobile) return; // Timers do not work well on mobile
         clearInterval(interval_away_time);
         interval_away_time = setInterval(function () {
             away();
-        }, timeoutInterval);
+        }, TIMEOUT * 60000);
     }.bind(this);
 
     this.resetTimer();
@@ -201,3 +200,33 @@ function isAppDisabled() {
 
 document.addEventListener('touchstart', opKeystrokeCallback, false);
 document.addEventListener('click', opKeystrokeCallback);
+
+document.addEventListener('visibilitychange', function () {
+    if (document.hidden) {
+        onHidden();
+    } else {
+        onVisible();
+    }
+});
+
+function onHidden() {
+    console.debug('**** PAGE HIDDEN');
+    if (!isMobile) return;
+
+    mobile_lastSeen = Date.now();
+}
+function onVisible() {
+    console.debug('**** PAGE VISIBLE');
+    if (!isMobile || !mobile_lastSeen) return;
+
+    if (Date.now() - mobile_lastSeen > TIMEOUT_MOBILE * 60000) {
+        if (idler) idler.away();
+    }
+}
+
+/*
+hide 
+    now 
+show 
+    check new_now - now > timeout 
+    */
