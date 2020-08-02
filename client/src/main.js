@@ -136,9 +136,7 @@ function detectIdle() {
     this.resetTimer = function () {
         if (isMobile) return; // Timers do not work well on mobile
         clearInterval(interval_away_time);
-        interval_away_time = setInterval(function () {
-            away();
-        }, TIMEOUT * 60000);
+        interval_away_time = setInterval(() => this.away(), TIMEOUT * 60000);
     }.bind(this);
 
     this.resetTimer();
@@ -223,10 +221,3 @@ function onVisible() {
         if (idler) idler.away();
     }
 }
-
-/*
-hide 
-    now 
-show 
-    check new_now - now > timeout 
-    */
