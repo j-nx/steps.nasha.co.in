@@ -385,7 +385,8 @@
                     </div>
                     <div class="main-footer" id="footer" ng-hide="isTouchEdit()">
                         <div class="footer-left">
-                            <i title="Status" class="icon-refresh bar-icon bar-icon-left" ng-style="{ color: statusColor() }" ng-click="forceSync()" ng-hide="isMobile()"></i>
+                        <i title="Status" ng-class="{ 'icon-refresh bar-icon bar-icon-left refresh-icon': true, 'icon-spin': saveState === 'Saving' }" ng-click="forceSync()" ng-hide="isMobile()"></i>
+                            <!-- ng-style="{ color: statusColor() }" --> 
                         </div>
                         <div class="footer-center">
                             <img class="svg3336" src="images/steps.png" alt="Steps" style="height: 27px; width:55px;" ng-click="forceSync()" ng-style="{ opacity: statusOpacity() }">

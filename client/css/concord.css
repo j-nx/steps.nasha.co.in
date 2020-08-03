@@ -715,6 +715,11 @@ strike {
     margin: 15px auto 22px auto;
 }
 
+.refresh-icon {
+    font-size: 18px;
+    line-height: 24px !important;
+}
+
 /* Bootstrap */
 
 select,
