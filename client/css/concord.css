@@ -124,6 +124,7 @@
     min-width: 10px;
     white-space: pre-wrap;
     padding-left: 14px;
+    word-break: break-all;
 }
 
 .concord-wrapper {
