@@ -27,18 +27,27 @@ var ns;
 var store;
 var idler;
 var api;
-var lastRefresh; // Epoch
 
 let TIMEOUT = 20; // min
-let TIMEOUT_MOBILE = 1; // min
 let TIMEOUT_AUTO_REFRESH = 10; // min
-let REFRESH_INTERVAL = TIMEOUT_AUTO_REFRESH * 60000;
 let AUTOSAVE_DELAY = 5; // seconds
+const MOBILE = {
+    TIMEOUT: 1, // min
+    AUTOSAVE_DELAY: 3 // seconds
+};
+
 let interval_auto_refresh; // polling update
 let interval_auto_save; // automatically save note
 let interval_away_time; // auto-lock screen PC
-let mobile_lastSeen;
+let lastSeen = Date.now(); // epoch
 let isMobile = $.browser.mobile;
+
+/* 
+                        Desktop         Mobile
+Auto-Refresh Interval        10              1
+Time out Interval            20              1
+Auto Save                    5s             2s
+*/
 
 function initLocalStorage() {
     localStorage.ctOpmlSaves = 0;
@@ -76,6 +85,11 @@ function startup(outliner, noInitialize) {
     console.debug('Starting up...');
 
     clearTimers();
+
+    if (isMobile) {
+        TIMEOUT = MOBILE.TIMEOUT;
+        AUTOSAVE_DELAY = MOBILE.AUTOSAVE_DELAY;
+    }
 
     const onAPIInitialized = () => {
         initLocalStorage();
@@ -146,26 +160,16 @@ function detectIdle() {
     // this.resetTimer();
 }
 
+//#region Timers
+
 function startTimers() {
     // Automatic save note
     interval_auto_save = setInterval(function () {
         backgroundProcess();
     }, AUTOSAVE_DELAY * 1000);
 
-    // Polling for new notes (Poor man's push)
-    interval_auto_refresh = setInterval(() => {
-        if (appPrefs.readonly === false && isAppDisabled() === false) {
-            if (isOnWake()) {
-                console.log('On Wake detected');
-                clearTimers();
-                return;
-            }
-
-            lastRefresh = Date.now();
-            console.debug('Auto-Refresh Triggered');
-            ns.loadNotes();
-        }
-    }, REFRESH_INTERVAL);
+    // To get fresh notes & versions
+    startAutoRefreshTimer();
 
     // Start Idler
     idler = new detectIdle();
@@ -175,17 +179,37 @@ function clearTimers() {
     clearInterval(interval_auto_refresh);
     clearInterval(interval_auto_save);
     clearInterval(interval_away_time);
-    lastRefresh = undefined;
     console.debug('Timers cleared');
 }
 
-function isOnWake() {
-    /** Check if wake from sleep
-     * by checking if the last refresh is overdue  */
-    if (!lastRefresh) return false;
-    const now = Date.now();
+function startAutoRefreshTimer() {
+    /** No Auto Refresh on Mobile since
+     *  it is unlikely that the mobile view will remain open for a long time
+     * */
+    if (isMobile) return;
 
-    return lastRefresh && now - lastRefresh > REFRESH_INTERVAL + 120000;
+    // Polling for new notes (Poor man's push)
+    interval_auto_refresh = setInterval(() => {
+        if (isOnWake()) {
+            console.log('On Wake detected');
+            clearTimers();
+            return;
+        }
+
+        if (appPrefs.readonly === false && isAppDisabled() === false) {
+            console.debug('Auto-Refresh Triggered');
+            ns.loadNotes();
+        }
+    }, TIMEOUT_AUTO_REFRESH * 60000);
+}
+
+//#endregion
+
+function isOnWake() {
+    const isOnWake = Date.now() - lastSeen > TIMEOUT * 60000 + 120000;
+    console.debug('isOnWake: ' + isOnWake);
+
+    return isOnWake;
 }
 
 function isAppDisabled() {
@@ -199,6 +223,7 @@ function isAppDisabled() {
 document.addEventListener('touchstart', opKeystrokeCallback, false);
 document.addEventListener('click', opKeystrokeCallback);
 
+/** Use the visbility change listener to check is on wake */
 document.addEventListener('visibilitychange', function () {
     if (document.hidden) {
         onHidden();
@@ -207,17 +232,28 @@ document.addEventListener('visibilitychange', function () {
     }
 });
 
+/** Sometimes visibilty change does not fire,
+ * Therefore listening to 'focus' as a workaround for visibilityChange event failing to fire
+ * e.g. after ~30 min on Mobile
+ * Need to seek more alternatives as on some phones focus does not fire after a long sleep, either
+ * */
+window.addEventListener('focus', onFocus);
+
 function onHidden() {
     console.debug('**** PAGE HIDDEN');
-    if (!isMobile) return;
-
-    mobile_lastSeen = Date.now();
+    lastSeen = Date.now();
 }
+
 function onVisible() {
     console.debug('**** PAGE VISIBLE');
-    if (!isMobile || !mobile_lastSeen) return;
+    if (!isMobile || !lastSeen) return;
 
-    if (Date.now() - mobile_lastSeen > TIMEOUT_MOBILE * 60000) {
+    if (isOnWake()) {
         if (idler) idler.away();
     }
+}
+
+function onFocus() {
+    console.debug('**** ON FOCUS');
+    onVisible();
 }

@@ -169,7 +169,7 @@
         let urlParams = new URLSearchParams(window.location.search);
         isDebug = urlParams.has('debug');
         console.debug('Debug Mode: ', isDebug);
-
+ 
         window.onload = function() {
             if (isLoaded) return;
             if (isBrowserValid() == false) return;
@@ -385,7 +385,7 @@
                     </div>
                     <div class="main-footer" id="footer" ng-hide="isTouchEdit()">
                         <div class="footer-left">
-                        <i title="Status" ng-class="{ 'icon-refresh bar-icon bar-icon-left refresh-icon': true, 'icon-spin': saveState === 'Saving' }" ng-click="forceSync()" ng-hide="isMobile()"></i>
+                        <i title="Status" ng-class="{ 'icon-refresh bar-icon bar-icon-left refresh-icon': true, 'icon-spin': saveState === 'Saving' }" ng-click="forceSync()"></i>
                             <!-- ng-style="{ color: statusColor() }" --> 
                         </div>
                         <div class="footer-center">
