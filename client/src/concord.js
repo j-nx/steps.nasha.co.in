@@ -3560,8 +3560,9 @@ window.currentInstance;
             if (altKey) event.preventDefault();
 
             let currentCursor = concordInstance.op.getCursor();
-            let lineText = concordInstance.op.getLineText();
             let caretPosition = ConcordUtil.getCaret(event.target);
+            let lineText = concordInstance.op.getLineText();
+            if (!lineText) lineText = '';
             let isCaretAtEndOfLine = caretPosition >= lineText.trimEnd().length;
 
             switch (event.which) {

@@ -1,9 +1,9 @@
 var swKey = 'steps-VERSION_NUMBER';
 
-self.addEventListener('install', function(e) {
+self.addEventListener('install', function (e) {
     e.waitUntil(self.skipWaiting());
     e.waitUntil(
-        caches.open(swKey).then(function(cache) {
+        caches.open(swKey).then(function (cache) {
             return cache.addAll([
                 '/',
                 '/index.html',
@@ -35,20 +35,20 @@ self.addEventListener('install', function(e) {
     );
 });
 
-self.addEventListener('fetch', function(event) {
+self.addEventListener('fetch', function (event) {
     event.respondWith(
-        caches.match(event.request).then(function(response) {
+        caches.match(event.request).then(function (response) {
             return response || fetch(event.request);
         })
     );
 });
 
-this.addEventListener('activate', function(event) {
+this.addEventListener('activate', function (event) {
     var cacheWhitelist = [swKey];
     event.waitUntil(
-        caches.keys().then(function(keyList) {
+        caches.keys().then(function (keyList) {
             return Promise.all(
-                keyList.map(function(key) {
+                keyList.map(function (key) {
                     if (cacheWhitelist.indexOf(key) === -1) {
                         console.log('Deleting Cache ' + key);
                         return caches.delete(key);

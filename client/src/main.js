@@ -26,14 +26,28 @@ var whenLastKeystroke = new Date(),
 var ns;
 var store;
 var idler;
-var TIMEOUT = 20; //min
-var TIMEOUT_MOBILE = 3; //min
-var TIMEOUT_AUTO_REFRESH = 10; //min
-var AUTOSAVE_DELAY = 5; //seconds
 var api;
 
-let interval_auto_refresh;
-let interval_auto_save;
+let TIMEOUT = 20; // min
+let TIMEOUT_AUTO_REFRESH = 10; // min
+let AUTOSAVE_DELAY = 5; // seconds
+const MOBILE = {
+    TIMEOUT: 1, // min
+    AUTOSAVE_DELAY: 3 // seconds
+};
+
+let interval_auto_refresh; // polling update
+let interval_auto_save; // automatically save note
+let interval_away_time; // auto-lock screen PC
+let lastSeen = Date.now(); // epoch
+let isMobile = $.browser.mobile;
+
+/* 
+                        Desktop         Mobile
+Auto-Refresh Interval        10              1
+Time out Interval            20              1
+Auto Save                    5s             2s
+*/
 
 function initLocalStorage() {
     localStorage.ctOpmlSaves = 0;
@@ -72,6 +86,11 @@ function startup(outliner, noInitialize) {
 
     clearTimers();
 
+    if (isMobile) {
+        TIMEOUT = MOBILE.TIMEOUT;
+        AUTOSAVE_DELAY = MOBILE.AUTOSAVE_DELAY;
+    }
+
     const onAPIInitialized = () => {
         initLocalStorage();
 
@@ -84,8 +103,6 @@ function startup(outliner, noInitialize) {
 
         ns = CreateNoteService(outliner);
         ns.start();
-
-        idler = new detectIdle();
     };
 
     if (isAppDisabled()) return;
@@ -117,53 +134,82 @@ function hideSplash() {
 
 function detectIdle() {
     if (appPrefs.readonly) return;
-    var timeoutInterval = TIMEOUT * 60000;
-    if ($.browser.mobile) timeoutInterval = TIMEOUT_MOBILE * 60000;
 
-    var t;
     document.onkeypress = this.resetTimer;
 
-    function away() {
+    this.away = function () {
         if (!ns) return;
         if (ns.ngScope.isLoggedIn() == false || ns.ngScope.isAppDisabled)
             return;
 
+        console.debug('Activating Away Mode');
         clearTimers();
         ns.ngScope.showDisabledDialog('Click to continue', true);
-    }
-
-    this.resetTimerInternal = function () {
-        clearInterval(t);
-        t = setInterval(function () {
-            away();
-        }, timeoutInterval);
     }.bind(this);
 
-    this.resetTimer = _.debounce(this.resetTimerInternal, 300).bind(this);
+    this.resetTimer = function () {
+        if (isMobile) return; // Timers do not work well on mobile
+        clearInterval(interval_away_time);
+        interval_away_time = setInterval(() => this.away(), TIMEOUT * 60000);
+    }.bind(this);
+
     this.resetTimer();
+
+    // SetInterval Has very unpredictable behavior on mobile (esp one plus), made worse with debounce
+    // this.resetTimer = _.debounce(resetTimerInternal, 300).bind(this);
+    // this.resetTimer();
 }
 
-function resetTimer(event) {
-    opKeystrokeCallback(event);
-}
+//#region Timers
 
 function startTimers() {
     // Automatic save note
     interval_auto_save = setInterval(function () {
         backgroundProcess();
-    }, 5000);
+    }, AUTOSAVE_DELAY * 1000);
 
-    // Polling for new notes (Poor man's push)
-    interval_auto_refresh = setInterval(() => {
-        if (appPrefs.readonly === false && isAppDisabled() === false) {
-            ns.loadNotes();
-        }
-    }, TIMEOUT_AUTO_REFRESH * 60000);
+    // To get fresh notes & versions
+    startAutoRefreshTimer();
+
+    // Start Idler
+    idler = new detectIdle();
 }
 
 function clearTimers() {
     clearInterval(interval_auto_refresh);
     clearInterval(interval_auto_save);
+    clearInterval(interval_away_time);
+    console.debug('Timers cleared');
+}
+
+function startAutoRefreshTimer() {
+    /** No Auto Refresh on Mobile since
+     *  it is unlikely that the mobile view will remain open for a long time
+     * */
+    if (isMobile) return;
+
+    // Polling for new notes (Poor man's push)
+    interval_auto_refresh = setInterval(() => {
+        if (isOnWake()) {
+            console.log('On Wake detected');
+            clearTimers();
+            return;
+        }
+
+        if (appPrefs.readonly === false && isAppDisabled() === false) {
+            console.debug('Auto-Refresh Triggered');
+            ns.loadNotes();
+        }
+    }, TIMEOUT_AUTO_REFRESH * 60000);
+}
+
+//#endregion
+
+function isOnWake() {
+    const isOnWake = Date.now() - lastSeen > TIMEOUT * 60000 + 120000;
+    console.debug('isOnWake: ' + isOnWake);
+
+    return isOnWake;
 }
 
 function isAppDisabled() {
@@ -174,5 +220,40 @@ function isAppDisabled() {
     );
 }
 
-document.addEventListener('touchstart', resetTimer, false);
-document.addEventListener('click', resetTimer);
+document.addEventListener('touchstart', opKeystrokeCallback, false);
+document.addEventListener('click', opKeystrokeCallback);
+
+/** Use the visbility change listener to check is on wake */
+document.addEventListener('visibilitychange', function () {
+    if (document.hidden) {
+        onHidden();
+    } else {
+        onVisible();
+    }
+});
+
+/** Sometimes visibilty change does not fire,
+ * Therefore listening to 'focus' as a workaround for visibilityChange event failing to fire
+ * e.g. after ~30 min on Mobile
+ * Need to seek more alternatives as on some phones focus does not fire after a long sleep, either
+ * */
+window.addEventListener('focus', onFocus);
+
+function onHidden() {
+    console.debug('**** PAGE HIDDEN');
+    lastSeen = Date.now();
+}
+
+function onVisible() {
+    console.debug('**** PAGE VISIBLE');
+    if (!isMobile || !lastSeen) return;
+
+    if (isOnWake()) {
+        if (idler) idler.away();
+    }
+}
+
+function onFocus() {
+    console.debug('**** ON FOCUS');
+    onVisible();
+}

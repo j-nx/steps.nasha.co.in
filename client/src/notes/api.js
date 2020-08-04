@@ -63,8 +63,12 @@ function gApi() {
 
     this.initialize = (onInitComplete) => {
         this.onInitComplete = onInitComplete;
+
         // Load the API client and auth2 library
-        gapi.load('client:auth2', this.initClient);
+        const init = () => gapi.load('client:auth2', this.initClient);
+
+        // Delay to allow wake up
+        setTimeout(init, 1000);
     };
 
     this.isLoggedIn = () => {
