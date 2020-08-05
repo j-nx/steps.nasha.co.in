@@ -11,8 +11,10 @@
 
 var betaMode = window.location.search.substring(1) == 'beta';
 
+var isOffline = navigator.onLine === false;
+
 var appPrefs = {
-    readonly: false,
+    readonly: isOffline,
     outlineFontSize: $.browser.mobile ? 15 : 13,
     iconSize: 8,
     paddingLeft: $.browser.mobile ? 8 : 11,
@@ -103,12 +105,17 @@ function startup(outliner, noInitialize) {
 
         ns = CreateNoteService(outliner);
         ns.start();
+
+        if (isOffline) {
+            ns.setOffline('Offline');
+            ns.tryFinishLoading();
+        }
     };
 
     if (isAppDisabled()) return;
 
     api = new API();
-    api.initialize(onAPIInitialized);
+    isOffline ? onAPIInitialized() : api.initialize(onAPIInitialized);
 }
 
 function opKeystrokeCallback(event) {
