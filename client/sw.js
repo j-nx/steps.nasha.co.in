@@ -8,6 +8,7 @@ self.addEventListener('install', function (e) {
                 '/',
                 '/index.html',
                 '/demo.html',
+                '/config.js',
                 '/css/768.min.css',
                 '/css/style.min.css',
                 '/script.min.js',
