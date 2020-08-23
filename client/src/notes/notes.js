@@ -29,6 +29,7 @@
     };
 
     NoteProvider.prototype.isLoggedIn = function () {
+        if (isOffline) return true;
         return api.isLoggedIn();
     };
 
@@ -327,8 +328,7 @@ function NoteService(concord) {
     this.loadNote = function (note, noteMetadata) {
         if (note == undefined) throw 'Note argument not specified';
 
-        if (this.getPendingNotes() <= 0) this.setPendingNotes(1);
-        else this.incrementPendingNotes();
+        this.incrementPendingNotes();
         delay = this.getPendingNotes() > 0 ? delay + 500 : 0;
 
         this.ngScope.setSaveState(saveStates.updating);
@@ -344,8 +344,6 @@ function NoteService(concord) {
 
     /* Parse note index array and constructs note object from outline tagged note*/
     this.parseNoteIndex = function (outlineNotes) {
-        delay = 0;
-
         if (outlineNotes == undefined || outlineNotes.length == 0) {
             console.log('Unable to fetch any notes');
 
@@ -516,7 +514,7 @@ function NoteService(concord) {
     }.bind(this);
 
     this.isCookieValid = function () {
-        return api.isLoggedIn();
+        return this.np.isLoggedIn();
     }.bind(this);
 
     this.isModelReady = function () {
@@ -540,6 +538,7 @@ function NoteService(concord) {
                 this.launchNote(null, true);
             this.ngScope.hideWorkingDialog();
             this.ngScope.finishMainRefresh();
+            delay = 0;
         }
     }.bind(this);
 
@@ -1075,6 +1074,8 @@ function Note(v, k, ver, date) {
                 if ($scope.idleTimeout == false) return;
                 $scope.hideDisabledDialog();
                 $scope.startMainRefresh();
+
+                if (appPrefs.readonly) return;
 
                 api.initialize(() => {
                     clearTimers();

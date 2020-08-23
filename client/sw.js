@@ -8,6 +8,7 @@ self.addEventListener('install', function (e) {
                 '/',
                 '/index.html',
                 '/demo.html',
+                '/config.js',
                 '/css/768.min.css',
                 '/css/style.min.css',
                 '/script.min.js',
@@ -43,7 +44,7 @@ self.addEventListener('fetch', function (event) {
     );
 });
 
-this.addEventListener('activate', function (event) {
+self.addEventListener('activate', function (event) {
     var cacheWhitelist = [swKey];
     event.waitUntil(
         caches.keys().then(function (keyList) {

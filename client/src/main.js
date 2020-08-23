@@ -11,8 +11,10 @@
 
 var betaMode = window.location.search.substring(1) == 'beta';
 
+var isOffline = navigator.onLine === false;
+
 var appPrefs = {
-    readonly: false,
+    readonly: isOffline,
     outlineFontSize: $.browser.mobile ? 15 : 13,
     iconSize: 8,
     paddingLeft: $.browser.mobile ? 8 : 11,
@@ -103,12 +105,17 @@ function startup(outliner, noInitialize) {
 
         ns = CreateNoteService(outliner);
         ns.start();
+
+        if (isOffline) {
+            ns.setOffline('Offline');
+            ns.tryFinishLoading();
+        }
     };
 
     if (isAppDisabled()) return;
 
     api = new API();
-    api.initialize(onAPIInitialized);
+    isOffline ? onAPIInitialized() : api.initialize(onAPIInitialized);
 }
 
 function opKeystrokeCallback(event) {
@@ -190,11 +197,7 @@ function startAutoRefreshTimer() {
 
     // Polling for new notes (Poor man's push)
     interval_auto_refresh = setInterval(() => {
-        if (isOnWake()) {
-            console.log('On Wake detected');
-            clearTimers();
-            return;
-        }
+        if (isOnWake()) return;
 
         if (appPrefs.readonly === false && isAppDisabled() === false) {
             console.debug('Auto-Refresh Triggered');
@@ -208,6 +211,7 @@ function startAutoRefreshTimer() {
 function isOnWake() {
     const isOnWake = Date.now() - lastSeen > TIMEOUT * 60000 + 120000;
     console.debug('isOnWake: ' + isOnWake);
+    if (isOnWake) console.debug('On Wake Detected');
 
     return isOnWake;
 }

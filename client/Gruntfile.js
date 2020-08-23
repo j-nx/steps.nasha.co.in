@@ -22,8 +22,8 @@ module.exports = function (grunt) {
                         'src/concordUtils.js',
                         'src/notes/notes.js',
                         'src/notes/api.js'
-                    ]
-                    /* "build/init.min.js": ["sw.js", "cache-polyfill.js"] */
+                    ],
+                    'build/init.min.js': ['sw.js', 'cache-polyfill.js']
                 }
             }
         },
@@ -70,7 +70,7 @@ module.exports = function (grunt) {
                 dest: 'build/'
             },
             config: {
-                src: 'config-prod.js',
+                src: 'config-prod.js', // For debugging src: 'config.js'
                 dest: 'build/config.js'
             }
         },
