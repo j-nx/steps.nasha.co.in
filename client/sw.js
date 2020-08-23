@@ -44,7 +44,7 @@ self.addEventListener('fetch', function (event) {
     );
 });
 
-this.addEventListener('activate', function (event) {
+self.addEventListener('activate', function (event) {
     var cacheWhitelist = [swKey];
     event.waitUntil(
         caches.keys().then(function (keyList) {
