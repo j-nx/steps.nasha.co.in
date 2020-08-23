@@ -1362,6 +1362,7 @@ function ConcordEvents(root, editor, op, concordInstance) {
                 op.expand();
             }
         }
+        concordInstance.fireCallback('opIconClicked', event);
     };
     this.clickSelect = function (event) {
         if (!concord.handleEvents) {

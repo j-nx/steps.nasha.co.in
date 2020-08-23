@@ -35,7 +35,7 @@ let TIMEOUT_AUTO_REFRESH = 10; // min
 let AUTOSAVE_DELAY = 5; // seconds
 const MOBILE = {
     TIMEOUT: 1, // min
-    AUTOSAVE_DELAY: 3 // seconds
+    AUTOSAVE_DELAY: 1 // seconds
 };
 
 let interval_auto_refresh; // polling update
@@ -122,7 +122,8 @@ function opKeystrokeCallback(event) {
     whenLastKeystroke = new Date();
     if (
         event.srcElement != null &&
-        event.srcElement.className.indexOf('concord-wrapper') == -1
+        event.srcElement.className.indexOf('concord-wrapper') == -1 &&
+        event.srcElement.className.indexOf('note-icon') === -1
     )
         return;
     if (navigationKeystrokes.has(event.which)) return;
