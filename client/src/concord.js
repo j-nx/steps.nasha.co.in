@@ -210,18 +210,9 @@ var ConcordUtil = {
             var pNode = selectedObj.anchorNode.parentNode;
             while (
                 pNode.localName != 'div' //has in classList "concord-text"
-            )
+            ) {
+                rangeCount += `<${pNode.localName}>`.length;
                 pNode = pNode.parentNode;
-            var childNodes = pNode.childNodes;
-            for (var i = 0; i < childNodes.length; i++) {
-                if (childNodes[i] == selectedObj.anchorNode) {
-                    break;
-                }
-                if (childNodes[i].outerHTML)
-                    rangeCount += childNodes[i].outerHTML.length;
-                else if (childNodes[i].nodeType == 3) {
-                    rangeCount += childNodes[i].textContent.length;
-                }
             }
             return range.startOffset + rangeCount;
         }
