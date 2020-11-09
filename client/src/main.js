@@ -34,7 +34,7 @@ let TIMEOUT = 20; // min
 let TIMEOUT_AUTO_REFRESH = 10; // min
 let AUTOSAVE_DELAY = 5; // seconds
 const MOBILE = {
-    TIMEOUT: 1, // min
+    TIMEOUT: 0.2, // min, 0.2 = 12 seconds
     AUTOSAVE_DELAY: 1 // seconds
 };
 
@@ -43,6 +43,10 @@ let interval_auto_save; // automatically save note
 let interval_away_time; // auto-lock screen PC
 let lastSeen = Date.now(); // epoch
 let isMobile = $.browser.mobile;
+
+var isLoaded = false;
+var isDebug = false;
+var appVersionHash = 'Development';
 
 /* 
                         Desktop         Mobile

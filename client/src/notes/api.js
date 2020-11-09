@@ -68,7 +68,7 @@ function gApi() {
         const init = () => gapi.load('client:auth2', this.initClient);
 
         // Delay to allow wake up
-        setTimeout(init, isOnWake() ? 1000 : 0);
+        setTimeout(init, isOnWake() ? 500 : 0);
     };
 
     this.isLoggedIn = () => {

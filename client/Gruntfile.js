@@ -31,7 +31,8 @@ module.exports = function (grunt) {
             target: {
                 files: {
                     'build/css/style.min.css': ['css/concord.css'],
-                    'build/css/768.min.css': ['css/768.css']
+                    'build/css/768.min.css': ['css/768.css'],
+                    'build/css/main.min.css': ['css/main.css']
                 }
             }
         },
