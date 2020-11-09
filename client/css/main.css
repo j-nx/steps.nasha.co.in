@@ -1,0 +1,81 @@
+html,
+body {
+    height: 100%;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    background-color: white;
+}
+
+#splash,
+#splash-logo {
+    -webkit-transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
+    -moz-transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
+    -ms-transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
+    -o-transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
+    transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
+}
+
+#splash {
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    position: absolute;
+    background: #926e8a;
+    background: -webkit-radial-gradient(
+        circle,
+        #aa8da4 10%,
+        #9f7a97 27%,
+        #926e8a 50%
+    );
+    background: -o-radial-gradient(
+        circle,
+        #aa8da4 10%,
+        #9f7a97 27%,
+        #926e8a 50%
+    );
+    background: -moz-radial-gradient(
+        circle,
+        #aa8da4 10%,
+        #9f7a97 27%,
+        #926e8a 50%
+    );
+    background: radial-gradient(circle, #aa8da4 10%, #9f7a97 27%, #926e8a 50%);
+}
+
+#splash-logo {
+    width: 200px;
+    height: 115.5px;
+    margin-left: -100px;
+    left: 50%;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+    fill: #d1d1d1;
+}
+
+#splash.hide-splash,
+#splash-logo.hide-splash {
+    opacity: 0;
+    visibility: hidden;
+}
+
+#appBlock {
+    margin-left: auto;
+    margin-right: auto;
+    left: 0;
+    right: 0;
+    vertical-align: middle;
+    position: fixed;
+    text-align: center;
+    border-radius: 4px;
+    padding: 10px;
+    width: 300px;
+    top: 50px;
+    color: antiquewhite;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background-color: #385471;
+    border: 1px solid #a49b91;
+    display: none;
+    z-index: 9999;
+}

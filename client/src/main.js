@@ -44,6 +44,10 @@ let interval_away_time; // auto-lock screen PC
 let lastSeen = Date.now(); // epoch
 let isMobile = $.browser.mobile;
 
+var isLoaded = false;
+var isDebug = false;
+var appVersionHash = 'Development';
+
 /* 
                         Desktop         Mobile
 Auto-Refresh Interval        10              1

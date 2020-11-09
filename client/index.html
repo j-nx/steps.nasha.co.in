@@ -3,75 +3,13 @@
 
 <head>
     <title>Steps</title>
-    <style>
-        html,
-        body {
-            height: 100%;
-            width: 100%;
-            padding: 0;
-            margin: 0;
-            background-color: white;
-        }
-        
-        #splash,
-        #splash-logo {
-            -webkit-transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
-            -moz-transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
-            -ms-transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
-            -o-transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
-            transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
-        }
-        
-        #splash {
-            width: 100%;
-            height: 100%;
-            z-index: 9999;
-            position: absolute;
-            background: #926E8A;
-            background: -webkit-radial-gradient(circle, #AA8DA4 10%, #9F7A97 27%, #926E8A 50%);
-            background: -o-radial-gradient(circle, #AA8DA4 10%, #9F7A97 27%, #926E8A 50%);
-            background: -moz-radial-gradient(circle, #AA8DA4 10%, #9F7A97 27%, #926E8A 50%);
-            background: radial-gradient(circle, #AA8DA4 10%, #9F7A97 27%, #926E8A 50%);
-        }
-        
-        #splash-logo {
-            width: 200px;
-            height: 115.5px;
-            margin-left: -100px;
-            left: 50%;
-            position: relative;
-            top: 50%;
-            transform: translateY(-50%);
-            fill: #D1D1D1;
-        }
-        
-        #splash.hide-splash,
-        #splash-logo.hide-splash {
-            opacity: 0;
-            visibility: hidden;
-        }
-        
-        #appBlock {
-            margin-left: auto;
-            margin-right: auto;
-            left: 0;
-            right: 0;
-            vertical-align: middle;
-            position: fixed;
-            text-align: center;
-            border-radius: 4px;
-            padding: 10px;
-            width: 300px;
-            top: 50px;
-            color: antiquewhite;
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            background-color: #385471;
-            border: 1px solid #A49B91;
-            display: none;
-            z-index: 9999;
-        }
 
-    </style>
+    <!-- build:remove -->
+    <link rel="stylesheet" href="css/main.css" type="text/css" media="all" />
+    <!-- /build -->
+    <!-- build:template
+    <link rel="stylesheet" href="css/main.min.css" type="text/css" media="all" />
+    <!-- /build -->
 
     <link rel="manifest" href="manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
@@ -147,9 +85,6 @@
     <script src="src/concordUtils.js"></script>
     <script src="src/notes/notes.js"></script>
     <script src="src/notes/api.js"></script>
-    <script>
-        var appVersionHash = 'Development';
-    </script>
     <!-- /build -->
 
     <!-- build:template
@@ -164,9 +99,6 @@
     <link href='css/fonts/fira-sans/css/fira-sans.css' rel='stylesheet' type='text/css'>
     <!-- Startup -->
     <script>
-        var isLoaded = false;
-        
-        var isDebug = false; 
         let urlParams = new URLSearchParams(window.location.search);
         isDebug = urlParams.has('debug');
         console.debug('Debug Mode: ', isDebug);
