@@ -103,7 +103,6 @@
         callback,
         errorCallback
     ) {
-        if (document.hidden) return;
         api.updateNote({
             key: key,
             body: noteBody,
@@ -181,6 +180,9 @@ function NoteService(concord) {
     var pendingNotes = 0; //counter to track # notes requested / saving
     this.incrementPendingNotes = function () {
         pendingNotes++;
+        console.debug(
+            '------- Incrementing Pending Notes, new count ' + pendingNotes
+        );
     }.bind(this);
 
     this.decrementPendingNotes = function () {
@@ -188,6 +190,9 @@ function NoteService(concord) {
         this.ngScope.setLoadingCountdown(
             store.notes.length - pendingNotes,
             store.notes.length
+        );
+        console.debug(
+            '------- Decrementing Pending Notes, new count ' + pendingNotes
         );
     }.bind(this);
 
@@ -344,6 +349,16 @@ function NoteService(concord) {
 
     /* Parse note index array and constructs note object from outline tagged note*/
     this.parseNoteIndex = function (outlineNotes) {
+        // temp
+        const cd = (m) => console.debug('parseNoteIndex: ' + m);
+        let count = outlineNotes ? outlineNotes.length : 0;
+        cd(
+            'Called parseNoteIndex with ' +
+                count +
+                ' notes & pending notes ' +
+                this.getPendingNotes()
+        );
+
         if (outlineNotes == undefined || outlineNotes.length == 0) {
             console.log('Unable to fetch any notes');
 
@@ -510,6 +525,10 @@ function NoteService(concord) {
         if (this.isModelReady() == false) return false;
         if (this.ngScope.isAppDisabled) return false;
         if (this.ngScope.showWorking) return false;
+        if ($.browser.mobile && document.hidden) {
+            console.log('blocked save, on mobile');
+            return false;
+        }
         return true;
     }.bind(this);
 
