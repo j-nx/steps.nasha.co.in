@@ -4199,7 +4199,7 @@ window.currentInstance;
                     //CMD + SEMICOLON
                     if (commandKey) {
                         var text = concordInstance.op.getLineText();
-                        var date = ConcordUtil.getCurrentDate();
+                        var date = `${ConcordUtil.getCurrentDate()} `;
                         var caret = ConcordUtil.getCaret(event.target);
 
                         text = text.insertAt(caret, date);
