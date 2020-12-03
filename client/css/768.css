@@ -14,8 +14,11 @@ body {
     height: auto;
 }
 
+.concord {
+    padding: 0 20px;
+}
+
 .divOutlinerContainer {
-    width: 60%; /*75%;*/
     border-right: 1px dotted #e2e2e2;
 }
 
