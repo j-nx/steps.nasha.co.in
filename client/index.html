@@ -9,6 +9,8 @@
     <!-- /build -->
     <!-- build:template
     <link rel="stylesheet" href="css/main.min.css" type="text/css" media="all" />
+    <link rel="stylesheet" href="css/768.min.css" type="text/css" media="only screen and (min-width: 540px)" />
+    <link rel="stylesheet" href="css/922.min.css" type="text/css" media="only screen and (min-width: 800px)" />
     <!-- /build -->
 
     <link rel="manifest" href="manifest.json">
@@ -52,7 +54,7 @@
     <link rel="stylesheet" href="css/922.css" type="text/css" media="only screen and (min-width: 800px)" />
     <!-- /build -->
 
-    <!-- Get CSS https://developers.google.com/speed/docs/insights/OptimizeCSSDelivery-->
+    <!-- Get CSS https://developers.google.com/speed/docs/insights/OptimizeCSSDelivery -->
     <!-- build:template
     <script>
         var cb = function () {
@@ -67,8 +69,7 @@
         if (raf) raf(cb);
         else window.addEventListener('load', cb);
     </script>
-    <link rel="stylesheet" href="css/768.min.css" type="text/css" media="only screen and (min-width: 540px)" />
-    <link rel="stylesheet" href="css/922.min.css" type="text/css" media="only screen and (min-width: 800px)" />
+
     <!-- /build -->
 
     <!-- Scripts -->
@@ -96,7 +97,6 @@
         console.log('Application VersionHash: ' + appVersionHash)
     </script>
     /build -->
-
     <link href="css/fonts/font-awesome/css/font-awesome.min.css" rel="stylesheet">
     <link href='css/fonts/fira-sans/css/fira-sans.css' rel='stylesheet' type='text/css'>
     <!-- Startup -->
@@ -150,8 +150,8 @@
             }
             
             function createLog(fn) {
-                return (msg) => {
-                    log(`${new Date().toLocaleString()} - ${msg}`)
+                return (...msg) => {
+                    log(`${new Date().toLocaleString()} - ${msg.join(' ')}`)
                 }
             }
 

@@ -3530,7 +3530,7 @@ window.currentInstance;
         }
         var context = focusRoot;
         context.data('keydownEvent', event);
-        var concordInstance = new ConcordOutline(context.parent());
+        var concordInstance = window.currentInstance;
         var readonly = concordInstance.prefs()['readonly'];
         if (readonly == undefined) {
             readonly = false;
