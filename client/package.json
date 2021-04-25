@@ -7,7 +7,7 @@
         "test": "tests"
     },
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "echo \"Info: Run SpecRunner.html to execute tests\" && exit 1"
     },
     "author": "jnx@nasha.co.in",
     "license": "ISC",

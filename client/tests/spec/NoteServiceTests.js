@@ -76,7 +76,7 @@ describe('Note Service functions', function() {
         expect(_store.note.key).toBe('456');
     });
 
-    it('should set pending notes equal to 1 if calling loadNote with no pending note set', function() {
+    xit('should set pending notes equal to 1 if calling loadNote with no pending note set', function() {
         ns.setPendingNotes(-1);
 
         ns.loadNote(new Note());

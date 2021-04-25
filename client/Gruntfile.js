@@ -11,7 +11,7 @@ module.exports = function (grunt) {
                         'src/lib/underscore-1.8.3.min.js',
                         'src/lib/angular-1.5.0.min.js',
                         'src/lib/angular-animate.1.5.0.min.js',
-                        'src/lib/jquery-1.9.1.min.js',
+                        'src/lib/jquery-3.6.0.min.js',
                         'src/lib/jquery.base64.min.js',
                         'src/lib/velocity/velocity.1.5.0.min.js',
                         'src/lib/velocity/velocity.ui.1.5.0.min.js',

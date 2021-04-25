@@ -525,7 +525,7 @@ function NoteService(concord) {
         if (this.isModelReady() == false) return false;
         if (this.ngScope.isAppDisabled) return false;
         if (this.ngScope.showWorking) return false;
-        if ($.browser.mobile && document.hidden) {
+        if (isMobile && document.hidden) {
             console.log('blocked save, on mobile');
             return false;
         }
@@ -836,7 +836,7 @@ function Note(v, k, ver, date) {
         return tmp.textContent || tmp.innerText || '';
     }
 
-    $(document).bind('touchend', function (e) {
+    $(document).on('touchend', function (e) {
         var target = $(e.target);
         var isBarTouch = target.is('#footer *, #footer');
         if (
@@ -879,7 +879,7 @@ function Note(v, k, ver, date) {
             /* Safe Apply */
             {
                 $scope.update = function (fn) {
-                    var phase = this.$root.$$phase;
+                    var phase = this.$root ? this.$root.$$phase : undefined;
                     if (phase == '$apply' || phase == '$digest') this.$eval(fn);
                     else this.$apply(fn);
                 };
@@ -1168,10 +1168,6 @@ function Note(v, k, ver, date) {
                 };
             }
 
-            $scope.isMobile = function () {
-                return $.browser.mobile;
-            };
-
             $scope.isReadOnly = function () {
                 return appPrefs.readonly;
             };
@@ -1266,7 +1262,7 @@ function Note(v, k, ver, date) {
                     if (ns && ns.outliner) {
                         return (
                             !appPrefs.readOnly &&
-                            $scope.isMobile() &&
+                            isMobile &&
                             ns.outliner.op.inTextMode()
                         );
                     }
