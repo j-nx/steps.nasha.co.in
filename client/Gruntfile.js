@@ -9,12 +9,12 @@ module.exports = function (grunt) {
                 files: {
                     'build/script.min.js': [
                         'src/lib/underscore-1.8.3.min.js',
-                        'src/lib/angular-1.5.0.min.js',
-                        'src/lib/angular-animate.1.5.0.min.js',
+                        'src/lib/angular-1.8.2.min.js',
+                        'src/lib/angular-animate.1.8.2.min.js',
                         'src/lib/jquery-3.6.0.min.js',
                         'src/lib/jquery.base64.min.js',
-                        'src/lib/velocity/velocity.1.5.0.min.js',
-                        'src/lib/velocity/velocity.ui.1.5.0.min.js',
+                        'src/lib/velocity/velocity.1.5.2.min.js',
+                        'src/lib/velocity/velocity.ui.5.0.4.min.js',
                         'src/lib/velocity/velocity.ui.angular.min.js',
                         'src/lib/gapi.js',
                         'src/main.js',

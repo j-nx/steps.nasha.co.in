@@ -602,7 +602,7 @@ function NoteService(concord) {
             this.ngScope.hideLoginDialog();
             hideSplash();
         } catch (error) {
-            console.log('Error occured when launching note. ' + error.message);
+            console.error('Error occured when launching note. ' + error.message);
         }
     }.bind(this);
 
