@@ -27,7 +27,7 @@ if (!Array.prototype.indexOf) {
 }
 var concord = {
     version: '2.49',
-    mobile: $.browser.mobile,
+    mobile: isMobile,
     ready: false,
     handleEvents: true,
     resumeCallbacks: [],
@@ -171,7 +171,7 @@ var ie =
 var w3 = typeof window.getSelection != 'undefined' && true;
 
 var ConcordUtil = {
-    mobile: $.browser.mobile,
+    mobile: isMobile,
     escapeXml: function (s) {
         s = s.toString();
         s = s.replace(/\u00A0/g, ' ');
@@ -445,7 +445,7 @@ function ConcordOutline(container, options) {
                 this.pasteBin.text('...');
             }
             this.op.focusCursor();
-            this.pasteBin.focus();
+            this.pasteBin.trigger('focus');
             if (this.pasteBin[0] === document.activeElement) {
                 document.execCommand('selectAll');
             }
@@ -751,7 +751,7 @@ function ConcordEditor(root, concordInstance) {
         if (empty) {
             text.html('');
         }
-        text.focus();
+        text.trigger('focus');
         var el = text.get(0);
         if (el && el.childNodes && el.childNodes[0]) {
             if (
@@ -1066,7 +1066,7 @@ function ConcordEditor(root, concordInstance) {
             child.appendTo(children);
         });
         if (collapsed) {
-            if (outline.children('outline').size() > 0) {
+            if (outline.children('outline').length > 0) {
                 node.addClass('collapsed');
             }
         }
@@ -2023,7 +2023,7 @@ function ConcordOp(root, concordInstance, _cursor) {
         var node = n;
         if (!node) node = this.getCursor();
         if (node.length == 1) {
-            return node.children('ol').children().size();
+            return node.children('ol').children().length;
         }
         return 0;
     };
@@ -2190,7 +2190,7 @@ function ConcordOp(root, concordInstance, _cursor) {
         this.getCursor()
             .children('.concord-wrapper')
             .children('.concord-text')
-            .focus();
+            .trigger('focus');
         ConcordUtil.setCaretAtStart(
             this.getCursor()
                 .children('.concord-wrapper')
@@ -2201,11 +2201,11 @@ function ConcordOp(root, concordInstance, _cursor) {
         this.getCursor()
             .children('.concord-wrapper')
             .children('.concord-text')
-            .blur();
+            .trigger('blur')
     };
     this.fullCollapse = function () {
         root.find('.concord-node').each(function () {
-            if ($(this).children('ol').children().size() > 0) {
+            if ($(this).children('ol').children().length > 0) {
                 $(this).addClass('collapsed');
             }
         });
@@ -2335,7 +2335,7 @@ function ConcordOp(root, concordInstance, _cursor) {
                     if (cursor) {
                         if (
                             !cursor.hasClass('collapsed') &&
-                            cursor.children('ol').children().size() > 0
+                            cursor.children('ol').children().length > 0
                         ) {
                             nodeCount++;
                             ableToMoveInDirection = true;
@@ -2369,7 +2369,7 @@ function ConcordOp(root, concordInstance, _cursor) {
                     if (cursor) {
                         if (
                             !cursor.hasClass('collapsed') &&
-                            cursor.children('ol').children().size() > 0
+                            cursor.children('ol').children().length > 0
                         ) {
                             nodeCount++;
                             ableToMoveInDirection = true;
@@ -2979,7 +2979,7 @@ function ConcordOp(root, concordInstance, _cursor) {
         if (node.length == 1) {
             if (
                 !node.hasClass('collapsed') &&
-                node.children('ol').children().size() > 0
+                node.children('ol').children().length > 0
             ) {
                 return true;
             } else {
@@ -3021,7 +3021,7 @@ function ConcordOp(root, concordInstance, _cursor) {
             if (cursor) {
                 if (
                     !cursor.hasClass('collapsed') &&
-                    cursor.children('ol').children().size() > 0
+                    cursor.children('ol').children().length > 0
                 ) {
                     expansionStates.push(nodeId);
                 }
