@@ -118,7 +118,9 @@ var concord = {
         if (preventDefaults) event.preventDefault();
     },
     bringIntoView: function (element) {
-        //If element is not in view scroll to it
+        /* If element is not in view scroll to it */
+        
+        if (isDom(element) === false) return; 
         if (!element || !element.offset() || !concord.mobile) return;
 
         var headerHt = 62;
@@ -3802,6 +3804,11 @@ window.currentInstance;
                         concordInstance.op.demote();
                     }
                     break;
+                case 229: {
+                    // The cursed Android Chromium Key Code issue https://bugs.chromium.org/p/chromium/issues/detail?id=118639 Since 2013
+                    keyCaptured = true;
+                    break;
+                }
                 case 13: // Enter
                     {
                         keyCaptured = true;
@@ -4295,3 +4302,4 @@ window.currentInstance;
     });
     concord.ready = true;
 })(jQuery);
+
