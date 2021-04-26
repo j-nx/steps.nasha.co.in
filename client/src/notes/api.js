@@ -261,7 +261,7 @@ function gApi() {
         }.bind(this);
 
         const error = function (e) {
-            console.error('Error Occured when initializing Google ' + e);
+            console.error('Error Occured when initializing Google ', e.details);
             this.onInitComplete();
         };
 
