@@ -424,3 +424,7 @@ function sliceHtmlText(str, index, allowedTags = ['<b>', '<i>', '<u>']) {
 
     return [a, b];
 }
+
+function isDom(el) {
+    return el && el instanceof Element || el.length && el[0] instanceof Element;
+}

@@ -118,7 +118,9 @@ var concord = {
         if (preventDefaults) event.preventDefault();
     },
     bringIntoView: function (element) {
-        //If element is not in view scroll to it
+        /* If element is not in view scroll to it */
+        
+        if (isDom(element) === false) return; 
         if (!element || !element.offset() || !concord.mobile) return;
 
         var headerHt = 62;
@@ -4300,3 +4302,4 @@ window.currentInstance;
     });
     concord.ready = true;
 })(jQuery);
+
