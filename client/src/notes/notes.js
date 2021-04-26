@@ -1168,6 +1168,11 @@ function Note(v, k, ver, date) {
                 };
             }
 
+            // Do not remove
+            $scope.isMobile = function () {
+                return isMobile;
+            };
+
             $scope.isReadOnly = function () {
                 return appPrefs.readonly;
             };
