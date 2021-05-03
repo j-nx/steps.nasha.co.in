@@ -1346,13 +1346,13 @@ function ConcordEvents(root, editor, op, concordInstance) {
             var wrapper = $(event.target);
             if (wrapper.hasClass('node-icon')) {
                 wrapper = wrapper.parent();
-            }
-            event.preventDefault();
-            op.setTextMode(false);
-            if (op.subsExpanded()) {
-                op.collapse();
-            } else {
-                op.expand();
+                event.preventDefault();
+                op.setTextMode(false);
+                if (op.subsExpanded()) {
+                    op.collapse();
+                } else {
+                    op.expand();
+                }
             }
         }
         concordInstance.fireCallback('opIconClicked', event);
