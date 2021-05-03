@@ -70,10 +70,7 @@ describe('Outliner Functions', function () {
             expect(ans).toBe('<b><u>BUBU</u></b>');
         });
 
-        it('should slice node correctly', function () {
-            const node = document.createElement('div');
-            node.innerHTML = '';
-
+        it('should split nodes correctly', function () {
             let [a, b] = sliceHtmlText('Hello There', 4);
             expect(a).toBe('Hell');
             expect(b).toBe('o There');
@@ -132,6 +129,45 @@ describe('Outliner Functions', function () {
             );
             expect(a).toBe('<b><strike>Hello <i>There</i></strike></b>');
             expect(b).toBe('');
+        });
+
+        it('should split link nodes correctly', function () {
+            let [a, b] = sliceHtmlText(
+                '<div>Hello <a href="URL.com">There</a></div>',
+                8,
+                []
+            ); // at h
+
+            expect(a).toBe('<div>Hello <a href="URL.com">Th</a href="URL.com"></div>');
+            expect(b).toBe('<div><a href="URL.com">ere</a></div>');
+
+            // With style
+            [a, b] = sliceHtmlText(
+                '<div>Hello <b><a href="URL.com">There</a></b></div>',
+                8,
+                []
+            ); // at h
+
+            expect(a).toBe('<div>Hello <b><a href="URL.com">Th</a href="URL.com"></b></div>');
+            expect(b).toBe('<div><b><a href="URL.com">ere</a></b></div>');
+        });
+
+        it('should consolidate with link tag child', function () {
+            
+            let ans = ConcordUtil.consolidateTags(
+                '<b>BOLD <a href="url.com">link</a></b>',
+                '<b>BOLD FRIEND</b>'
+            );
+
+            expect(ans).toBe('<b>BOLD <a href="url.com">link</a>BOLD FRIEND</b>');
+
+            ans = ConcordUtil.consolidateTags(
+                '<b>BOLD <a href="url.com">link</a></b>',
+                '<b><a href="url2.com">link2</a>BOLD FRIEND </b>'
+            );
+
+            expect(ans).toBe('<b>BOLD <a href="url.com">link</a><a href="url2.com">link2</a>BOLD FRIEND </b>');
+
         });
     });
 });
