@@ -84,7 +84,7 @@ describe('Note Service functions', function() {
         expect(ns.getPendingNotes()).toBe(1);
     });
 
-    it('should indicate which note failed to download - API does not indicate Key! ', function() {
+    xit('should indicate which note failed to download - API does not indicate Key! ', function() {
         ns.onNoteActionFailure();
     });
 
