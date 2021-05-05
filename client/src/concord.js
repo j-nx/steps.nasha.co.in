@@ -119,8 +119,8 @@ var concord = {
     },
     bringIntoView: function (element) {
         /* If element is not in view scroll to it */
-        
-        if (isDom(element) === false) return; 
+
+        if (isDom(element) === false) return;
         if (!element || !element.offset() || !concord.mobile) return;
 
         var headerHt = 62;
@@ -206,9 +206,17 @@ var ConcordUtil = {
     },
     getCaret2: function () {
         if (window.getSelection && window.getSelection().getRangeAt) {
-            var range = window.getSelection().getRangeAt(0);
-            var selectedObj = window.getSelection();
-            var rangeCount = 0;
+            let range = window.getSelection().getRangeAt(0);
+            let selectedObj = window.getSelection();
+            let rangeCount = 0;
+
+            let siblingOnLeft = selectedObj.anchorNode.previousSibling;
+
+            while (siblingOnLeft !== null) {
+                rangeCount += siblingOnLeft.textContent.length;
+                siblingOnLeft = siblingOnLeft.previousSibling;
+            }
+
             var pNode = selectedObj.anchorNode.parentNode;
             while (
                 pNode.localName != 'div' //has in classList "concord-text"
@@ -2203,7 +2211,7 @@ function ConcordOp(root, concordInstance, _cursor) {
         this.getCursor()
             .children('.concord-wrapper')
             .children('.concord-text')
-            .trigger('blur')
+            .trigger('blur');
     };
     this.fullCollapse = function () {
         root.find('.concord-node').each(function () {
@@ -4302,4 +4310,3 @@ window.currentInstance;
     });
     concord.ready = true;
 })(jQuery);
-
