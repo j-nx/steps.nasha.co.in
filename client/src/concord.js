@@ -420,6 +420,12 @@ var ConcordUtil = {
         checkTag('<u>', '</u>', a, b);
 
         return a + b;
+    },
+    getTextNode: function (op) {
+        return op
+            .getCursor()
+            .children('.concord-wrapper')
+            .children('.concord-text')[0];
     }
 };
 
@@ -1501,10 +1507,7 @@ function ConcordEvents(root, editor, op, concordInstance) {
                         event.shiftKey
                     );
                     var caretPosition = op.getLineText().length;
-                    const el = op
-                        .getCursor()
-                        .children('.concord-wrapper')
-                        .children('.concord-text')[0];
+                    const el = ConcordUtil.getTextNode(op);
                     ConcordUtil.setCaret(el, caretPosition);
                     instance.clickSelect(event);
                 }
@@ -3684,10 +3687,7 @@ window.currentInstance;
                                     )
                                 );
                                 ConcordUtil.setCaret2(
-                                    concordInstance.op
-                                        .getCursor()
-                                        .children('.concord-wrapper')
-                                        .children('.concord-text')[0],
+                                    ConcordUtil.getTextNode(concordInstance.op),
                                     newCaretPosition
                                 );
                             }
@@ -3727,10 +3727,9 @@ window.currentInstance;
 
                                         concordInstance.op.setCursor(cursor);
                                         ConcordUtil.setCaret(
-                                            concordInstance.op
-                                                .getCursor()
-                                                .children('.concord-wrapper')
-                                                .children('.concord-text')[0],
+                                            ConcordUtil.getTextNode(
+                                                concordInstance.op
+                                            ),
                                             prevNodeText.length
                                         );
                                         event.preventDefault();
@@ -4207,23 +4206,45 @@ window.currentInstance;
                         } else {
                             concordInstance.op.expand();
                         }
+                        break;
                     }
+
+                    // Hyperlinkify
+                    let text = concordInstance.op.getLineText();
+                    let html = concordInstance.op.getLineText(undefined, true); // since we want to preserve other tags
+                    let caret = ConcordUtil.getCaret2(event.target);
+
+                    const lastWord = getPreviousWord(text, caret);
+
+                    if (lastWord.startsWith('http')) {
+                        // Todo: Strip word from start,end index and replace with below
+                        // Issue if adding same link multiple times in a node
+
+                        const link = document.createElement('a');
+                        link.innerHTML = lastWord;
+                        link.target = '_';
+                        link.setAttribute('href', lastWord);
+                        html = html.replace(lastWord, link.outerHTML);
+                        concordInstance.op.setLineText(html);
+                        ConcordUtil.setCaret2(
+                            ConcordUtil.getTextNode(concordInstance.op),
+                            caret
+                        );
+                    }
+
                     break;
                 case 186:
                 case 59:
                     //CMD + SEMICOLON
                     if (commandKey) {
-                        var text = concordInstance.op.getLineText();
-                        var date = `${ConcordUtil.getCurrentDate()} `;
-                        var caret = ConcordUtil.getCaret(event.target);
+                        let text = concordInstance.op.getLineText();
+                        let date = `${ConcordUtil.getCurrentDate()} `;
+                        let caret = ConcordUtil.getCaret(event.target);
 
                         text = text.insertAt(caret, date);
                         concordInstance.op.setLineText(text);
                         ConcordUtil.setCaret(
-                            concordInstance.op
-                                .getCursor()
-                                .children('.concord-wrapper')
-                                .children('.concord-text')[0],
+                            ConcordUtil.getTextNode(concordInstance.op),
                             caret + date.length
                         );
                         keyCaptured = true;
