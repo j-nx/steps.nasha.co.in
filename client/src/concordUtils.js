@@ -425,6 +425,26 @@ function sliceHtmlText(str, index, allowedTags = ['<b>', '<i>', '<u>']) {
     return [a, b];
 }
 
+/**
+ * Get previous word from end index. e.g. str: 'hello moto', endIndex 5 ==> hello
+ * @param {*} str
+ * @param {*} wordEndIndex
+ */
+function getPreviousWord(str, endIndex) {
+    if (!str || endIndex === undefined || endIndex > str.length) return '';
+
+    // from caret position (end index), move backwards till 0 or till ' ' ===> start index
+    const wArray = [];
+    for (let i=endIndex-1; i>=0; i--) {
+        if (str[i] === ' ')
+            break;
+        wArray.unshift(str[i]);
+    }
+    return wArray.join('');
+}
+
 function isDom(el) {
-    return el && el instanceof Element || el.length && el[0] instanceof Element;
+    return (
+        (el && el instanceof Element) || (el.length && el[0] instanceof Element)
+    );
 }

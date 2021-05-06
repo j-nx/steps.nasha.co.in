@@ -138,7 +138,9 @@ describe('Outliner Functions', function () {
                 []
             ); // at h
 
-            expect(a).toBe('<div>Hello <a href="URL.com">Th</a href="URL.com"></div>');
+            expect(a).toBe(
+                '<div>Hello <a href="URL.com">Th</a href="URL.com"></div>'
+            );
             expect(b).toBe('<div><a href="URL.com">ere</a></div>');
 
             // With style
@@ -148,26 +150,41 @@ describe('Outliner Functions', function () {
                 []
             ); // at h
 
-            expect(a).toBe('<div>Hello <b><a href="URL.com">Th</a href="URL.com"></b></div>');
+            expect(a).toBe(
+                '<div>Hello <b><a href="URL.com">Th</a href="URL.com"></b></div>'
+            );
             expect(b).toBe('<div><b><a href="URL.com">ere</a></b></div>');
         });
 
         it('should consolidate with link tag child', function () {
-            
             let ans = ConcordUtil.consolidateTags(
                 '<b>BOLD <a href="url.com">link</a></b>',
                 '<b>BOLD FRIEND</b>'
             );
 
-            expect(ans).toBe('<b>BOLD <a href="url.com">link</a>BOLD FRIEND</b>');
+            expect(ans).toBe(
+                '<b>BOLD <a href="url.com">link</a>BOLD FRIEND</b>'
+            );
 
             ans = ConcordUtil.consolidateTags(
                 '<b>BOLD <a href="url.com">link</a></b>',
                 '<b><a href="url2.com">link2</a>BOLD FRIEND </b>'
             );
 
-            expect(ans).toBe('<b>BOLD <a href="url.com">link</a><a href="url2.com">link2</a>BOLD FRIEND </b>');
+            expect(ans).toBe(
+                '<b>BOLD <a href="url.com">link</a><a href="url2.com">link2</a>BOLD FRIEND </b>'
+            );
+        });
 
+        it('should get the word from a string', function () {
+            let ans = getPreviousWord('hello world', 5);
+            expect(ans).toBe('hello');
+
+            ans = getPreviousWord('hello world', 11);
+            expect(ans).toBe('world');
+            
+            ans = getPreviousWord('b http://nasha.co.in', 20);
+            expect(ans).toBe('http://nasha.co.in');
         });
     });
 });
