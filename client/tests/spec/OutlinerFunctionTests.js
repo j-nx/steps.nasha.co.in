@@ -139,7 +139,7 @@ describe('Outliner Functions', function () {
             ); // at h
 
             expect(a).toBe(
-                '<div>Hello <a href="URL.com">Th</a href="URL.com"></div>'
+                '<div>Hello <a href="URL.com">Th</a></div>'
             );
             expect(b).toBe('<div><a href="URL.com">ere</a></div>');
 
@@ -151,7 +151,7 @@ describe('Outliner Functions', function () {
             ); // at h
 
             expect(a).toBe(
-                '<div>Hello <b><a href="URL.com">Th</a href="URL.com"></b></div>'
+                '<div>Hello <b><a href="URL.com">Th</a></b></div>'
             );
             expect(b).toBe('<div><b><a href="URL.com">ere</a></b></div>');
         });

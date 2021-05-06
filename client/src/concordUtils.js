@@ -333,7 +333,7 @@ function secondsSince(when) {
  * Assumes that the input string is well formed
  * This code only works because of the unit tests behind it
  */
-function sliceHtmlText(str, index, allowedTags = ['<b>', '<i>', '<u>']) {
+function sliceHtmlText(str, index, allowedTags = ['<b>', '<i>', '<u>', '<a ']) {
     // Up until index, how many incomplete tags exist
     if (str.length === 0) return [str, ''];
     if (index === 0) return ['', str];
@@ -350,27 +350,33 @@ function sliceHtmlText(str, index, allowedTags = ['<b>', '<i>', '<u>']) {
         return [str.substring(0, index), str.substring(index)];
 
     const openTags = [];
+
+    const getTagInfo = (i) => {
+        let tagName = [];
+        let isTag = false;
+        for (var j = i + 1; j <= str.length; j++) {
+            if (str[j] === '>') {
+                isTag = true;
+                break;
+            }
+            tagName.push(str[j]);
+        }
+        if (isTag) {
+            return { name: tagName.join(''), newIndex: j };
+        }
+        return undefined;
+    };
+
+    const cleanTag = (tag) => {
+        if (tag.startsWith('a')) return 'a';
+        return tag;
+    };
+
     for (var i = 0; i <= str.length && index >= 0; i++) {
         if (str[i] != '<') {
             index--;
             continue;
         }
-
-        const getTagInfo = (i) => {
-            let tagName = [];
-            let isTag = false;
-            for (var j = i + 1; j <= str.length; j++) {
-                if (str[j] === '>') {
-                    isTag = true;
-                    break;
-                }
-                tagName.push(str[j]);
-            }
-            if (isTag) {
-                return { name: tagName.join(''), newIndex: j };
-            }
-            return undefined;
-        };
 
         if (str[i] === '<') {
             if (i + 1 < str.length && str[i + 1] === '/') {
@@ -418,7 +424,7 @@ function sliceHtmlText(str, index, allowedTags = ['<b>', '<i>', '<u>']) {
 
     for (let ti = openTags.length - 1; ti >= 0; ti--) {
         const t = openTags[ti];
-        a += `</${t}>`;
+        a += `</${cleanTag(t)}>`;
         if (b) b = `<${t}>` + b;
     }
 
@@ -435,9 +441,8 @@ function getPreviousWord(str, endIndex) {
 
     // from caret position (end index), move backwards till 0 or till ' ' ===> start index
     const wArray = [];
-    for (let i=endIndex-1; i>=0; i--) {
-        if (str[i] === ' ')
-            break;
+    for (let i = endIndex - 1; i >= 0; i--) {
+        if (str[i] === ' ') break;
         wArray.unshift(str[i]);
     }
     return wArray.join('');

@@ -4222,7 +4222,7 @@ window.currentInstance;
 
                         const link = document.createElement('a');
                         link.innerHTML = lastWord;
-                        link.target = '_blank';
+                        link.target = '_';
                         link.setAttribute('href', lastWord);
                         html = html.replace(lastWord, link.outerHTML);
                         concordInstance.op.setLineText(html);
