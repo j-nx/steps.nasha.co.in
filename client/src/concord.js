@@ -3530,10 +3530,16 @@ window.currentInstance;
         window.currentInstance = new ConcordOutline($(this), options);
         return window.currentInstance;
     };
-    $(document).on('keydown', function (event) {
-        if (!concord.handleEvents) {
+
+    function handleInput(event, which = undefined) {
+        if (
+            !concord.handleEvents ||
+            (event.which === 229 && which === undefined)
+        ) {
             return;
         }
+        if (!which) which = event.which;
+
         if ($(event.target).is('input') || $(event.target).is('textarea')) {
             return;
         }
@@ -3570,7 +3576,7 @@ window.currentInstance;
             if (!lineText) lineText = '';
             let isCaretAtEndOfLine = caretPosition >= lineText.trimEnd().length;
 
-            switch (event.which) {
+            switch (which) {
                 case 8:
                     //Backspace
                     {
@@ -3880,7 +3886,7 @@ window.currentInstance;
                                     ? right
                                     : down;
                             } else {
-                                const [top, bottom] = sliceHtmlText(
+                                let [top, bottom] = sliceHtmlText(
                                     textNode,
                                     caretPosition
                                 );
@@ -4284,7 +4290,25 @@ window.currentInstance;
             }
             concord.bringIntoView($(event.target));
         }
-    });
+    }
+
+    $(document).on('keydown', handleInput);
+
+    function handleInput_Mobile(event) {
+        /** We want to move away from using event.which in HandleInput as mobile keyboards don't reliably relay a keyCode
+         * Till that is done this method will relay those key presses that are required immediately
+         */
+
+        if (event && event.originalEvent.data) {
+            if (event.originalEvent.data === ' ') handleInput(event, 32); // space
+
+            // enter pressed. Enter is a textInput event if node has text, not otherwise 🤷‍♂️
+            if (event.originalEvent.data.endsWith('\n')) handleInput(event, 13);
+        }
+    }
+
+    if (isMobile) $(document).on('textInput', handleInput_Mobile);
+
     $(document).on('mouseup', function (event) {
         if (!concord.handleEvents) {
             return;
@@ -4312,8 +4336,11 @@ window.currentInstance;
             var focusRoot = concord.getFocusRoot();
         }
     });
+
     $(document).on('click', concord.updateFocusRootEvent);
+
     $(document).on('dblclick', concord.updateFocusRootEvent);
+
     $(document).on('show', function (e) {
         if ($(e.target).is('.modal')) {
             if ($(e.target).attr('concord-events') != 'true') {
@@ -4321,6 +4348,7 @@ window.currentInstance;
             }
         }
     });
+
     $(document).on('hidden', function (e) {
         if ($(e.target).is('.modal')) {
             if ($(e.target).attr('concord-events') != 'true') {
@@ -4328,5 +4356,6 @@ window.currentInstance;
             }
         }
     });
+
     concord.ready = true;
 })(jQuery);
