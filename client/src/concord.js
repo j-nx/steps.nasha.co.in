@@ -432,11 +432,11 @@ var ConcordUtil = {
 
         var r = document.createRange();
         if (!startIndex) startIndex = 0;
-        if (!endIndex) endIndex = textNode.textContent.length;;
-        
+        if (!endIndex) endIndex = textNode.textContent.length;
+
         r.setStart(textNode, startIndex);
         r.setEnd(textNode, endIndex);
-        
+
         var s = window.getSelection();
         s.removeAllRanges();
         s.addRange(r);
@@ -4229,7 +4229,6 @@ window.currentInstance;
                         break;
                     }
 
-                    
                     let text = concordInstance.op.getLineText();
                     let html = concordInstance.op.getLineText(undefined, true); // since we want to preserve other tags
                     let caret = ConcordUtil.getCaret2(event.target);
@@ -4237,13 +4236,10 @@ window.currentInstance;
 
                     /** Apply formatting on space  */
                     if (lastWord.startsWith('http')) {
-
-                        const lineHtml = convertToHref(lastWord, html)
+                        const lineHtml = convertToHref(lastWord, html);
 
                         concordInstance.op.setLineText(lineHtml);
-                        ConcordUtil.setCaret2(ConcordUtil.getTextNode(concordInstance.op), caret);
-
-                    } 
+                    }
 
                     break;
                 case 186:
