@@ -15,10 +15,14 @@ const config = {
 
 `python -m http.server`
 
-**Build Deployment:**
+**Create Build**
 
 -   Create config-prod.js
 -   Run `grunt`
+
+**Deploy Build**
+
+-   [Instructions on Trello](https://trello.com/c/0Kgcc1Bl/463-deployment)
 
 **Remote Debugging**
 
