@@ -173,13 +173,13 @@ describe('Outliner Functions', function () {
         });
 
         it('should get the word from a string', function () {
-            let ans = getPreviousWord('hello world', 5);
+            let ans = getLastWord('hello world', 5);
             expect(ans).toBe('hello');
 
-            ans = getPreviousWord('hello world', 11);
+            ans = getLastWord('hello world', 11);
             expect(ans).toBe('world');
 
-            ans = getPreviousWord('b http://nasha.co.in', 20);
+            ans = getLastWord('b http://nasha.co.in', 20);
             expect(ans).toBe('http://nasha.co.in');
         });
 

@@ -295,16 +295,16 @@
                 <div class="touchEditExtras">
                     <div class="touchEditExtraButtons">
                         <div class="touchEditDelete">
-                            <i class="icon-trash bar-icon bar-icon-left" ng-click="deleteText()" ng-class="{'warn': readyToDelete}"></i>
+                            <i class="icon-trash bar-icon" ng-click="deleteText()" ng-class="{'warn': readyToDelete}"></i>
                         </div>
                         <div class="touchEditStrike">
-                            <i ng-class="{'icon-check': isStrikethrough(), 'icon-check-empty': isStrikethrough() == false}" class="bar-icon bar-icon-left" ng-click="strikethrough()"></i>
+                            <i ng-class="{'icon-check': isStrikethrough(), 'icon-check-empty': isStrikethrough() == false}" class="bar-icon" ng-click="strikethrough()"></i>
                         </div>
                     </div>
-                    <div class="touchEditMove">
-                        <i class="icon-caret-up bar-icon bar-icon-left" ng-click="move('up')"></i>
+                    <div class="touchEditMove right">
+                        <i class="icon-caret-up bar-icon" ng-click="move('up')"></i>
                         <br />
-                        <i class="icon-caret-down bar-icon bar-icon-left" ng-click="move('down')"></i>
+                        <i class="icon-caret-down bar-icon" ng-click="move('down')"></i>
                     </div>
                 </div>
             </div>
@@ -312,17 +312,21 @@
                 <div ng-show="isAppReady()">
                     <div class="mobile-edit-footer" ng-show="isTouchEdit()">
                         <div class="footer-left">
-                            <div>
-                                <i class="icon-chevron-left bar-icon bar-icon-left" ng-click="move('left')"></i>
-                                <i class="icon-chevron-right bar-icon bar-icon-left" ng-click="move('right')" style="padding-left: 15px;"></i>
+                            <div class="touchEditMove left">
+                                <i class="icon-caret-left bar-icon" ng-click="move('left')"></i>
+                                <i class="icon-caret-right bar-icon" ng-click="move('right')" style="padding-left: 15px;"></i>
                             </div>
                         </div>
                         <div class="footer-center"></div>
-                        <div class="footer-right"><span class="taskbar-button" ng-click="forceSync()" style="color:#777879">OK</span></div>
+                        <div class="footer-right">
+                            <span class="taskbar-button" ng-mousedown="makeBold($event, 'bold')"><b>B</b></span>
+                            <span class="taskbar-button" ng-mousedown="makeBold($event, 'italic')"><i>I</i></span>
+                            <span class="taskbar-button" ng-mousedown="makeBold($event, 'underline')"><u>U</u></span>
+                            <span class="taskbar-button" ng-click="forceSync()" style="color:#777879; margin-left: 10px">OK</span></div>
                     </div>
                     <div class="main-footer" id="footer" ng-hide="isTouchEdit()">
                         <div class="footer-left">
-                        <i title="Status" ng-class="{ 'icon-refresh bar-icon bar-icon-left refresh-icon': true, 'icon-spin': saveState === 'Saving' }" ng-click="forceSync()"></i>
+                        <i title="Status" ng-class="{ 'icon-refresh bar-icon refresh-icon': true, 'icon-spin': saveState === 'Saving' }" ng-click="forceSync()"></i>
                             <!-- ng-style="{ color: statusColor() }" --> 
                         </div>
                         <div class="footer-center">

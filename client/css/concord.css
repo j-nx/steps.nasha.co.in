@@ -386,15 +386,10 @@ strike {
     padding-right: 8px;
 }
 
-.bar-icon,
-.bar-icon-left {
+.bar-icon {
     color: #a3aaac;
     padding: 0 6px;
-    font-size: 130%;
-}
-
-.bar-icon-left {
-    float: left;
+    font-size: 1.3em;
 }
 
 .footer {
@@ -459,12 +454,18 @@ strike {
 }
 
 .touchEditMove {
+    background-color: #d6d6d6 !important;
+    border-radius: 4px;
+}
+.touchEditMove.left {
+    float: left;
+}
+
+.touchEditMove.right {
+    font-size: 150%;
     margin-top: -75px;
     margin-right: 10px;
-    font-size: 150%;
-    background-color: #e4e4e4;
     float: right;
-    border-radius: 4px;
 }
 
 .footer-center {
@@ -480,7 +481,7 @@ strike {
 .footer-right {
     text-align: right;
     float: right;
-    width: 35%;
+    width: 40%;
 }
 
 .footer-extra {
@@ -708,7 +709,8 @@ strike {
 
 .taskbar-button {
     padding: 5px;
-    color: #494949;
+    color: #a4a4a4;
+    min-width: 16px;
 }
 
 .try-it {

@@ -631,6 +631,19 @@ function NoteService(concord) {
         appPrefs.readonly = true;
         this.ngScope.setStatus(msg);
     }.bind(this);
+
+    this.applyStyle = function (style) {
+        switch (style) {
+            case 'bold':
+                return this.outliner.op.bold();
+            case 'italic':
+                return this.outliner.op.italic();
+            case 'underline':
+                return this.outliner.op.underline();
+            default:
+                break;
+        }
+    }.bind(this);
 }
 
 /* Local Storage Object */
@@ -1161,6 +1174,12 @@ function Note(v, k, ver, date) {
                         concord.removeFocus(true);
                     }
                 };
+
+                $scope.makeBold = function (e, style) { 
+                    e.stopPropagation();
+                    e.preventDefault();
+                    ns.applyStyle(style) 
+                }
 
                 $scope.setStatus = function (e) {
                     $scope.statusMessage = e;

@@ -19,3 +19,17 @@ const config = {
 
 -   Create config-prod.js
 -   Run `grunt`
+
+**Remote Debugging**
+
+-   Connect phone to USB
+    -   Enable Remote debugging on the phone
+
+To connect to localhost,
+
+-   Find out local IP (e.g. 172.18.128.1:8000)
+-   Connect to a DNS rebinding service like nip.io
+    -   `http://172.18.128.1.nip.io:8000/` (Note http)
+-   Allow access from this domain on firebase
+-   [Setup Chrome Debugging](https://developer.chrome.com/docs/devtools/remote-debugging/) on Desktop
+    -   `chrome://inspect/#devices`
