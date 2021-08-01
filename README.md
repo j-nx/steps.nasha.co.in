@@ -1,6 +1,8 @@
 # Steps.nasha.co.in
 
-**Create a config.js in the root folder:**
+**Setup**
+
+Create a config.js in the root folder:
 
 ```
 const config = {
@@ -8,6 +10,10 @@ const config = {
     API_KEY: 'YOUR_API_KEY'
 };
 ```
+
+**Run**
+
+`python -m http.server`
 
 **Build Deployment:**
 

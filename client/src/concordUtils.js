@@ -448,6 +448,18 @@ function getPreviousWord(str, endIndex) {
     return wArray.join('');
 }
 
+function convertToHref(word, lineHtml, caret, concordInstance) {
+    // Todo: Strip word from start,end index and replace with below
+    // Issue if adding same link multiple times in a node
+
+    const link = document.createElement('a');
+    link.innerHTML = word;
+    link.setAttribute('href', word);
+    lineHtml = lineHtml.replace(word, link.outerHTML);
+    concordInstance.op.setLineText(lineHtml);
+    ConcordUtil.setCaret2(ConcordUtil.getTextNode(concordInstance.op), caret);
+}
+
 function isDom(el) {
     return (
         (el && el instanceof Element) || (el.length && el[0] instanceof Element)

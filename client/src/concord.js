@@ -4215,26 +4215,15 @@ window.currentInstance;
                         break;
                     }
 
-                    // Hyperlinkify
+                    
                     let text = concordInstance.op.getLineText();
                     let html = concordInstance.op.getLineText(undefined, true); // since we want to preserve other tags
                     let caret = ConcordUtil.getCaret2(event.target);
-
                     const lastWord = getPreviousWord(text, caret);
 
+                    /** Apply formatting on space  */
                     if (lastWord.startsWith('http')) {
-                        // Todo: Strip word from start,end index and replace with below
-                        // Issue if adding same link multiple times in a node
-
-                        const link = document.createElement('a');
-                        link.innerHTML = lastWord;
-                        link.setAttribute('href', lastWord);
-                        html = html.replace(lastWord, link.outerHTML);
-                        concordInstance.op.setLineText(html);
-                        ConcordUtil.setCaret2(
-                            ConcordUtil.getTextNode(concordInstance.op),
-                            caret
-                        );
+                        convertToHref(lastWord, html, caret, concordInstance)
                     }
 
                     break;
