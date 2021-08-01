@@ -138,9 +138,7 @@ describe('Outliner Functions', function () {
                 []
             ); // at h
 
-            expect(a).toBe(
-                '<div>Hello <a href="URL.com">Th</a></div>'
-            );
+            expect(a).toBe('<div>Hello <a href="URL.com">Th</a></div>');
             expect(b).toBe('<div><a href="URL.com">ere</a></div>');
 
             // With style
@@ -150,9 +148,7 @@ describe('Outliner Functions', function () {
                 []
             ); // at h
 
-            expect(a).toBe(
-                '<div>Hello <b><a href="URL.com">Th</a></b></div>'
-            );
+            expect(a).toBe('<div>Hello <b><a href="URL.com">Th</a></b></div>');
             expect(b).toBe('<div><b><a href="URL.com">ere</a></b></div>');
         });
 
@@ -182,10 +178,24 @@ describe('Outliner Functions', function () {
 
             ans = getPreviousWord('hello world', 11);
             expect(ans).toBe('world');
-            
+
             ans = getPreviousWord('b http://nasha.co.in', 20);
             expect(ans).toBe('http://nasha.co.in');
         });
+
+        it('should convert a url word to an <a href> tag', function () {
+            let word = 'http://url.com';
+            let html = 'this is a long sentence with a http://url.com in it ';
+            let expected =
+                'this is a long sentence with a <a href="http://url.com">http://url.com</a> in it ';
+
+            let ans = convertToHref(word, html);
+            expect(ans).toBe(expected);
+        });
+
+        it('should convert a markdown b,i,u to a formatted tag', function() {
+
+        })
     });
 });
 

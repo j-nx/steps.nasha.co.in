@@ -426,6 +426,20 @@ var ConcordUtil = {
             .getCursor()
             .children('.concord-wrapper')
             .children('.concord-text')[0];
+    },
+    selectRangeInTextNode: function (textNode, startIndex, endIndex) {
+        // https://newbedev.com/programmatically-select-text-in-a-contenteditable-html-element
+
+        var r = document.createRange();
+        if (!startIndex) startIndex = 0;
+        if (!endIndex) endIndex = textNode.textContent.length;;
+        
+        r.setStart(textNode, startIndex);
+        r.setEnd(textNode, endIndex);
+        
+        var s = window.getSelection();
+        s.removeAllRanges();
+        s.addRange(r);
     }
 };
 
@@ -4219,12 +4233,17 @@ window.currentInstance;
                     let text = concordInstance.op.getLineText();
                     let html = concordInstance.op.getLineText(undefined, true); // since we want to preserve other tags
                     let caret = ConcordUtil.getCaret2(event.target);
-                    const lastWord = getPreviousWord(text, caret);
+                    const lastWord = getLastWord(text, caret);
 
                     /** Apply formatting on space  */
                     if (lastWord.startsWith('http')) {
-                        convertToHref(lastWord, html, caret, concordInstance)
-                    }
+
+                        const lineHtml = convertToHref(lastWord, html)
+
+                        concordInstance.op.setLineText(lineHtml);
+                        ConcordUtil.setCaret2(ConcordUtil.getTextNode(concordInstance.op), caret);
+
+                    } 
 
                     break;
                 case 186:

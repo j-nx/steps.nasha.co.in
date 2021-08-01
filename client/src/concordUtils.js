@@ -432,11 +432,11 @@ function sliceHtmlText(str, index, allowedTags = ['<b>', '<i>', '<u>', '<a ']) {
 }
 
 /**
- * Get previous word from end index. e.g. str: 'hello moto', endIndex 5 ==> hello
+ * Get previous word from endIndex. e.g. str: 'hello moto', endIndex 5 ==> hello
  * @param {*} str
  * @param {*} wordEndIndex
  */
-function getPreviousWord(str, endIndex) {
+function getLastWord(str, endIndex) {
     if (!str || endIndex === undefined || endIndex > str.length) return '';
 
     // from caret position (end index), move backwards till 0 or till ' ' ===> start index
@@ -448,16 +448,14 @@ function getPreviousWord(str, endIndex) {
     return wArray.join('');
 }
 
-function convertToHref(word, lineHtml, caret, concordInstance) {
+function convertToHref(word, lineHtml) {
     // Todo: Strip word from start,end index and replace with below
-    // Issue if adding same link multiple times in a node
+    // BUG: Error if adding same link multiple times in a node
 
     const link = document.createElement('a');
     link.innerHTML = word;
     link.setAttribute('href', word);
-    lineHtml = lineHtml.replace(word, link.outerHTML);
-    concordInstance.op.setLineText(lineHtml);
-    ConcordUtil.setCaret2(ConcordUtil.getTextNode(concordInstance.op), caret);
+    return lineHtml.replace(word, link.outerHTML);
 }
 
 function isDom(el) {
