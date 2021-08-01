@@ -406,7 +406,7 @@ strike {
 
 .footer-content {
     text-align: center;
-    font-size: 130%;
+    font-size: 1.3em;
     padding: 10px;
     height: 24px;
 }
@@ -415,6 +415,8 @@ strike {
     float: left;
     text-align: left;
     width: 35%;
+
+    font-size: 88%;
 }
 
 .footer-extra .footer-left .statusMessage {
@@ -482,6 +484,8 @@ strike {
     text-align: right;
     float: right;
     width: 40%;
+
+    font-size: 95%;
 }
 
 .footer-extra {
@@ -708,7 +712,7 @@ strike {
 }
 
 .taskbar-button {
-    padding: 5px;
+    padding: 2px 3px 2px 3px;
     color: #a4a4a4;
     min-width: 16px;
 }

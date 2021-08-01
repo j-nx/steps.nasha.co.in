@@ -8,6 +8,7 @@
     },
     "scripts": {
         "start": "python -m http.server",
+        "build": "grunt",
         "test": "echo \"Info: Run SpecRunner.html to execute tests\" && exit 1"
     },
     "author": "jnx@nasha.co.in",

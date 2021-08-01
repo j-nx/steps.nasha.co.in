@@ -18,7 +18,7 @@ const config = {
 **Create Build**
 
 -   Create config-prod.js
--   Run `grunt`
+-   Run `npm run build` or `grunt`
 
 **Deploy Build**
 
