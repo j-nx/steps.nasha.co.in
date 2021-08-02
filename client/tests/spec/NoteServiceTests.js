@@ -326,7 +326,7 @@ describe('Note Service functions', function() {
             spyOn(concord, 'removeFocus');
             var e = {
                 type: 'touchend',
-                target: createDiv('wot', 'bar-icon-left')
+                target: createDiv('wot', 'bar-icon')
             };
             $(document).trigger(e);
 

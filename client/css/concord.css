@@ -1,3 +1,5 @@
+/** All CSS in HTML is symptomatic of a css hacks */
+
 #main {
     font-family: 'Fira Sans', sans-serif;
     height: 100%;
@@ -386,15 +388,22 @@ strike {
     padding-right: 8px;
 }
 
-.bar-icon,
-.bar-icon-left {
+.bar-icon {
     color: #a3aaac;
     padding: 0 6px;
-    font-size: 130%;
+    font-size: 1.3em;
 }
 
-.bar-icon-left {
-    float: left;
+.main-footer {
+    display: flex;
+}
+
+.mobile-edit-footer {
+    display: flex;
+    max-height: 40px;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 34px;
 }
 
 .footer {
@@ -411,21 +420,29 @@ strike {
 
 .footer-content {
     text-align: center;
-    font-size: 130%;
-    padding: 10px;
-    height: 24px;
+    font-size: 1.3em;
+    min-height: 40px;
+}
+
+.flex {
+    display: flex;
 }
 
 .footer-left {
-    float: left;
-    text-align: left;
-    width: 35%;
+    padding: 8px;
+    max-width: 20px;
+    margin-right: auto;
+
+    font-size: 88%;
 }
 
 .footer-extra .footer-left .statusMessage {
     display: inline-block;
     font-size: 60%;
     color: #81786f;
+}
+
+.footer-left-edit {
 }
 
 .footer-extra .statusMessage {
@@ -459,28 +476,45 @@ strike {
 }
 
 .touchEditMove {
-    margin-top: -75px;
-    margin-right: 10px;
+    background-color: #d6d6d6 !important;
+}
+
+.touchEditMove.left {
+    height: 100%;
+    border-radius: 0px;
+    padding: 6px;
+}
+
+.touchEditMove.right {
     font-size: 150%;
-    background-color: #e4e4e4;
+    margin-top: -75px;
     float: right;
-    border-radius: 4px;
+    margin-right: 8px;
 }
 
 .footer-center {
     width: 60px;
-    /*30%;*/
     margin-left: auto;
     margin-right: auto;
     left: 0;
     right: 0;
     position: absolute;
+
+    padding: 8px;
 }
 
 .footer-right {
     text-align: right;
     float: right;
-    width: 35%;
+    width: 40%;
+
+    font-size: 95%;
+    padding: 6px;
+}
+
+.footer-right-edit {
+    right: 0;
+    padding: 7px;
 }
 
 .footer-extra {
@@ -707,8 +741,13 @@ strike {
 }
 
 .taskbar-button {
-    padding: 5px;
-    color: #494949;
+    padding: 2px 3px 2px 3px;
+    color: #a4a4a4;
+    min-width: 16px;
+}
+
+.taskbar-button.style {
+    background-color: transparent;
 }
 
 .try-it {

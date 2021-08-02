@@ -138,7 +138,7 @@ describe('Outliner Functions', function () {
                 []
             ); // at h
 
-            expect(a).toBe('<div>Hello <a href="URL.com">Th</a href="URL.com"></div>');
+            expect(a).toBe('<div>Hello <a href="URL.com">Th</a></div>');
             expect(b).toBe('<div><a href="URL.com">ere</a></div>');
 
             // With style
@@ -148,27 +148,54 @@ describe('Outliner Functions', function () {
                 []
             ); // at h
 
-            expect(a).toBe('<div>Hello <b><a href="URL.com">Th</a href="URL.com"></b></div>');
+            expect(a).toBe('<div>Hello <b><a href="URL.com">Th</a></b></div>');
             expect(b).toBe('<div><b><a href="URL.com">ere</a></b></div>');
         });
 
         it('should consolidate with link tag child', function () {
-            
             let ans = ConcordUtil.consolidateTags(
                 '<b>BOLD <a href="url.com">link</a></b>',
                 '<b>BOLD FRIEND</b>'
             );
 
-            expect(ans).toBe('<b>BOLD <a href="url.com">link</a>BOLD FRIEND</b>');
+            expect(ans).toBe(
+                '<b>BOLD <a href="url.com">link</a>BOLD FRIEND</b>'
+            );
 
             ans = ConcordUtil.consolidateTags(
                 '<b>BOLD <a href="url.com">link</a></b>',
                 '<b><a href="url2.com">link2</a>BOLD FRIEND </b>'
             );
 
-            expect(ans).toBe('<b>BOLD <a href="url.com">link</a><a href="url2.com">link2</a>BOLD FRIEND </b>');
-
+            expect(ans).toBe(
+                '<b>BOLD <a href="url.com">link</a><a href="url2.com">link2</a>BOLD FRIEND </b>'
+            );
         });
+
+        it('should get the word from a string', function () {
+            let ans = getLastWord('hello world', 5);
+            expect(ans).toBe('hello');
+
+            ans = getLastWord('hello world', 11);
+            expect(ans).toBe('world');
+
+            ans = getLastWord('b http://nasha.co.in', 20);
+            expect(ans).toBe('http://nasha.co.in');
+        });
+
+        it('should convert a url word to an <a href> tag', function () {
+            let word = 'http://url.com';
+            let html = 'this is a long sentence with a http://url.com in it ';
+            let expected =
+                'this is a long sentence with a <a href="http://url.com">http://url.com</a> in it ';
+
+            let ans = convertToHref(word, html);
+            expect(ans).toBe(expected);
+        });
+
+        it('should convert a markdown b,i,u to a formatted tag', function() {
+
+        })
     });
 });
 

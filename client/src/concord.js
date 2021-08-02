@@ -420,6 +420,26 @@ var ConcordUtil = {
         checkTag('<u>', '</u>', a, b);
 
         return a + b;
+    },
+    getTextNode: function (op) {
+        return op
+            .getCursor()
+            .children('.concord-wrapper')
+            .children('.concord-text')[0];
+    },
+    selectRangeInTextNode: function (textNode, startIndex, endIndex) {
+        // https://newbedev.com/programmatically-select-text-in-a-contenteditable-html-element
+
+        var r = document.createRange();
+        if (startIndex === undefined) startIndex = 0;
+        if (endIndex === undefined) endIndex = textNode.textContent.length;
+
+        r.setStart(textNode, startIndex);
+        r.setEnd(textNode, endIndex);
+
+        var s = window.getSelection();
+        s.removeAllRanges();
+        s.addRange(r);
     }
 };
 
@@ -1501,10 +1521,7 @@ function ConcordEvents(root, editor, op, concordInstance) {
                         event.shiftKey
                     );
                     var caretPosition = op.getLineText().length;
-                    const el = op
-                        .getCursor()
-                        .children('.concord-wrapper')
-                        .children('.concord-text')[0];
+                    const el = ConcordUtil.getTextNode(op);
                     ConcordUtil.setCaret(el, caretPosition);
                     instance.clickSelect(event);
                 }
@@ -3527,10 +3544,16 @@ window.currentInstance;
         window.currentInstance = new ConcordOutline($(this), options);
         return window.currentInstance;
     };
-    $(document).on('keydown', function (event) {
-        if (!concord.handleEvents) {
+
+    function handleInput(event, which = undefined) {
+        if (
+            !concord.handleEvents ||
+            (event.which === 229 && which === undefined)
+        ) {
             return;
         }
+        if (!which) which = event.which;
+
         if ($(event.target).is('input') || $(event.target).is('textarea')) {
             return;
         }
@@ -3567,7 +3590,7 @@ window.currentInstance;
             if (!lineText) lineText = '';
             let isCaretAtEndOfLine = caretPosition >= lineText.trimEnd().length;
 
-            switch (event.which) {
+            switch (which) {
                 case 8:
                     //Backspace
                     {
@@ -3684,10 +3707,7 @@ window.currentInstance;
                                     )
                                 );
                                 ConcordUtil.setCaret2(
-                                    concordInstance.op
-                                        .getCursor()
-                                        .children('.concord-wrapper')
-                                        .children('.concord-text')[0],
+                                    ConcordUtil.getTextNode(concordInstance.op),
                                     newCaretPosition
                                 );
                             }
@@ -3727,10 +3747,9 @@ window.currentInstance;
 
                                         concordInstance.op.setCursor(cursor);
                                         ConcordUtil.setCaret(
-                                            concordInstance.op
-                                                .getCursor()
-                                                .children('.concord-wrapper')
-                                                .children('.concord-text')[0],
+                                            ConcordUtil.getTextNode(
+                                                concordInstance.op
+                                            ),
                                             prevNodeText.length
                                         );
                                         event.preventDefault();
@@ -3788,7 +3807,7 @@ window.currentInstance;
                         concordInstance.op.reorg(left);
                     }
                     break;
-                case 82:
+                case 82: 
                     //CMD+R
                     if (commandKey) {
                         keyCaptured = true;
@@ -3881,7 +3900,7 @@ window.currentInstance;
                                     ? right
                                     : down;
                             } else {
-                                const [top, bottom] = sliceHtmlText(
+                                let [top, bottom] = sliceHtmlText(
                                     textNode,
                                     caretPosition
                                 );
@@ -4207,23 +4226,66 @@ window.currentInstance;
                         } else {
                             concordInstance.op.expand();
                         }
+                        break;
                     }
+
+                    let text = concordInstance.op.getLineText();
+                    let html = concordInstance.op.getLineText(undefined, true); // since we want to preserve other tags
+                    let caret = ConcordUtil.getCaret2(event.target);
+                    const lastWord = getLastWord(text, caret);
+
+                    /** Apply formatting on space  */
+                    if (lastWord.startsWith('http')) {
+                        const lineHtml = convertToHref(lastWord, html);
+
+                        concordInstance.op.setLineText(lineHtml);
+                    } else if (lastWord.startsWith('**') && lastWord.endsWith('**')) {
+                        /** This is a feature to allow you to type 
+                         **hello there**, press space --> <b>hello there</b> 
+                         It's disabled right now as it only works with the last word not a range
+                         e.g. **works** **does not work**
+
+                         execCommand is not working as expected on mobile)
+                         */
+
+                        // Select Text 
+                        const selection = window.getSelection();
+                        const startSelection = selection.anchorOffset - lastWord.length;
+                        const endSelection = selection.anchorOffset;
+                        ConcordUtil.selectRangeInTextNode(selection.anchorNode, startSelection, endSelection)
+
+                        // Apply style - not stylize? 
+                        concordInstance.op.bold()
+
+                        /** Strip prefix, postfix **
+                         * BUG: Will replace all **!
+                         */
+                        // Get new styled html
+                        html = concordInstance.op.getLineText(undefined, true);
+                        html = html.replace(lastWord, lastWord.replaceAll('**', ''));
+                        concordInstance.op.setLineText(html);
+
+                        // Unselect text
+                        window.getSelection().empty()
+
+                        // Set caret
+                        ConcordUtil.setCaret2(ConcordUtil.getTextNode(concordInstance.op), caret-4);
+
+                    }
+
                     break;
                 case 186:
                 case 59:
                     //CMD + SEMICOLON
                     if (commandKey) {
-                        var text = concordInstance.op.getLineText();
-                        var date = `${ConcordUtil.getCurrentDate()} `;
-                        var caret = ConcordUtil.getCaret(event.target);
+                        let text = concordInstance.op.getLineText();
+                        let date = `${ConcordUtil.getCurrentDate()} `;
+                        let caret = ConcordUtil.getCaret(event.target);
 
                         text = text.insertAt(caret, date);
                         concordInstance.op.setLineText(text);
                         ConcordUtil.setCaret(
-                            concordInstance.op
-                                .getCursor()
-                                .children('.concord-wrapper')
-                                .children('.concord-text')[0],
+                            ConcordUtil.getTextNode(concordInstance.op),
                             caret + date.length
                         );
                         keyCaptured = true;
@@ -4264,7 +4326,25 @@ window.currentInstance;
             }
             concord.bringIntoView($(event.target));
         }
-    });
+    }
+
+    $(document).on('keydown', handleInput);
+
+    function handleInput_Mobile(event) {
+        /** We want to move away from using event.which in HandleInput as mobile keyboards don't reliably relay a keyCode
+         * Till that is done this method will relay those key presses that are required immediately
+         */
+
+        if (event && event.originalEvent.data) {
+            if (event.originalEvent.data === ' ') handleInput(event, 32); // space
+
+            // enter pressed. Enter is a textInput event if node has text, not otherwise 🤷‍♂️
+            if (event.originalEvent.data.endsWith('\n')) handleInput(event, 13);
+        }
+    }
+
+    if (isMobile) $(document).on('textInput', handleInput_Mobile);
+
     $(document).on('mouseup', function (event) {
         if (!concord.handleEvents) {
             return;
@@ -4292,8 +4372,11 @@ window.currentInstance;
             var focusRoot = concord.getFocusRoot();
         }
     });
+
     $(document).on('click', concord.updateFocusRootEvent);
+
     $(document).on('dblclick', concord.updateFocusRootEvent);
+
     $(document).on('show', function (e) {
         if ($(e.target).is('.modal')) {
             if ($(e.target).attr('concord-events') != 'true') {
@@ -4301,6 +4384,7 @@ window.currentInstance;
             }
         }
     });
+
     $(document).on('hidden', function (e) {
         if ($(e.target).is('.modal')) {
             if ($(e.target).attr('concord-events') != 'true') {
@@ -4308,5 +4392,6 @@ window.currentInstance;
             }
         }
     });
+
     concord.ready = true;
 })(jQuery);
