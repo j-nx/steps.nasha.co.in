@@ -1,3 +1,5 @@
+/** All CSS in HTML is symptomatic of a css hacks */
+
 #main {
     font-family: 'Fira Sans', sans-serif;
     height: 100%;
@@ -392,6 +394,18 @@ strike {
     font-size: 1.3em;
 }
 
+.main-footer {
+    display: flex;
+}
+
+.mobile-edit-footer {
+    display: flex;
+    max-height: 40px;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 34px;
+}
+
 .footer {
     position: fixed;
     bottom: 0;
@@ -407,14 +421,17 @@ strike {
 .footer-content {
     text-align: center;
     font-size: 1.3em;
-    padding: 10px;
-    height: 24px;
+    min-height: 40px;
+}
+
+.flex {
+    display: flex;
 }
 
 .footer-left {
-    float: left;
-    text-align: left;
-    width: 35%;
+    padding: 8px;
+    max-width: 20px;
+    margin-right: auto;
 
     font-size: 88%;
 }
@@ -423,6 +440,9 @@ strike {
     display: inline-block;
     font-size: 60%;
     color: #81786f;
+}
+
+.footer-left-edit {
 }
 
 .footer-extra .statusMessage {
@@ -457,27 +477,30 @@ strike {
 
 .touchEditMove {
     background-color: #d6d6d6 !important;
-    border-radius: 4px;
 }
+
 .touchEditMove.left {
-    float: left;
+    height: 100%;
+    border-radius: 0px;
+    padding: 6px;
 }
 
 .touchEditMove.right {
     font-size: 150%;
     margin-top: -75px;
-    margin-right: 10px;
     float: right;
+    margin-right: 8px;
 }
 
 .footer-center {
     width: 60px;
-    /*30%;*/
     margin-left: auto;
     margin-right: auto;
     left: 0;
     right: 0;
     position: absolute;
+
+    padding: 8px;
 }
 
 .footer-right {
@@ -486,6 +509,12 @@ strike {
     width: 40%;
 
     font-size: 95%;
+    padding: 6px;
+}
+
+.footer-right-edit {
+    right: 0;
+    padding: 7px;
 }
 
 .footer-extra {
@@ -715,6 +744,10 @@ strike {
     padding: 2px 3px 2px 3px;
     color: #a4a4a4;
     min-width: 16px;
+}
+
+.taskbar-button.style {
+    background-color: transparent;
 }
 
 .try-it {
