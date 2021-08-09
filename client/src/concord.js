@@ -4238,7 +4238,6 @@ window.currentInstance;
                     if (lastWord.startsWith('http')) {
                         const lineHtml = convertToHref(lastWord, html);
                         concordInstance.op.setLineText(lineHtml);
-                        // Set caret
                         ConcordUtil.setCaret2(
                             ConcordUtil.getTextNode(concordInstance.op),
                             caret
