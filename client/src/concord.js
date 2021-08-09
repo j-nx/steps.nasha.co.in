@@ -4243,7 +4243,7 @@ window.currentInstance;
                             ConcordUtil.getTextNode(concordInstance.op),
                             caret
                         );
-                    } else if (
+                    } else if (false &&
                         lastWord.startsWith('**') &&
                         lastWord.endsWith('**')
                     ) {
