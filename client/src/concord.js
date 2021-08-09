@@ -3807,7 +3807,7 @@ window.currentInstance;
                         concordInstance.op.reorg(left);
                     }
                     break;
-                case 82: 
+                case 82:
                     //CMD+R
                     if (commandKey) {
                         keyCaptured = true;
@@ -4237,9 +4237,16 @@ window.currentInstance;
                     /** Apply formatting on space  */
                     if (lastWord.startsWith('http')) {
                         const lineHtml = convertToHref(lastWord, html);
-
                         concordInstance.op.setLineText(lineHtml);
-                    } else if (lastWord.startsWith('**') && lastWord.endsWith('**')) {
+                        // Set caret
+                        ConcordUtil.setCaret2(
+                            ConcordUtil.getTextNode(concordInstance.op),
+                            caret
+                        );
+                    } else if (
+                        lastWord.startsWith('**') &&
+                        lastWord.endsWith('**')
+                    ) {
                         /** This is a feature to allow you to type 
                          **hello there**, press space --> <b>hello there</b> 
                          It's disabled right now as it only works with the last word not a range
@@ -4248,29 +4255,39 @@ window.currentInstance;
                          execCommand is not working as expected on mobile)
                          */
 
-                        // Select Text 
+                        // Select Text
                         const selection = window.getSelection();
-                        const startSelection = selection.anchorOffset - lastWord.length;
+                        const startSelection =
+                            selection.anchorOffset - lastWord.length;
                         const endSelection = selection.anchorOffset;
-                        ConcordUtil.selectRangeInTextNode(selection.anchorNode, startSelection, endSelection)
+                        ConcordUtil.selectRangeInTextNode(
+                            selection.anchorNode,
+                            startSelection,
+                            endSelection
+                        );
 
-                        // Apply style - not stylize? 
-                        concordInstance.op.bold()
+                        // Apply style - not stylize?
+                        concordInstance.op.bold();
 
                         /** Strip prefix, postfix **
                          * BUG: Will replace all **!
                          */
                         // Get new styled html
                         html = concordInstance.op.getLineText(undefined, true);
-                        html = html.replace(lastWord, lastWord.replaceAll('**', ''));
+                        html = html.replace(
+                            lastWord,
+                            lastWord.replaceAll('**', '')
+                        );
                         concordInstance.op.setLineText(html);
 
                         // Unselect text
-                        window.getSelection().empty()
+                        window.getSelection().empty();
 
                         // Set caret
-                        ConcordUtil.setCaret2(ConcordUtil.getTextNode(concordInstance.op), caret-4);
-
+                        ConcordUtil.setCaret2(
+                            ConcordUtil.getTextNode(concordInstance.op),
+                            caret - 4
+                        );
                     }
 
                     break;
