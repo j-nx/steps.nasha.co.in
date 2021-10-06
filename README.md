@@ -20,10 +20,6 @@ const config = {
 -   Create config-prod.js
 -   Run `npm run build` or `grunt`
 
-**Deploy Build**
-
--   [Instructions on Trello](https://trello.com/c/0Kgcc1Bl/463-deployment)
-
 **Remote Debugging**
 
 -   Connect phone to USB
