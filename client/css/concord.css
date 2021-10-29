@@ -6,6 +6,10 @@
     text-rendering: optimizeLegibility;
 }
 
+::selection {
+    background-color: #9ef35e;
+}
+
 .concord {
     font-size: 12pt;
     margin: 0;
@@ -168,6 +172,7 @@
 
 .concord-text a,
 .concord-text a:visited {
+    color: inherit;
     cursor: pointer;
 }
 
