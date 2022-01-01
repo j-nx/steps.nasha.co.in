@@ -953,6 +953,10 @@ function Note(v, k, ver, date) {
                 {
                     function: 'Mark Complete',
                     code: 'Ctrl + Enter'
+                },
+                {
+                    function: 'Indent all below ',
+                    code: 'Ctrl + Shift + [ or ]'
                 }
             ];
 

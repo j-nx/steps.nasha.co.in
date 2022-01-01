@@ -11,12 +11,13 @@
 }
 
 .concord {
-    font-size: 12pt;
+    font-size: 1em;
     margin: 0;
     padding: 0;
     border: 0;
     list-style-type: none;
     color: #000;
+    margin-bottom: 50px; /* Space for footer */
 }
 
 .divOutlinerContainer {
@@ -125,7 +126,7 @@
     /* float: left; */
     display: inline-block;
     outline: none !important;
-    font-size: 12pt;
+    font-size: 1em;
     color: #4c555a;
     min-width: 10px;
     white-space: pre-wrap;
@@ -172,7 +173,7 @@
 
 .concord-text a,
 .concord-text a:visited {
-    color: inherit;
+    color: #4caf50;
     cursor: pointer;
 }
 
@@ -240,7 +241,7 @@ strike {
     width: 100%;
     padding: 2px;
     color: #dad664;
-    font-size: 10px;
+    font-size: 0.6em;
     white-space: pre-line; /* For new line */
     overflow-y: scroll;
 }

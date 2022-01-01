@@ -525,21 +525,15 @@ function ConcordOutline(container, options) {
                     prefs.outlineFont;
             }
             if (prefs.outlineFontSize) {
-                prefs.outlineFontSize = parseFloat(prefs.outlineFontSize);
-                var diff = prefs.nodeLineHeight - prefs.outlineFontSize;
+                var diff = (prefs.nodeLineHeight*16) - (prefs.outlineFontSize*16); // Rem to Px = REM*BASE_FONT_SIZE e.g. 1.2*16
                 nodeStyle['font-size'] = style['font-size'] =
-                    prefs.outlineFontSize + 'px';
+                    prefs.outlineFontSize + 'em';
                 nodeStyle['min-height'] = style['min-height'] =
-                    prefs.outlineFontSize + diff + 'px';
+                    (prefs.outlineFontSize*16) + diff + 'px';
                 nodeStyle['line-height'] = style['line-height'] =
-                    prefs.outlineFontSize + diff + 'px';
+                    (prefs.outlineFontSize*16) + diff + 'px';
             }
 
-            if (prefs.nodeLineHeight) {
-                prefs.nodeLineHeight = parseFloat(prefs.nodeLineHeight);
-                nodeStyle['min-height'] = prefs.nodeLineHeight + 'px';
-                nodeStyle['line-height'] = prefs.nodeLineHeight + 'px';
-            }
             this.root.parent().find('style.prefsStyle').remove();
             var css = '<style type="text/css" class="prefsStyle">\n';
             var cssId = '';
@@ -564,7 +558,7 @@ function ConcordOutline(container, options) {
                 }
             }
             if (prefs.iconSize) {
-                css += 'font-size:' + prefs.iconSize + 'px;';
+                css += 'font-size:' + prefs.iconSize + 'em;';
             }
             css += '}\n';
             var olPaddingLeft = prefs.paddingLeft;
