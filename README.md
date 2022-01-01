@@ -13,7 +13,7 @@ const config = {
 
 **Run**
 
-`python -m http.server`
+`npm start`
 
 **Create Build**
 

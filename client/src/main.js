@@ -11,10 +11,10 @@ console.log('isMobile evaluated to', isMobile)
 
 var appPrefs = {
     readonly: isOffline,
-    outlineFontSize: isMobile ? 15 : 13,
-    iconSize: 8,
-    paddingLeft: isMobile ? 8 : 11,
-    nodeLineHeight: isMobile ? 25 : 22,
+    outlineFontSize: isMobile ? 0.95 : 1, // em
+    iconSize: 0.5, // em
+    paddingLeft: isMobile ? 8 : 11, // px
+    nodeLineHeight: isMobile ? 1.4 : 1.6, // em
     authorName: 'DJ',
     authorEmail: 'jnx@nasha.co.in'
 };

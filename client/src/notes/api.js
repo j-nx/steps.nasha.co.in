@@ -91,7 +91,6 @@ function gApi() {
     };
 
     this.retrieveIndex = (successCallback, failCallback) => {
-        const that = this;
         var retrievePageOfFiles = function (request, result) {
             request.execute(function (resp) {
                 const files = [];
@@ -116,8 +115,6 @@ function gApi() {
     };
 
     this.retrieveNote = (key, successCallback, failCallback) => {
-        //return new Promise(function(resolve, reject) {});
-
         var request = gapi.client.drive.files.get({
             fileId: key,
             alt: 'media'
@@ -262,7 +259,8 @@ function gApi() {
 
         const error = function (e) {
             console.error('Error Occured when initializing Google ', e.details);
-            this.onInitComplete();
+            this.onInitComplete(); 
+            // Todo signal failure to UI
         };
 
         gapi.client
