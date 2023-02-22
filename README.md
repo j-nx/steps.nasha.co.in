@@ -2,7 +2,7 @@
 
 **Setup**
 
-Create a config.js in the root folder:
+Create a config.js in the root folder with your [Google Cloud Configuration](https://console.cloud.google.com/):
 
 ```
 const config = {

@@ -45,6 +45,8 @@ function API() {
 }
 // #region GDrive
 function gApi() {
+    this.PLUGIN_NAME = 'steps.nasha.co.in'
+
     this.CLIENT_ID = config.CLIENT_ID;
 
     this.API_KEY = config.API_KEY;
@@ -268,7 +270,8 @@ function gApi() {
                 apiKey: this.API_KEY,
                 clientId: this.CLIENT_ID,
                 discoveryDocs: this.DISCOVERY_DOCS,
-                scope: this.SCOPES
+                scope: this.SCOPES,
+                plugin_name: this.PLUGIN_NAME
             })
             .then(success)
             .catch(error);
