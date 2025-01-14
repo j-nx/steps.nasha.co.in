@@ -602,7 +602,9 @@ function NoteService(concord) {
             this.ngScope.hideLoginDialog();
             hideSplash();
         } catch (error) {
-            console.error('Error occured when launching note. ' + error.message);
+            console.error(
+                'Error occured when launching note. ' + error.message
+            );
         }
     }.bind(this);
 
@@ -696,44 +698,64 @@ function NoteStore() {
     };
 
     this.save = function () {
-        localStorage[this.storageName] = JSON.stringify(this);
+        storage.set(JSON.stringify(this));
         localStorage.ctOpmlSaves++;
+        localStorage.whenLastSave = new Date().toString();
     }.bind(this);
 
     this.load = function () {
-        if (localStorage[this.storageName] == undefined) return null;
+        return new Promise((resolve, reject) => {
+            storage
+                .get()
+                .then((data) => {
+                    if (!data) {
+                        resolve(null);
+                        return;
+                    }
 
-        try {
-            var obj = JSON.parse(localStorage.nsxData);
+                    try {
+                        var obj = JSON.parse(data);
 
-            this.email = obj.email;
-            this.token = obj.token;
-            this.tokenSaveDateTime = obj.tokenSaveDateTime;
+                        this.email = obj.email;
+                        this.token = obj.token;
+                        this.tokenSaveDateTime = obj.tokenSaveDateTime;
 
-            var self = this;
-            this.notes = [];
-            obj.notes.forEach(function (note) {
-                var n = new Note(
-                    note.value,
-                    note.key,
-                    note.version,
-                    note.modifydate
-                );
-                self.notes.push(n);
-            });
+                        var self = this;
+                        this.notes = [];
+                        obj.notes.forEach(function (note) {
+                            var n = new Note(
+                                note.value,
+                                note.key,
+                                note.version,
+                                note.modifydate
+                            );
+                            self.notes.push(n);
+                        });
 
-            this.version = obj.version;
-            this.selectedNoteKey = obj.selectedNoteKey;
-        } catch (err) {
-            console.error(
-                'Error occured when parsing saved data ' + err.message
-            );
-            return null;
-        }
+                        this.version = obj.version;
+                        this.selectedNoteKey = obj.selectedNoteKey;
+
+                        resolve(this);
+                    } catch (err) {
+                        console.error(
+                            'Error occurred when parsing saved data:',
+                            err.message
+                        );
+                        reject(err);
+                    }
+                })
+                .catch((err) => {
+                    console.error(
+                        'Error occurred while getting data:',
+                        err.message
+                    );
+                    reject(err);
+                });
+        });
     };
 
     this.clear = function () {
-        localStorage.removeItem('nsxData');
+        storage.clear();
         this.email = null;
         this.token = null;
         this.tokenSaveDateTime = null;
@@ -820,7 +842,6 @@ function Note(v, k, ver, date) {
 
     function CreateNoteService(outliner) {
         var ns = new NoteService(outliner);
-        var token = localStorage.getItem(ns.TOKEN_NAME);
         return ns;
     }
 
@@ -1179,11 +1200,11 @@ function Note(v, k, ver, date) {
                     }
                 };
 
-                $scope.makeBold = function (e, style) { 
+                $scope.makeBold = function (e, style) {
                     e.stopPropagation();
                     e.preventDefault();
-                    ns.applyStyle(style) 
-                }
+                    ns.applyStyle(style);
+                };
 
                 $scope.setStatus = function (e) {
                     $scope.statusMessage = e;
@@ -1230,8 +1251,8 @@ function Note(v, k, ver, date) {
                 };
 
                 $scope.toggleHello = function () {
-                    $scope.context.hello.isVisible = !$scope.context.hello
-                        .isVisible;
+                    $scope.context.hello.isVisible =
+                        !$scope.context.hello.isVisible;
                 };
 
                 $scope.toggleBarMenuDialog = function () {

@@ -1,5 +1,4 @@
-
-window.isMobileFn = function() {
+window.isMobileFn = function () {
     return window.orientation !== undefined;
 };
 
@@ -7,7 +6,7 @@ var betaMode = window.location.search.substring(1) == 'beta';
 
 var isOffline = navigator.onLine === false;
 var isMobile = isMobileFn();
-console.log('isMobile evaluated to', isMobile)
+console.log('isMobile evaluated to', isMobile);
 
 var appPrefs = {
     readonly: isOffline,
@@ -51,19 +50,80 @@ Auto Save                    5s             2s
 */
 
 function initLocalStorage() {
-    localStorage.ctOpmlSaves = 0;
-
-    if (localStorage.whenLastSave == undefined) {
-        localStorage.whenLastSave = new Date().toString();
-    }
-    if (localStorage.flTextMode == undefined) {
+    return new Promise((resolve, reject) => {
+        localStorage.ctOpmlSaves = 0;
         localStorage.flTextMode = 'true';
+
+        store = new NoteStore();
+        store
+            .load()
+            .then(() => {
+                if (!store.note) store.note = new Note(initialOpmltext);
+                resolve();
+            })
+            .catch((err) => {
+                console.error('Error Initializeing', err);
+                reject(err);
+            });
+    });
+}
+
+/**
+ * Storage Class based on IndexedDB
+ * use storage.clear() in place of localStorage.clear() */
+class NSXStorage {
+    constructor() {
+        this.dbName = 'NSXStorageDB';
+        this.storeName = 'nsxData';
+        this.db = null;
+        this.init();
     }
 
-    store = new NoteStore();
-    store.load();
-    if (!store.note) store.note = new Note(initialOpmltext);
+    init() {
+        const request = indexedDB.open(this.dbName, 1);
+        request.onupgradeneeded = (event) => {
+            event.target.result.createObjectStore(this.storeName);
+        };
+        request.onsuccess = (event) => {
+            this.db = event.target.result;
+        };
+        console.debug('NSXStorage Initialized');
+    }
+
+    set(data) {
+        const transaction = this.db.transaction([this.storeName], 'readwrite');
+        transaction.objectStore(this.storeName).put(data, this.storeName);
+        console.debug('Data saved locally');
+    }
+
+    get() {
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction(
+                [this.storeName],
+                'readonly'
+            );
+            const request = transaction
+                .objectStore(this.storeName)
+                .get(this.storeName);
+
+            request.onsuccess = () => {
+                resolve(request.result || null);
+            };
+
+            request.onerror = (event) => {
+                reject(event.target.error);
+            };
+        });
+    }
+
+    clear() {
+        const transaction = this.db.transaction([this.storeName], 'readwrite');
+        transaction.objectStore(this.storeName).delete(this.storeName);
+        console.debug('Storage cleared');
+    }
 }
+
+const storage = new NSXStorage();
 
 function saveOutlineNow() {
     if (ns.canPersist() == false || ns.isCookieValid() === false) return;
@@ -93,22 +153,25 @@ function startup(outliner, noInitialize) {
     }
 
     const onAPIInitialized = () => {
-        initLocalStorage();
+        initLocalStorage()
+            .then(() => {
+                if (!noInitialize || noInitialize === false) {
+                    var initVal = initialOpmltext;
+                    if (!store.note || !store.note.value)
+                        opXmlToOutline(initVal);
+                }
 
-        if (!noInitialize || noInitialize === false) {
-            var initVal = initialOpmltext;
-            if (!store.note || !store.note.value) opXmlToOutline(initVal);
-        }
+                startTimers();
 
-        startTimers();
+                ns = CreateNoteService(outliner);
+                ns.start();
 
-        ns = CreateNoteService(outliner);
-        ns.start();
-
-        if (isOffline) {
-            ns.setOffline('Offline');
-            ns.tryFinishLoading();
-        }
+                if (isOffline) {
+                    ns.setOffline('Offline');
+                    ns.tryFinishLoading();
+                }
+            })
+            .catch((err) => {});
     };
 
     if (isAppDisabled()) return;
