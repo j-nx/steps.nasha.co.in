@@ -67,10 +67,6 @@ class SearchCacheManager {
 
         const searchText = this.extractTextFromNote(note);
         this.store.searchCache[note.key] = searchText;
-
-        console.debug(
-            `Search cache updated for note: ${note.title || note.key}`
-        );
     }
 
     deleteNote(noteKey) {
