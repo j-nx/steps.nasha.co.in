@@ -171,6 +171,7 @@ function NoteService(concord) {
     this.np = new NoteProvider();
     this.outliner = concord;
     this.ngScope = null; //MainScope
+    this.searchCacheManager = null; // Search cache manager (initialized after store loads)
 
     this.m = {
         sessionExpired: 'Session expired.',
@@ -211,6 +212,11 @@ function NoteService(concord) {
         if (!store) store = new NoteStore();
         this.ngScope.store = store;
         this.ngScope.initialize();
+
+        // Initialize search cache manager
+        if (!this.searchCacheManager) {
+            this.searchCacheManager = new SearchCacheManager(store);
+        }
 
         if (store.requiresUpdate()) {
             store = new NoteStore();
@@ -265,6 +271,11 @@ function NoteService(concord) {
         if (store.note) {
             store.note.value = ns.outlineToXml();
             store.save();
+
+            // Update search cache
+            if (this.searchCacheManager) {
+                this.searchCacheManager.updateNote(store.note);
+            }
         }
 
         this.ngScope.setSaveState(saveStates.saving);
@@ -465,6 +476,11 @@ function NoteService(concord) {
             if (snote.deleted == 1) {
                 console.debug('Removing deleted note...');
                 store.removeNote(snote.key);
+
+                // Remove from search cache
+                if (this.searchCacheManager) {
+                    this.searchCacheManager.deleteNote(snote.key);
+                }
             } else {
                 var isNewNote = false;
 
@@ -489,6 +505,12 @@ function NoteService(concord) {
                         store.addNote(saveNote);
                     }
                     store.save();
+
+                    // Update search cache
+                    if (this.searchCacheManager && snote.content != undefined) {
+                        this.searchCacheManager.updateNote(saveNote);
+                    }
+
                     console.log(
                         'Saved note: ' +
                             saveNote.title +
@@ -553,6 +575,12 @@ function NoteService(concord) {
                     new Date(b.modifydate).getTime()
                 );
             });
+
+            // Rebuild search cache after all notes are loaded
+            if (this.searchCacheManager) {
+                this.searchCacheManager.rebuildCache();
+            }
+
             if (!store.note && store.notes.length > 0)
                 this.launchNote(null, true);
             this.ngScope.hideWorkingDialog();
@@ -565,6 +593,19 @@ function NoteService(concord) {
         var n = new Note(initialOpmltext);
         this.launchNote(n);
         this.saveNote();
+    }.bind(this);
+
+    /**
+     * Search across all notes using the search cache
+     * @param {string} query - Search query string
+     * @returns {Array} Array of search results with highlighted matches
+     */
+    this.searchNotes = function (query) {
+        if (!this.searchCacheManager) {
+            console.warn('Search cache not initialized');
+            return [];
+        }
+        return this.searchCacheManager.search(query);
     }.bind(this);
 
     this.launchNote = function (note, useDefault) {
@@ -659,6 +700,7 @@ function NoteStore() {
     this.notes = [];
     this.selectedNoteKey = null;
     this.storageName = 'nsxData';
+    this.searchCache = {}; // Search cache for fast note searching
     //Remember: Add inflation code to load() for each new property
 
     //Current Note
@@ -734,6 +776,7 @@ function NoteStore() {
 
                         this.version = obj.version;
                         this.selectedNoteKey = obj.selectedNoteKey;
+                        this.searchCache = obj.searchCache || {}; // Restore search cache
 
                         resolve(this);
                     } catch (err) {
@@ -908,8 +951,9 @@ function Note(v, k, ver, date) {
     myApp.controller('MainCtrl', [
         '$scope',
         '$timeout',
+        '$sce',
         'context',
-        function ($scope, $timeout, context) {
+        function ($scope, $timeout, $sce, context) {
             /* Safe Apply */
             {
                 $scope.update = function (fn) {
@@ -994,6 +1038,10 @@ function Note(v, k, ver, date) {
                 $scope.showBarMenu = false;
                 $scope.idleTimeout = false;
                 $scope.showWorking = false;
+                $scope.showSearch = false;
+                $scope.searchQuery = '';
+                $scope.searchResults = [];
+                $scope.searchInputFocused = false;
                 $scope.showMainRefresh = false;
                 $scope.statusMessage = '';
                 $scope.loadingCountdownMessage = defaultloadingSuffix;
@@ -1273,6 +1321,71 @@ function Note(v, k, ver, date) {
                 $scope.toggleNotesDialog = function () {
                     $scope.showNotesList = !$scope.showNotesList;
                 };
+
+                /* Search */
+                $scope.toggleSearchDialog = function () {
+                    $scope.showSearch = !$scope.showSearch;
+
+                    if ($scope.showSearch) {
+                        // Reset search state
+                        $scope.searchQuery = '';
+                        $scope.searchResults = [];
+
+                        // Focus search input after UI renders
+                        $timeout(function () {
+                            var searchInput = document.getElementById('searchInput');
+                            if (searchInput) searchInput.focus();
+                        }, 100);
+                    }
+                };
+
+                $scope.performSearch = function () {
+                    if (!$scope.searchQuery || $scope.searchQuery.length < 2) {
+                        $scope.searchResults = [];
+                        return;
+                    }
+
+                    $scope.searchResults = ns.searchNotes($scope.searchQuery);
+                };
+
+                $scope.openSearchResult = function (result) {
+                    var note = store.notes.find(function (n) {
+                        return n.key === result.noteKey;
+                    });
+
+                    if (note) {
+                        ns.launchNote(note);
+                        $scope.showSearch = false;
+                        $scope.searchQuery = '';
+                        $scope.searchResults = [];
+                    }
+                };
+
+                // Helper function for ng-bind-html to trust HTML content
+                $scope.trustAsHtml = function (html) {
+                    return $sce.trustAsHtml(html);
+                };
+
+                // Keyboard shortcuts for search
+                document.addEventListener('keydown', function (e) {
+                    // Ctrl+F or Cmd+F to open search
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                        e.preventDefault();
+                        $scope.$apply(function () {
+                            if (!$scope.showSearch) {
+                                $scope.toggleSearchDialog();
+                            }
+                        });
+                    }
+
+                    // Escape to close search
+                    if (e.key === 'Escape' && $scope.showSearch) {
+                        e.preventDefault();
+                        $scope.$apply(function () {
+                            $scope.toggleSearchDialog();
+                        });
+                    }
+                });
             }
 
             /* Notes */

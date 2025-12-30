@@ -21,7 +21,8 @@ module.exports = function (grunt) {
                         'src/concord.js',
                         'src/concordUtils.js',
                         'src/notes/notes.js',
-                        'src/notes/api.js'
+                        'src/notes/api.js',
+                        'src/notes/searchCache.js'
                     ],
                     'build/init.min.js': ['sw.js', 'cache-polyfill.js']
                 }

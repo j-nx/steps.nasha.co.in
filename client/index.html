@@ -91,6 +91,7 @@
     <script src="src/concordUtils.js"></script>
     <script src="src/notes/notes.js"></script>
     <script src="src/notes/api.js"></script>
+    <script src="src/notes/searchCache.js"></script>
     <!-- /build -->
 
     <!-- build:template
@@ -178,6 +179,7 @@
                 <!--svg3336 -->
                 <img class="svg3336" src="images/el2.png" alt="Steps"
                     style="height: auto; width:240px;opacity: 0.2;padding-bottom: 5px;">
+                <i class="icon-search search-button" ng-click="toggleSearchDialog()" title="Search notes (Ctrl+F)"></i>
             </div>
             <div class="divOutlinerContainer word-break">
                 <div id="outliner">
@@ -275,6 +277,37 @@
                     <div ng-class="{'notesList-note': true, 'notesList-note-selected':  isSelectedNote(note)}"
                         ng-click="launchNote(note)">
                         <i class="icon-caret-right" style="padding-right: 4px;"></i> {{note.title}}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="searchContainer drop-shadow-upwards" ng-show="showSearch">
+            <div class="search-header">
+                <input type="text"
+                       class="search-input"
+                       ng-model="searchQuery"
+                       ng-change="performSearch()"
+                       placeholder="Search notes..."
+                       ng-focus="searchInputFocused = true"
+                       ng-blur="searchInputFocused = false"
+                       id="searchInput">
+                <i class="icon-remove search-close" ng-click="toggleSearchDialog()" title="Close (Esc)"></i>
+            </div>
+            <div class="searchResults">
+                <div ng-show="searchQuery.length < 2 && searchQuery.length > 0" class="search-hint">
+                    Type at least 2 characters to search...
+                </div>
+                <div ng-show="searchQuery.length >= 2 && searchResults.length === 0" class="search-no-results">
+                    No results found for "{{searchQuery}}"
+                </div>
+                <div ng-repeat="result in searchResults" class="search-result-group">
+                    <div class="search-result-note-title" ng-click="openSearchResult(result)">
+                        <i class="icon-file-text"></i> {{result.noteTitle}}
+                    </div>
+                    <div ng-repeat="match in result.matches"
+                         class="search-result-match"
+                         ng-click="openSearchResult(result)"
+                         ng-bind-html="trustAsHtml(match.highlightedText)">
                     </div>
                 </div>
             </div>
