@@ -122,7 +122,7 @@ class NSXStorage {
     }
 }
 
-const storage = new NSXStorage();
+var storage = new NSXStorage();
 
 function saveOutlineNow() {
     if (ns.canPersist() == false || ns.isCookieValid() === false) return;
