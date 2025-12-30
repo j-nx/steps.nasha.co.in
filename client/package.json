@@ -27,7 +27,8 @@
         "grunt-terser": "^0.1.0",
         "grunt-text-replace": "^0.4.0",
         "jshint": "^2.9.1",
-        "lodash": "^4.17.14"
+        "lodash": "^4.17.14",
+        "puppeteer": "^24.34.0"
     },
     "jshintConfig": {
         "globals": {
@@ -36,6 +37,5 @@
         "devel": true,
         "strict": true,
         "maxerr": 9999
-    },
-    "dependencies": {}
+    }
 }

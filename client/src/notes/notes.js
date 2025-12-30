@@ -577,9 +577,7 @@ function NoteService(concord) {
             });
 
             // Rebuild search cache after all notes are loaded
-            if (this.searchCacheManager) {
-                this.searchCacheManager.rebuildCache();
-            }
+            if (this.searchCacheManager) this.searchCacheManager.rebuildCache();
 
             if (!store.note && store.notes.length > 0)
                 this.launchNote(null, true);
@@ -700,7 +698,7 @@ function NoteStore() {
     this.notes = [];
     this.selectedNoteKey = null;
     this.storageName = 'nsxData';
-    this.searchCache = {}; // Search cache for fast note searching
+    this.searchCache = {};
     //Remember: Add inflation code to load() for each new property
 
     //Current Note
@@ -1333,7 +1331,8 @@ function Note(v, k, ver, date) {
 
                         // Focus search input after UI renders
                         $timeout(function () {
-                            var searchInput = document.getElementById('searchInput');
+                            var searchInput =
+                                document.getElementById('searchInput');
                             if (searchInput) searchInput.focus();
                         }, 100);
                     }

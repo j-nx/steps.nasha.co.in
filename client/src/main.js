@@ -93,7 +93,6 @@ class NSXStorage {
     set(data) {
         const transaction = this.db.transaction([this.storeName], 'readwrite');
         transaction.objectStore(this.storeName).put(data, this.storeName);
-        console.debug('Data saved locally');
     }
 
     get() {

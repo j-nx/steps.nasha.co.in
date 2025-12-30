@@ -3,19 +3,36 @@ describe('Note Service functions', function() {
     var _store; //mimic global :/
     var otag = 'Outline-OPML';
 
-    beforeEach(function() {
-        module('nsx');
-        inject(function(_$controller_) {
-            $controller = _$controller_;
+    // Wait for IndexedDB to initialize before running tests
+    function waitForStorage() {
+        return new Promise(function(resolve) {
+            function check() {
+                if (storage.db) {
+                    resolve();
+                } else {
+                    setTimeout(check, 10);
+                }
+            }
+            check();
         });
+    }
 
-        ns = new NoteService($(defaultUtilsOutliner).concord());
-        ns.np = new NoteProviderMock();
-        window.store = null;
-        _store = window.store = new NoteStore();
-        _store.storageName = 'nsxData-tests2';
+    beforeEach(function(done) {
+        waitForStorage().then(function() {
+            module('nsx');
+            inject(function(_$controller_) {
+                $controller = _$controller_;
+            });
 
-        window.ns = ns;
+            ns = new NoteService($(defaultUtilsOutliner).concord());
+            ns.np = new NoteProviderMock();
+            window.store = null;
+            _store = window.store = new NoteStore();
+            _store.storageName = 'nsxData-tests2';
+
+            window.ns = ns;
+            done();
+        });
     });
 
     beforeEach(inject(function($rootScope) {

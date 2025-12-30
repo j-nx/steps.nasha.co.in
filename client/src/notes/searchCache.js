@@ -8,15 +8,6 @@
  * This class maintains a cache of searchable text extracted from OPML notes.
  * The cache is updated on every note save/update/delete to stay in sync.
  *
- * Benefits:
- * - 20x faster search (10ms vs 200ms for 100 notes)
- * - Enables real-time search-as-you-type
- * - Isolated code - easy to maintain or disable
- *
- * Overhead:
- * - Memory: +50% (1MB for 1000 notes)
- * - Startup: +100ms one-time cache build
- * - Per save: +1ms
  */
 class SearchCacheManager {
     constructor(noteStore) {
@@ -37,7 +28,7 @@ class SearchCacheManager {
 
         try {
             const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(note.value, "text/xml");
+            const xmlDoc = parser.parseFromString(note.value, 'text/xml');
             const outlines = xmlDoc.getElementsByTagName('outline');
 
             const textParts = [note.title || '']; // Start with title
@@ -54,9 +45,8 @@ class SearchCacheManager {
             // Join with newlines and convert to lowercase for case-insensitive search
             const fullText = textParts.join('\n').toLowerCase();
 
-            // Limit cache size per note to 10KB to prevent bloat
-            return fullText.substring(0, 10000);
-
+            // Limit cache size per note to 500KB to prevent bloat
+            return fullText.substring(0, 500000);
         } catch (error) {
             console.error('Error extracting text from note:', error);
             return '';
@@ -72,23 +62,17 @@ class SearchCacheManager {
         return tmp.textContent || tmp.innerText || '';
     }
 
-    /**
-     * Update cache for a single note
-     * Call this on note save/update
-     */
     updateNote(note) {
         if (!note || !note.key) return;
 
         const searchText = this.extractTextFromNote(note);
         this.store.searchCache[note.key] = searchText;
 
-        console.debug(`Search cache updated for note: ${note.title || note.key}`);
+        console.debug(
+            `Search cache updated for note: ${note.title || note.key}`
+        );
     }
 
-    /**
-     * Remove note from cache
-     * Call this on note delete
-     */
     deleteNote(noteKey) {
         if (this.store.searchCache[noteKey]) {
             delete this.store.searchCache[noteKey];
@@ -106,12 +90,16 @@ class SearchCacheManager {
 
         this.store.searchCache = {};
 
-        this.store.notes.forEach(note => {
+        this.store.notes.forEach((note) => {
             this.updateNote(note);
         });
 
         const duration = Math.round(performance.now() - startTime);
-        console.debug(`Search cache rebuilt: ${Object.keys(this.store.searchCache).length} notes indexed in ${duration}ms`);
+        console.debug(
+            `Search cache rebuilt: ${
+                Object.keys(this.store.searchCache).length
+            } notes indexed in ${duration}ms`
+        );
     }
 
     /**
@@ -124,7 +112,7 @@ class SearchCacheManager {
         const lowerQuery = query.toLowerCase();
         const results = [];
 
-        this.store.notes.forEach(note => {
+        this.store.notes.forEach((note) => {
             const cachedText = this.store.searchCache[note.key];
 
             // Skip if note not in cache
@@ -159,7 +147,7 @@ class SearchCacheManager {
 
         try {
             const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(note.value, "text/xml");
+            const xmlDoc = parser.parseFromString(note.value, 'text/xml');
             const outlines = xmlDoc.getElementsByTagName('outline');
 
             for (let i = 0; i < outlines.length; i++) {
@@ -169,7 +157,10 @@ class SearchCacheManager {
                 if (cleanText.toLowerCase().includes(lowerQuery)) {
                     matches.push({
                         text: cleanText,
-                        highlightedText: this.highlightMatch(cleanText, lowerQuery)
+                        highlightedText: this.highlightMatch(
+                            cleanText,
+                            lowerQuery
+                        )
                     });
 
                     // Limit to 5 matches per note to avoid clutter
@@ -198,10 +189,14 @@ class SearchCacheManager {
             if (matchIndex !== -1) {
                 // Show 50 chars before and after match
                 const start = Math.max(0, matchIndex - 50);
-                const end = Math.min(text.length, matchIndex + query.length + 100);
-                displayText = (start > 0 ? '...' : '') +
-                             text.substring(start, end) +
-                             (end < text.length ? '...' : '');
+                const end = Math.min(
+                    text.length,
+                    matchIndex + query.length + 100
+                );
+                displayText =
+                    (start > 0 ? '...' : '') +
+                    text.substring(start, end) +
+                    (end < text.length ? '...' : '');
             } else {
                 displayText = text.substring(0, 150) + '...';
             }
