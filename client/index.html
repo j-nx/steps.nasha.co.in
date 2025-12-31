@@ -286,6 +286,7 @@
                 <input type="text"
                        class="search-input"
                        ng-model="searchQuery"
+                       ng-model-options="{ debounce: 300 }"
                        ng-change="performSearch()"
                        placeholder="Search notes..."
                        ng-focus="searchInputFocused = true"
