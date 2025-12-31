@@ -3,66 +3,81 @@
 /* global store */
 
 /**
- * SearchCacheManager - Manages search cache for fast note searching
+ * SearchCacheManager - Manages unified cache for search and rendering
  *
- * This class maintains a cache of searchable text extracted from OPML notes.
- * The cache is updated on every note save/update/delete to stay in sync.
+ * Cache format (compact tree): [text, attrs, children]
+ * - text: original HTML text content
+ * - attrs: null or object with attributes (type, icon, etc.)
+ * - children: array of child nodes in same format
  *
+ * Example:
+ * ["Shopping List", null, [
+ *   ["Groceries", {type:"task"}, [
+ *     ["Milk", null, []],
+ *     ["Eggs", null, []]
+ *   ]]
+ * ]]
  */
 class SearchCacheManager {
     constructor(noteStore) {
         this.store = noteStore;
 
-        // Initialize cache from existing notes
         if (!this.store.searchCache) {
             this.store.searchCache = {};
         }
     }
 
     /**
-     * Extract all elements from OPML note with their path indices for navigation
-     * Returns: Array of { pathIndices: [0,1,2], text: "lowercase", originalText: "Original" }
+     * Extract compact tree from OPML note
+     * Returns: Array of [text, attrs, children] nodes
      */
-    extractElementsFromNote(note) {
+    extractTreeFromNote(note) {
         if (!note || !note.value) return [];
 
         try {
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(note.value, 'text/xml');
-            const elements = [];
 
-            // Recursive function to traverse outline with path tracking
-            const traverse = (node, pathIndices) => {
-                const children = Array.from(node.children).filter(
-                    (el) => el.tagName === 'outline'
-                );
+            const buildNode = (outline) => {
+                const text = outline.getAttribute('text') || '';
 
-                children.forEach((child, index) => {
-                    const currentPath = [...pathIndices, index];
-                    const text = child.getAttribute('text') || '';
-                    const cleanText = this.stripHtml(text);
-
-                    if (cleanText.trim()) {
-                        elements.push({
-                            pathIndices: currentPath,
-                            text: cleanText.toLowerCase(),
-                            originalText: cleanText
-                        });
+                // Collect non-text attributes
+                let attrs = null;
+                const attrNames = ['type', 'icon', 'isComment', 'cssTextClass'];
+                for (const name of attrNames) {
+                    const val = outline.getAttribute(name);
+                    if (val) {
+                        if (!attrs) attrs = {};
+                        attrs[name] = val;
                     }
+                }
 
-                    // Recurse into children
-                    traverse(child, currentPath);
-                });
+                // Build children recursively
+                const children = [];
+                const childOutlines = outline.children;
+                for (let i = 0; i < childOutlines.length; i++) {
+                    if (childOutlines[i].tagName === 'outline') {
+                        children.push(buildNode(childOutlines[i]));
+                    }
+                }
+
+                return [text, attrs, children];
             };
 
             const body = xmlDoc.getElementsByTagName('body')[0];
-            if (body) {
-                traverse(body, []);
+            if (!body) return [];
+
+            const tree = [];
+            const topLevel = body.children;
+            for (let i = 0; i < topLevel.length; i++) {
+                if (topLevel[i].tagName === 'outline') {
+                    tree.push(buildNode(topLevel[i]));
+                }
             }
 
-            return elements;
+            return tree;
         } catch (error) {
-            console.error('Error extracting elements from note:', error);
+            console.error('Error extracting tree from note:', error);
             return [];
         }
     }
@@ -79,10 +94,10 @@ class SearchCacheManager {
     updateNote(note) {
         if (!note || !note.key) return;
 
-        const elements = this.extractElementsFromNote(note);
+        const tree = this.extractTreeFromNote(note);
         this.store.searchCache[note.key] = {
-            title: (note.title || '').toLowerCase(),
-            elements: elements
+            title: note.title || '',
+            tree: tree
         };
     }
 
@@ -95,7 +110,6 @@ class SearchCacheManager {
 
     /**
      * Rebuild entire cache from all notes
-     * Call this on app startup or when cache gets out of sync
      */
     rebuildCache() {
         console.debug('Rebuilding search cache...');
@@ -128,28 +142,20 @@ class SearchCacheManager {
         this.store.notes.forEach((note) => {
             const cached = this.store.searchCache[note.key];
 
-            // Skip if note not in cache or has old format
-            if (!cached || !cached.elements) {
+            // Handle missing or old format cache
+            if (!cached || !cached.tree) {
                 console.warn(`Note ${note.key} not in cache, updating...`);
                 this.updateNote(note);
                 return;
             }
 
-            // Check title or any element matches
-            const titleMatches = cached.title.includes(lowerQuery);
-            const elementMatches = cached.elements.some((el) =>
-                el.text.includes(lowerQuery)
-            );
-
-            if (titleMatches || elementMatches) {
-                const matches = this.findMatches(note, lowerQuery);
-                if (matches.length > 0) {
-                    results.push({
-                        noteKey: note.key,
-                        noteTitle: note.title || 'Untitled',
-                        matches: matches
-                    });
-                }
+            const matches = this.findMatchesInTree(cached.tree, lowerQuery);
+            if (matches.length > 0) {
+                results.push({
+                    noteKey: note.key,
+                    noteTitle: note.title || 'Untitled',
+                    matches: matches
+                });
             }
         });
 
@@ -157,28 +163,29 @@ class SearchCacheManager {
     }
 
     /**
-     * Find specific matching elements in the note from cache
-     * Returns matches with pathIndices for navigation
+     * Traverse tree to find matches
+     * Returns array of { text, pathIndices, highlightedText }
      */
-    findMatches(note, lowerQuery) {
-        const matches = [];
-        const cached = this.store.searchCache[note.key];
+    findMatchesInTree(tree, lowerQuery, pathPrefix = [], matches = []) {
+        for (let i = 0; i < tree.length && matches.length < 5; i++) {
+            const node = tree[i];
+            const text = node[0];
+            const children = node[2];
+            const currentPath = [...pathPrefix, i];
 
-        if (!cached || !cached.elements) return matches;
-
-        for (const element of cached.elements) {
-            if (element.text.includes(lowerQuery)) {
+            // Check if text matches
+            const cleanText = this.stripHtml(text);
+            if (cleanText.toLowerCase().includes(lowerQuery)) {
                 matches.push({
-                    text: element.originalText,
-                    pathIndices: element.pathIndices,
-                    highlightedText: this.highlightMatch(
-                        element.originalText,
-                        lowerQuery
-                    )
+                    text: cleanText,
+                    pathIndices: currentPath,
+                    highlightedText: this.highlightMatch(cleanText, lowerQuery)
                 });
+            }
 
-                // Limit to 5 matches per note to avoid clutter
-                if (matches.length >= 5) break;
+            // Recurse into children
+            if (children && children.length > 0 && matches.length < 5) {
+                this.findMatchesInTree(children, lowerQuery, currentPath, matches);
             }
         }
 
@@ -186,19 +193,26 @@ class SearchCacheManager {
     }
 
     /**
+     * Find matches in a specific note (for backward compatibility)
+     */
+    findMatches(note, lowerQuery) {
+        const cached = this.store.searchCache[note.key];
+        if (!cached || !cached.tree) return [];
+
+        return this.findMatchesInTree(cached.tree, lowerQuery);
+    }
+
+    /**
      * Highlight query matches in text
      */
     highlightMatch(text, query) {
-        // Escape special regex characters
         const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const regex = new RegExp(`(${escapedQuery})`, 'gi');
 
-        // Truncate long text for display (show context around match)
         let displayText = text;
         if (text.length > 150) {
             const matchIndex = text.toLowerCase().indexOf(query.toLowerCase());
             if (matchIndex !== -1) {
-                // Show 50 chars before and after match
                 const start = Math.max(0, matchIndex - 50);
                 const end = Math.min(
                     text.length,
@@ -217,7 +231,7 @@ class SearchCacheManager {
     }
 
     /**
-     * Get cache statistics for debugging
+     * Get cache statistics
      */
     getStats() {
         const cacheSize = Object.keys(this.store.searchCache).length;
@@ -230,5 +244,13 @@ class SearchCacheManager {
             cacheSize: `${Math.round(totalBytes / 1024)}KB`,
             syncStatus: cacheSize === noteCount ? 'synced' : 'out of sync'
         };
+    }
+
+    /**
+     * Get cached tree for a note (for rendering)
+     */
+    getTree(noteKey) {
+        const cached = this.store.searchCache[noteKey];
+        return cached ? cached.tree : null;
     }
 }

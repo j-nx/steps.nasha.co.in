@@ -1,4 +1,4 @@
-describe('SearchCacheManager', function() {
+describe('SearchCacheManager', function () {
     var searchCache;
     var mockStore;
 
@@ -6,22 +6,44 @@ describe('SearchCacheManager', function() {
         return {
             key: key,
             title: title,
-            value: '<opml version="2.0"><head></head><body><outline text="' + content + '"/></body></opml>'
+            value:
+                '<opml version="2.0"><head></head><body><outline text="' +
+                content +
+                '"/></body></opml>'
         };
     }
 
     function createNoteWithMultipleLines(key, title, lines) {
-        var outlines = lines.map(function(line) {
-            return '<outline text="' + line + '"/>';
-        }).join('');
+        var outlines = lines
+            .map(function (line) {
+                return '<outline text="' + line + '"/>';
+            })
+            .join('');
         return {
             key: key,
             title: title,
-            value: '<opml version="2.0"><head></head><body>' + outlines + '</body></opml>'
+            value:
+                '<opml version="2.0"><head></head><body>' +
+                outlines +
+                '</body></opml>'
         };
     }
 
-    beforeEach(function() {
+    function createNoteWithHierarchy(key, title) {
+        return {
+            key: key,
+            title: title,
+            value:
+                '<opml version="2.0"><head></head><body>' +
+                '<outline text="Parent">' +
+                '<outline text="Child 1"/>' +
+                '<outline text="Child 2"/>' +
+                '</outline>' +
+                '</body></opml>'
+        };
+    }
+
+    beforeEach(function () {
         mockStore = {
             notes: [],
             searchCache: {}
@@ -29,89 +51,94 @@ describe('SearchCacheManager', function() {
         searchCache = new SearchCacheManager(mockStore);
     });
 
-    describe('extractTextFromNote', function() {
-        it('should extract text from OPML note', function() {
+    describe('extractTreeFromNote', function () {
+        it('should extract tree from OPML note', function () {
             var note = createNote('123', 'My Title', 'Hello World');
-            var text = searchCache.extractTextFromNote(note);
+            var tree = searchCache.extractTreeFromNote(note);
 
-            expect(text).toContain('my title');
-            expect(text).toContain('hello world');
+            expect(tree.length).toBe(1);
+            expect(tree[0][0]).toBe('Hello World'); // text
+            expect(tree[0][1]).toBe(null); // no attrs
+            expect(tree[0][2]).toEqual([]); // no children
         });
 
-        it('should return empty string for null note', function() {
-            expect(searchCache.extractTextFromNote(null)).toBe('');
+        it('should return empty array for null note', function () {
+            expect(searchCache.extractTreeFromNote(null)).toEqual([]);
         });
 
-        it('should return empty string for note without value', function() {
-            expect(searchCache.extractTextFromNote({ key: '123' })).toBe('');
+        it('should return empty array for note without value', function () {
+            expect(searchCache.extractTreeFromNote({ key: '123' })).toEqual([]);
         });
 
-        it('should strip HTML tags from text', function() {
+        it('should preserve hierarchy', function () {
+            var note = createNoteWithHierarchy('123', 'Test');
+            var tree = searchCache.extractTreeFromNote(note);
+
+            expect(tree.length).toBe(1);
+            expect(tree[0][0]).toBe('Parent');
+            expect(tree[0][2].length).toBe(2); // 2 children
+            expect(tree[0][2][0][0]).toBe('Child 1');
+            expect(tree[0][2][1][0]).toBe('Child 2');
+        });
+
+        it('should extract attributes', function () {
             var note = {
                 key: '123',
                 title: 'Test',
-                value: '<opml><body><outline text="Hello &lt;b&gt;World&lt;/b&gt;"/></body></opml>'
+                value:
+                    '<opml><body><outline text="Task" type="task" icon="check"/></body></opml>'
             };
-            var text = searchCache.extractTextFromNote(note);
+            var tree = searchCache.extractTreeFromNote(note);
 
-            expect(text).toContain('hello');
-            expect(text).toContain('world');
-            expect(text).not.toContain('<b>');
-        });
-
-        it('should convert text to lowercase', function() {
-            var note = createNote('123', 'UPPERCASE', 'MiXeD CaSe');
-            var text = searchCache.extractTextFromNote(note);
-
-            expect(text).toContain('uppercase');
-            expect(text).toContain('mixed case');
+            expect(tree[0][1]).toEqual({ type: 'task', icon: 'check' });
         });
     });
 
-    describe('updateNote', function() {
-        it('should add note to cache', function() {
+    describe('updateNote', function () {
+        it('should add note to cache with tree structure', function () {
             var note = createNote('123', 'Test', 'Content');
             searchCache.updateNote(note);
 
             expect(mockStore.searchCache['123']).toBeDefined();
-            expect(mockStore.searchCache['123']).toContain('content');
+            expect(mockStore.searchCache['123'].title).toBe('Test');
+            expect(mockStore.searchCache['123'].tree).toBeDefined();
+            expect(mockStore.searchCache['123'].tree.length).toBe(1);
         });
 
-        it('should not add note without key', function() {
+        it('should not add note without key', function () {
             searchCache.updateNote({ title: 'No Key' });
 
             expect(Object.keys(mockStore.searchCache).length).toBe(0);
         });
 
-        it('should update existing cache entry', function() {
+        it('should update existing cache entry', function () {
             var note = createNote('123', 'Test', 'Original');
             searchCache.updateNote(note);
 
             note.value = '<opml><body><outline text="Updated"/></body></opml>';
             searchCache.updateNote(note);
 
-            expect(mockStore.searchCache['123']).toContain('updated');
-            expect(mockStore.searchCache['123']).not.toContain('original');
+            expect(mockStore.searchCache['123'].tree[0][0]).toBe('Updated');
         });
     });
 
-    describe('deleteNote', function() {
-        it('should remove note from cache', function() {
-            mockStore.searchCache['123'] = 'cached text';
+    describe('deleteNote', function () {
+        it('should remove note from cache', function () {
+            mockStore.searchCache['123'] = { title: 'test', tree: [] };
             searchCache.deleteNote('123');
 
             expect(mockStore.searchCache['123']).toBeUndefined();
         });
 
-        it('should handle deleting non-existent note', function() {
-            expect(function() {
+        it('should handle deleting non-existent note', function () {
+            expect(function () {
                 searchCache.deleteNote('nonexistent');
             }).not.toThrow();
         });
     });
 
-    describe('rebuildCache', function() {
-        it('should rebuild cache from all notes', function() {
+    describe('rebuildCache', function () {
+        it('should rebuild cache from all notes', function () {
             mockStore.notes = [
                 createNote('1', 'First', 'Content One'),
                 createNote('2', 'Second', 'Content Two')
@@ -120,12 +147,12 @@ describe('SearchCacheManager', function() {
             searchCache.rebuildCache();
 
             expect(Object.keys(mockStore.searchCache).length).toBe(2);
-            expect(mockStore.searchCache['1']).toContain('content one');
-            expect(mockStore.searchCache['2']).toContain('content two');
+            expect(mockStore.searchCache['1'].tree[0][0]).toBe('Content One');
+            expect(mockStore.searchCache['2'].tree[0][0]).toBe('Content Two');
         });
 
-        it('should clear existing cache before rebuilding', function() {
-            mockStore.searchCache['old'] = 'old cached data';
+        it('should clear existing cache before rebuilding', function () {
+            mockStore.searchCache['old'] = { title: 'old', tree: [] };
             mockStore.notes = [createNote('new', 'New', 'New Content')];
 
             searchCache.rebuildCache();
@@ -135,8 +162,8 @@ describe('SearchCacheManager', function() {
         });
     });
 
-    describe('search', function() {
-        beforeEach(function() {
+    describe('search', function () {
+        beforeEach(function () {
             mockStore.notes = [
                 createNote('1', 'JavaScript Guide', 'Learn JavaScript basics'),
                 createNote('2', 'Python Tutorial', 'Python programming intro'),
@@ -145,31 +172,31 @@ describe('SearchCacheManager', function() {
             searchCache.rebuildCache();
         });
 
-        it('should find notes matching query', function() {
+        it('should find notes matching query', function () {
             var results = searchCache.search('javascript');
 
             expect(results.length).toBe(2);
         });
 
-        it('should be case insensitive', function() {
+        it('should be case insensitive', function () {
             var results = searchCache.search('JAVASCRIPT');
 
             expect(results.length).toBe(2);
         });
 
-        it('should return empty array for short queries', function() {
+        it('should return empty array for short queries', function () {
             expect(searchCache.search('a').length).toBe(0);
             expect(searchCache.search('').length).toBe(0);
             expect(searchCache.search(null).length).toBe(0);
         });
 
-        it('should return empty array when no matches', function() {
+        it('should return empty array when no matches', function () {
             var results = searchCache.search('nonexistent');
 
             expect(results.length).toBe(0);
         });
 
-        it('should include note key and title in results', function() {
+        it('should include note key and title in results', function () {
             var results = searchCache.search('python');
 
             expect(results.length).toBe(1);
@@ -177,54 +204,76 @@ describe('SearchCacheManager', function() {
             expect(results[0].noteTitle).toBe('Python Tutorial');
         });
 
-        it('should include matches with highlighted text', function() {
+        it('should include matches with highlighted text', function () {
             var results = searchCache.search('python');
 
             expect(results[0].matches.length).toBeGreaterThan(0);
             expect(results[0].matches[0].highlightedText).toContain('<mark>');
         });
+
+        it('should include pathIndices in matches', function () {
+            var results = searchCache.search('python');
+
+            expect(results[0].matches[0].pathIndices).toBeDefined();
+            expect(Array.isArray(results[0].matches[0].pathIndices)).toBe(true);
+        });
     });
 
-    describe('findMatches', function() {
-        it('should find matching lines in note', function() {
+    describe('findMatchesInTree', function () {
+        it('should find matching nodes in tree', function () {
             var note = createNoteWithMultipleLines('1', 'Test', [
                 'First line with apple',
                 'Second line without',
                 'Third line with apple too'
             ]);
+            searchCache.updateNote(note);
 
             var matches = searchCache.findMatches(note, 'apple');
 
             expect(matches.length).toBe(2);
         });
 
-        it('should limit matches to 5 per note', function() {
+        it('should limit matches to 5 per note', function () {
             var lines = [];
             for (var i = 0; i < 10; i++) {
                 lines.push('Line ' + i + ' with keyword');
             }
             var note = createNoteWithMultipleLines('1', 'Test', lines);
+            searchCache.updateNote(note);
 
             var matches = searchCache.findMatches(note, 'keyword');
 
             expect(matches.length).toBe(5);
         });
+
+        it('should include correct pathIndices for nested items', function () {
+            var note = createNoteWithHierarchy('1', 'Test');
+            searchCache.updateNote(note);
+
+            var matches = searchCache.findMatches(note, 'child 1');
+
+            expect(matches.length).toBe(1);
+            expect(matches[0].pathIndices).toEqual([0, 0]); // First child of first parent
+        });
     });
 
-    describe('highlightMatch', function() {
-        it('should wrap match in mark tags', function() {
+    describe('highlightMatch', function () {
+        it('should wrap match in mark tags', function () {
             var result = searchCache.highlightMatch('Hello World', 'world');
 
             expect(result).toContain('<mark>World</mark>');
         });
 
-        it('should preserve original case in highlighted text', function() {
-            var result = searchCache.highlightMatch('JavaScript is great', 'javascript');
+        it('should preserve original case in highlighted text', function () {
+            var result = searchCache.highlightMatch(
+                'JavaScript is great',
+                'javascript'
+            );
 
             expect(result).toContain('<mark>JavaScript</mark>');
         });
 
-        it('should truncate long text with context', function() {
+        it('should truncate long text with context', function () {
             var longText = 'A'.repeat(100) + 'MATCH' + 'B'.repeat(100);
             var result = searchCache.highlightMatch(longText, 'match');
 
@@ -234,8 +283,27 @@ describe('SearchCacheManager', function() {
         });
     });
 
-    describe('getStats', function() {
-        it('should return cache statistics', function() {
+    describe('getTree', function () {
+        it('should return cached tree for a note', function () {
+            var note = createNote('123', 'Test', 'Content');
+            searchCache.updateNote(note);
+
+            var tree = searchCache.getTree('123');
+
+            expect(tree).toBeDefined();
+            expect(tree.length).toBe(1);
+            expect(tree[0][0]).toBe('Content');
+        });
+
+        it('should return null for non-existent note', function () {
+            var tree = searchCache.getTree('nonexistent');
+
+            expect(tree).toBeNull();
+        });
+    });
+
+    describe('getStats', function () {
+        it('should return cache statistics', function () {
             mockStore.notes = [
                 createNote('1', 'First', 'Content'),
                 createNote('2', 'Second', 'Content')
@@ -249,7 +317,7 @@ describe('SearchCacheManager', function() {
             expect(stats.syncStatus).toBe('synced');
         });
 
-        it('should detect out of sync cache', function() {
+        it('should detect out of sync cache', function () {
             mockStore.notes = [createNote('1', 'First', 'Content')];
             // Don't rebuild cache - leave it empty
 

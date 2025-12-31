@@ -1099,6 +1099,77 @@ function ConcordEditor(root, concordInstance) {
         children.appendTo(node);
         return node;
     };
+    /**
+     * Build DOM node from cached tree format [text, attrs, children]
+     */
+    this.buildFromTree = function (treeNode, collapsed, level) {
+        if (!level) {
+            level = 1;
+        }
+        var nodeText = treeNode[0] || '';
+        var attrs = treeNode[1] || {};
+        var nodeChildren = treeNode[2] || [];
+
+        var node = $('<li></li>');
+        node.addClass('concord-node');
+        node.addClass('concord-level-' + level);
+
+        node.data('attributes', attrs);
+
+        var wrapper = $("<div class='concord-wrapper'></div>");
+        var nodeIcon = attrs['icon'] || attrs['type'];
+        var localIcon = iconName; // Use global default (circle)
+
+        if (nodeIcon) {
+            if (
+                concordInstance.prefs() &&
+                concordInstance.prefs().typeIcons &&
+                concordInstance.prefs().typeIcons[nodeIcon]
+            ) {
+                localIcon = concordInstance.prefs().typeIcons[nodeIcon];
+            } else if (attrs['icon']) {
+                localIcon = attrs['icon'];
+            }
+            if (attrs['type']) {
+                node.attr('opml-type', attrs['type']);
+            }
+        }
+
+        var icon = '<span class="node-icon icon-' + localIcon + '"></span>';
+        wrapper.append(icon);
+        wrapper.addClass('type-icon');
+
+        if (attrs['isComment'] == 'true') {
+            node.addClass('concord-comment');
+        }
+
+        var text = $("<div class='concord-text' contenteditable='true'></div>");
+        text.addClass('concord-level-' + level + '-text');
+        text.html(this.escape(nodeText));
+
+        if (attrs['cssTextClass']) {
+            var cssClasses = attrs['cssTextClass'].split(/\s+/);
+            for (var c in cssClasses) {
+                text.addClass(cssClasses[c]);
+            }
+        }
+
+        var childrenOl = $('<ol></ol>');
+        var editor = this;
+        for (var i = 0; i < nodeChildren.length; i++) {
+            var child = editor.buildFromTree(nodeChildren[i], collapsed, level + 1);
+            child.appendTo(childrenOl);
+        }
+
+        if (collapsed && nodeChildren.length > 0) {
+            node.addClass('collapsed');
+        }
+
+        text.appendTo(wrapper);
+        wrapper.appendTo(node);
+        childrenOl.appendTo(node);
+        return node;
+    };
     this.hideContextMenu = function () {
         if (root.data('dropdown')) {
             root.data('dropdown').hide();
@@ -3250,6 +3321,34 @@ function ConcordOp(root, concordInstance, _cursor) {
 
         this.setCursor(root.find('.concord-node:first'));
 
+        this.setTextMode(!flSetFocus && !concord.mobile);
+
+        root.data('currentChange', root.children().clone(true, true));
+        return true;
+    };
+    /**
+     * Build outline from cached tree format (faster than parsing OPML)
+     * @param {Array} tree - Array of [text, attrs, children] nodes
+     * @param {string} title - Note title
+     * @param {boolean} flSetFocus - Whether to set focus after building
+     */
+    this.treeToOutline = function (tree, title, flSetFocus) {
+        if (flSetFocus == undefined) {
+            flSetFocus = true;
+        }
+
+        root.empty();
+        this.setTitle(title || '');
+        root.data('head', {});
+
+        for (var i = 0; i < tree.length; i++) {
+            root.append(concordInstance.editor.buildFromTree(tree[i], true));
+        }
+
+        root.data('changed', false);
+        root.removeData('previousChange');
+
+        this.setCursor(root.find('.concord-node:first'));
         this.setTextMode(!flSetFocus && !concord.mobile);
 
         root.data('currentChange', root.children().clone(true, true));

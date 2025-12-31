@@ -667,8 +667,9 @@ function NoteService(concord) {
                     }
 
                     if (currentNode && currentNode.length) {
-                        // Set cursor on the found node
+                        // Set cursor on the found node (but don't enter edit mode)
                         this.outliner.op.setCursor(currentNode);
+                        this.outliner.op.setTextMode(false);
 
                         // Scroll element into view
                         var wrapper = currentNode
@@ -724,7 +725,22 @@ function NoteService(concord) {
 
                 store.note = note;
                 store.save();
-                this.outliner.op.xmlToOutline(note.value, false);
+
+                // Try to use cached tree for faster rendering
+                var cachedTree = this.searchCacheManager
+                    ? this.searchCacheManager.getTree(note.key)
+                    : null;
+
+                if (cachedTree && cachedTree.length > 0) {
+                    this.outliner.op.treeToOutline(
+                        cachedTree,
+                        note.title,
+                        false
+                    );
+                } else {
+                    // Fall back to XML parsing
+                    this.outliner.op.xmlToOutline(note.value, false);
+                }
             }
 
             this.ngScope.hideLoginDialog();
