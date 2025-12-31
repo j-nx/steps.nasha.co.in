@@ -607,6 +607,84 @@ function NoteService(concord) {
     }.bind(this);
 
     /**
+     * Restore expansion state from OPML XML
+     * This extracts the <expansionState> tag from OPML and applies it to the current outline
+     * Used when building from cached tree which doesn't include expansion state
+     * @param {string} opmlXml - The OPML XML string containing <expansionState> tag
+     */
+    this.restoreExpansionState = function (opmlXml) {
+        if (!opmlXml) return;
+
+        try {
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(opmlXml, 'text/xml');
+            var expansionState = doc.querySelector('expansionState');
+
+            if (!expansionState || !expansionState.textContent || expansionState.textContent.trim() === '') {
+                // No expansion state to restore - all nodes remain collapsed
+                return;
+            }
+
+            var expansionStates = expansionState.textContent.split(/\s*,\s*/);
+            var expandedNodeIds = new Set(expansionStates.map(function(id) {
+                return id.trim();
+            }).filter(function(id) {
+                return id !== '';
+            }));
+
+            // Walk through all nodes and expand those in the expansion state list
+            var root = this.outliner.editor.root;
+            var nodeId = 1;
+            var cursor = root.find('.concord-node:first');
+
+            var walkDown = function(node) {
+                if (!node || node.length === 0) return null;
+
+                var next = node.nextAll('.concord-node:first');
+                if (next.length == 1) {
+                    return next;
+                }
+
+                var parent = node.parent().parent();
+                if (parent.hasClass('concord-node')) {
+                    return walkDown(parent);
+                }
+
+                return null;
+            };
+
+            while (cursor !== null && cursor.length > 0) {
+                // If this node's ID is in the expansion state, expand it
+                if (expandedNodeIds.has(String(nodeId))) {
+                    cursor.removeClass('collapsed');
+                }
+
+                nodeId++;
+
+                // Navigate to next node (depth-first traversal)
+                var next = null;
+                if (!cursor.hasClass('collapsed')) {
+                    var outline = cursor.children('ol');
+                    if (outline.length == 1) {
+                        var firstChild = outline.children('.concord-node:first');
+                        if (firstChild.length == 1) {
+                            next = firstChild;
+                        }
+                    }
+                }
+                if (!next) {
+                    next = walkDown(cursor);
+                }
+                cursor = next;
+            }
+
+            console.debug('Expansion state restored: ' + expandedNodeIds.size + ' nodes expanded');
+        } catch (error) {
+            console.error('Error restoring expansion state:', error);
+        }
+    }.bind(this);
+
+    /**
      * Navigate to specific outline element by path indices
      * @param {Array} pathIndices - e.g., [0, 2, 1] means first outline → third child → second child
      */
@@ -737,8 +815,13 @@ function NoteService(concord) {
                         note.title,
                         false
                     );
+
+                    // IMPORTANT: Restore expansion state from OPML
+                    // The cached tree doesn't include expansion state, so we need
+                    // to extract it from the OPML and apply it after building the tree
+                    this.restoreExpansionState(note.value);
                 } else {
-                    // Fall back to XML parsing
+                    // Fall back to XML parsing (includes expansion state restoration)
                     this.outliner.op.xmlToOutline(note.value, false);
                 }
             }
