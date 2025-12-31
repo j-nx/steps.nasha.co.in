@@ -91,7 +91,7 @@
     <script src="src/concordUtils.js"></script>
     <script src="src/notes/notes.js"></script>
     <script src="src/notes/api.js"></script>
-    <script src="src/notes/searchCache.js"></script>
+    <script src="src/notes/noteCache.js"></script>
     <!-- /build -->
 
     <!-- build:template
@@ -294,9 +294,6 @@
                 <i class="icon-remove search-close" ng-click="toggleSearchDialog()" title="Close (Esc)"></i>
             </div>
             <div class="searchResults">
-                <!-- <div ng-show="searchQuery.length < 2 && searchQuery.length > 0" class="search-hint">
-                    Type at least 2 characters to search...
-                </div> -->
                 <div ng-show="searchQuery.length >= 2 && searchResults.length === 0" class="search-no-results">
                     No results found for "{{searchQuery}}"
                 </div>

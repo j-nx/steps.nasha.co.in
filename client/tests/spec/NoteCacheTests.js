@@ -1,5 +1,5 @@
-describe('SearchCacheManager', function () {
-    var searchCache;
+describe('NoteCacheManager', function () {
+    var noteCache;
     var mockStore;
 
     function createNote(key, title, content) {
@@ -46,15 +46,15 @@ describe('SearchCacheManager', function () {
     beforeEach(function () {
         mockStore = {
             notes: [],
-            searchCache: {}
+            noteCache: {}
         };
-        searchCache = new SearchCacheManager(mockStore);
+        noteCache = new NoteCacheManager(mockStore);
     });
 
     describe('extractTreeFromNote', function () {
         it('should extract tree from OPML note', function () {
             var note = createNote('123', 'My Title', 'Hello World');
-            var result = searchCache.extractTreeFromNote(note);
+            var result = noteCache.extractTreeFromNote(note);
 
             expect(result.tree.length).toBe(1);
             expect(result.tree[0][0]).toBe('Hello World'); // text
@@ -64,20 +64,20 @@ describe('SearchCacheManager', function () {
         });
 
         it('should return empty arrays for null note', function () {
-            var result = searchCache.extractTreeFromNote(null);
+            var result = noteCache.extractTreeFromNote(null);
             expect(result.tree).toEqual([]);
             expect(result.expansionState).toEqual([]);
         });
 
         it('should return empty arrays for note without value', function () {
-            var result = searchCache.extractTreeFromNote({ key: '123' });
+            var result = noteCache.extractTreeFromNote({ key: '123' });
             expect(result.tree).toEqual([]);
             expect(result.expansionState).toEqual([]);
         });
 
         it('should preserve hierarchy', function () {
             var note = createNoteWithHierarchy('123', 'Test');
-            var result = searchCache.extractTreeFromNote(note);
+            var result = noteCache.extractTreeFromNote(note);
 
             expect(result.tree.length).toBe(1);
             expect(result.tree[0][0]).toBe('Parent');
@@ -93,7 +93,7 @@ describe('SearchCacheManager', function () {
                 value:
                     '<opml><body><outline text="Task" type="task" icon="check"/></body></opml>'
             };
-            var result = searchCache.extractTreeFromNote(note);
+            var result = noteCache.extractTreeFromNote(note);
 
             expect(result.tree[0][1]).toEqual({ type: 'task', icon: 'check' });
         });
@@ -107,7 +107,7 @@ describe('SearchCacheManager', function () {
                     '<outline text="Parent"><outline text="Child"/></outline>' +
                     '</body></opml>'
             };
-            var result = searchCache.extractTreeFromNote(note);
+            var result = noteCache.extractTreeFromNote(note);
 
             expect(result.expansionState).toEqual([1, 2, 5]);
         });
@@ -120,7 +120,7 @@ describe('SearchCacheManager', function () {
                     '<opml><head><expansionState></expansionState></head><body>' +
                     '<outline text="Content"/></body></opml>'
             };
-            var result = searchCache.extractTreeFromNote(note);
+            var result = noteCache.extractTreeFromNote(note);
 
             expect(result.expansionState).toEqual([]);
         });
@@ -133,7 +133,7 @@ describe('SearchCacheManager', function () {
                     '<opml><head><expansionState>1, 3 , 7</expansionState></head><body>' +
                     '<outline text="Content"/></body></opml>'
             };
-            var result = searchCache.extractTreeFromNote(note);
+            var result = noteCache.extractTreeFromNote(note);
 
             expect(result.expansionState).toEqual([1, 3, 7]);
         });
@@ -142,28 +142,28 @@ describe('SearchCacheManager', function () {
     describe('updateNote', function () {
         it('should add note to cache with tree structure', function () {
             var note = createNote('123', 'Test', 'Content');
-            searchCache.updateNote(note);
+            noteCache.updateNote(note);
 
-            expect(mockStore.searchCache['123']).toBeDefined();
-            expect(mockStore.searchCache['123'].title).toBe('Test');
-            expect(mockStore.searchCache['123'].tree).toBeDefined();
-            expect(mockStore.searchCache['123'].tree.length).toBe(1);
+            expect(mockStore.noteCache['123']).toBeDefined();
+            expect(mockStore.noteCache['123'].title).toBe('Test');
+            expect(mockStore.noteCache['123'].tree).toBeDefined();
+            expect(mockStore.noteCache['123'].tree.length).toBe(1);
         });
 
         it('should not add note without key', function () {
-            searchCache.updateNote({ title: 'No Key' });
+            noteCache.updateNote({ title: 'No Key' });
 
-            expect(Object.keys(mockStore.searchCache).length).toBe(0);
+            expect(Object.keys(mockStore.noteCache).length).toBe(0);
         });
 
         it('should update existing cache entry', function () {
             var note = createNote('123', 'Test', 'Original');
-            searchCache.updateNote(note);
+            noteCache.updateNote(note);
 
             note.value = '<opml><body><outline text="Updated"/></body></opml>';
-            searchCache.updateNote(note);
+            noteCache.updateNote(note);
 
-            expect(mockStore.searchCache['123'].tree[0][0]).toBe('Updated');
+            expect(mockStore.noteCache['123'].tree[0][0]).toBe('Updated');
         });
 
         it('should store expansion state in cache', function () {
@@ -175,23 +175,23 @@ describe('SearchCacheManager', function () {
                     '<outline text="Parent"><outline text="Child"/></outline>' +
                     '</body></opml>'
             };
-            searchCache.updateNote(note);
+            noteCache.updateNote(note);
 
-            expect(mockStore.searchCache['123'].expansionState).toEqual([1, 3, 5]);
+            expect(mockStore.noteCache['123'].expansionState).toEqual([1, 3, 5]);
         });
     });
 
     describe('deleteNote', function () {
         it('should remove note from cache', function () {
-            mockStore.searchCache['123'] = { title: 'test', tree: [] };
-            searchCache.deleteNote('123');
+            mockStore.noteCache['123'] = { title: 'test', tree: [] };
+            noteCache.deleteNote('123');
 
-            expect(mockStore.searchCache['123']).toBeUndefined();
+            expect(mockStore.noteCache['123']).toBeUndefined();
         });
 
         it('should handle deleting non-existent note', function () {
             expect(function () {
-                searchCache.deleteNote('nonexistent');
+                noteCache.deleteNote('nonexistent');
             }).not.toThrow();
         });
     });
@@ -203,21 +203,21 @@ describe('SearchCacheManager', function () {
                 createNote('2', 'Second', 'Content Two')
             ];
 
-            searchCache.rebuildCache();
+            noteCache.rebuildCache();
 
-            expect(Object.keys(mockStore.searchCache).length).toBe(2);
-            expect(mockStore.searchCache['1'].tree[0][0]).toBe('Content One');
-            expect(mockStore.searchCache['2'].tree[0][0]).toBe('Content Two');
+            expect(Object.keys(mockStore.noteCache).length).toBe(2);
+            expect(mockStore.noteCache['1'].tree[0][0]).toBe('Content One');
+            expect(mockStore.noteCache['2'].tree[0][0]).toBe('Content Two');
         });
 
         it('should clear existing cache before rebuilding', function () {
-            mockStore.searchCache['old'] = { title: 'old', tree: [] };
+            mockStore.noteCache['old'] = { title: 'old', tree: [] };
             mockStore.notes = [createNote('new', 'New', 'New Content')];
 
-            searchCache.rebuildCache();
+            noteCache.rebuildCache();
 
-            expect(mockStore.searchCache['old']).toBeUndefined();
-            expect(mockStore.searchCache['new']).toBeDefined();
+            expect(mockStore.noteCache['old']).toBeUndefined();
+            expect(mockStore.noteCache['new']).toBeDefined();
         });
     });
 
@@ -228,35 +228,35 @@ describe('SearchCacheManager', function () {
                 createNote('2', 'Python Tutorial', 'Python programming intro'),
                 createNote('3', 'Web Development', 'HTML CSS JavaScript')
             ];
-            searchCache.rebuildCache();
+            noteCache.rebuildCache();
         });
 
         it('should find notes matching query', function () {
-            var results = searchCache.search('javascript');
+            var results = noteCache.search('javascript');
 
             expect(results.length).toBe(2);
         });
 
         it('should be case insensitive', function () {
-            var results = searchCache.search('JAVASCRIPT');
+            var results = noteCache.search('JAVASCRIPT');
 
             expect(results.length).toBe(2);
         });
 
         it('should return empty array for short queries', function () {
-            expect(searchCache.search('a').length).toBe(0);
-            expect(searchCache.search('').length).toBe(0);
-            expect(searchCache.search(null).length).toBe(0);
+            expect(noteCache.search('a').length).toBe(0);
+            expect(noteCache.search('').length).toBe(0);
+            expect(noteCache.search(null).length).toBe(0);
         });
 
         it('should return empty array when no matches', function () {
-            var results = searchCache.search('nonexistent');
+            var results = noteCache.search('nonexistent');
 
             expect(results.length).toBe(0);
         });
 
         it('should include note key and title in results', function () {
-            var results = searchCache.search('python');
+            var results = noteCache.search('python');
 
             expect(results.length).toBe(1);
             expect(results[0].noteKey).toBe('2');
@@ -264,14 +264,14 @@ describe('SearchCacheManager', function () {
         });
 
         it('should include matches with highlighted text', function () {
-            var results = searchCache.search('python');
+            var results = noteCache.search('python');
 
             expect(results[0].matches.length).toBeGreaterThan(0);
             expect(results[0].matches[0].highlightedText).toContain('<mark>');
         });
 
         it('should include pathIndices in matches', function () {
-            var results = searchCache.search('python');
+            var results = noteCache.search('python');
 
             expect(results[0].matches[0].pathIndices).toBeDefined();
             expect(Array.isArray(results[0].matches[0].pathIndices)).toBe(true);
@@ -285,9 +285,9 @@ describe('SearchCacheManager', function () {
                 'Second line without',
                 'Third line with apple too'
             ]);
-            searchCache.updateNote(note);
+            noteCache.updateNote(note);
 
-            var matches = searchCache.findMatches(note, 'apple');
+            var matches = noteCache.findMatches(note, 'apple');
 
             expect(matches.length).toBe(2);
         });
@@ -298,18 +298,18 @@ describe('SearchCacheManager', function () {
                 lines.push('Line ' + i + ' with keyword');
             }
             var note = createNoteWithMultipleLines('1', 'Test', lines);
-            searchCache.updateNote(note);
+            noteCache.updateNote(note);
 
-            var matches = searchCache.findMatches(note, 'keyword');
+            var matches = noteCache.findMatches(note, 'keyword');
 
             expect(matches.length).toBe(5);
         });
 
         it('should include correct pathIndices for nested items', function () {
             var note = createNoteWithHierarchy('1', 'Test');
-            searchCache.updateNote(note);
+            noteCache.updateNote(note);
 
-            var matches = searchCache.findMatches(note, 'child 1');
+            var matches = noteCache.findMatches(note, 'child 1');
 
             expect(matches.length).toBe(1);
             expect(matches[0].pathIndices).toEqual([0, 0]); // First child of first parent
@@ -318,13 +318,13 @@ describe('SearchCacheManager', function () {
 
     describe('highlightMatch', function () {
         it('should wrap match in mark tags', function () {
-            var result = searchCache.highlightMatch('Hello World', 'world');
+            var result = noteCache.highlightMatch('Hello World', 'world');
 
             expect(result).toContain('<mark>World</mark>');
         });
 
         it('should preserve original case in highlighted text', function () {
-            var result = searchCache.highlightMatch(
+            var result = noteCache.highlightMatch(
                 'JavaScript is great',
                 'javascript'
             );
@@ -334,7 +334,7 @@ describe('SearchCacheManager', function () {
 
         it('should truncate long text with context', function () {
             var longText = 'A'.repeat(100) + 'MATCH' + 'B'.repeat(100);
-            var result = searchCache.highlightMatch(longText, 'match');
+            var result = noteCache.highlightMatch(longText, 'match');
 
             expect(result.length).toBeLessThan(longText.length);
             expect(result).toContain('...');
@@ -345,9 +345,9 @@ describe('SearchCacheManager', function () {
     describe('getTree', function () {
         it('should return cached tree for a note', function () {
             var note = createNote('123', 'Test', 'Content');
-            searchCache.updateNote(note);
+            noteCache.updateNote(note);
 
-            var tree = searchCache.getTree('123');
+            var tree = noteCache.getTree('123');
 
             expect(tree).toBeDefined();
             expect(tree.length).toBe(1);
@@ -355,7 +355,7 @@ describe('SearchCacheManager', function () {
         });
 
         it('should return null for non-existent note', function () {
-            var tree = searchCache.getTree('nonexistent');
+            var tree = noteCache.getTree('nonexistent');
 
             expect(tree).toBeNull();
         });
@@ -370,24 +370,24 @@ describe('SearchCacheManager', function () {
                     '<opml><head><expansionState>1,2,3</expansionState></head><body>' +
                     '<outline text="Content"/></body></opml>'
             };
-            searchCache.updateNote(note);
+            noteCache.updateNote(note);
 
-            var expansionState = searchCache.getExpansionState('123');
+            var expansionState = noteCache.getExpansionState('123');
 
             expect(expansionState).toEqual([1, 2, 3]);
         });
 
         it('should return null for non-existent note', function () {
-            var expansionState = searchCache.getExpansionState('nonexistent');
+            var expansionState = noteCache.getExpansionState('nonexistent');
 
             expect(expansionState).toBeNull();
         });
 
         it('should return empty array for note without expansion state', function () {
             var note = createNote('123', 'Test', 'Content');
-            searchCache.updateNote(note);
+            noteCache.updateNote(note);
 
-            var expansionState = searchCache.getExpansionState('123');
+            var expansionState = noteCache.getExpansionState('123');
 
             expect(expansionState).toEqual([]);
         });
@@ -399,9 +399,9 @@ describe('SearchCacheManager', function () {
                 createNote('1', 'First', 'Content'),
                 createNote('2', 'Second', 'Content')
             ];
-            searchCache.rebuildCache();
+            noteCache.rebuildCache();
 
-            var stats = searchCache.getStats();
+            var stats = noteCache.getStats();
 
             expect(stats.cachedNotes).toBe(2);
             expect(stats.totalNotes).toBe(2);
@@ -412,7 +412,7 @@ describe('SearchCacheManager', function () {
             mockStore.notes = [createNote('1', 'First', 'Content')];
             // Don't rebuild cache - leave it empty
 
-            var stats = searchCache.getStats();
+            var stats = noteCache.getStats();
 
             expect(stats.syncStatus).toBe('out of sync');
         });
@@ -444,58 +444,58 @@ describe('SearchCacheManager', function () {
 
         describe('setNavigationResults', function () {
             it('should store results and reset focusedIndex', function () {
-                searchCache.focusedIndex = 5;
-                searchCache.setNavigationResults(mockResults);
+                noteCache.focusedIndex = 5;
+                noteCache.setNavigationResults(mockResults);
 
-                expect(searchCache.lastResults).toBe(mockResults);
-                expect(searchCache.focusedIndex).toBe(-1);
+                expect(noteCache.lastResults).toBe(mockResults);
+                expect(noteCache.focusedIndex).toBe(-1);
             });
         });
 
         describe('getTotalMatches', function () {
             it('should count all matches across groups', function () {
-                searchCache.setNavigationResults(mockResults);
+                noteCache.setNavigationResults(mockResults);
 
-                expect(searchCache.getTotalMatches()).toBe(3);
+                expect(noteCache.getTotalMatches()).toBe(3);
             });
 
             it('should return 0 for empty results', function () {
-                searchCache.setNavigationResults([]);
+                noteCache.setNavigationResults([]);
 
-                expect(searchCache.getTotalMatches()).toBe(0);
+                expect(noteCache.getTotalMatches()).toBe(0);
             });
         });
 
         describe('navNext', function () {
             beforeEach(function () {
-                searchCache.setNavigationResults(mockResults);
+                noteCache.setNavigationResults(mockResults);
             });
 
             it('should move from -1 to 0 on first call', function () {
-                var moved = searchCache.navNext();
+                var moved = noteCache.navNext();
 
                 expect(moved).toBe(true);
-                expect(searchCache.focusedIndex).toBe(0);
+                expect(noteCache.focusedIndex).toBe(0);
             });
 
             it('should increment focusedIndex', function () {
-                searchCache.navNext();
-                searchCache.navNext();
+                noteCache.navNext();
+                noteCache.navNext();
 
-                expect(searchCache.focusedIndex).toBe(1);
+                expect(noteCache.focusedIndex).toBe(1);
             });
 
             it('should not go past last result', function () {
-                searchCache.focusedIndex = 2; // last item (0-indexed)
-                var moved = searchCache.navNext();
+                noteCache.focusedIndex = 2; // last item (0-indexed)
+                var moved = noteCache.navNext();
 
                 expect(moved).toBe(false);
-                expect(searchCache.focusedIndex).toBe(2);
+                expect(noteCache.focusedIndex).toBe(2);
             });
 
             it('should return false for empty results', function () {
-                searchCache.setNavigationResults([]);
-                var moved = searchCache.navNext();
+                noteCache.setNavigationResults([]);
+                var moved = noteCache.navNext();
 
                 expect(moved).toBe(false);
             });
@@ -503,94 +503,94 @@ describe('SearchCacheManager', function () {
 
         describe('navPrev', function () {
             beforeEach(function () {
-                searchCache.setNavigationResults(mockResults);
+                noteCache.setNavigationResults(mockResults);
             });
 
             it('should decrement focusedIndex', function () {
-                searchCache.focusedIndex = 2;
-                var moved = searchCache.navPrev();
+                noteCache.focusedIndex = 2;
+                var moved = noteCache.navPrev();
 
                 expect(moved).toBe(true);
-                expect(searchCache.focusedIndex).toBe(1);
+                expect(noteCache.focusedIndex).toBe(1);
             });
 
             it('should go from 0 to -1', function () {
-                searchCache.focusedIndex = 0;
-                var moved = searchCache.navPrev();
+                noteCache.focusedIndex = 0;
+                var moved = noteCache.navPrev();
 
                 expect(moved).toBe(true);
-                expect(searchCache.focusedIndex).toBe(-1);
+                expect(noteCache.focusedIndex).toBe(-1);
             });
 
             it('should return false when already at -1', function () {
-                searchCache.focusedIndex = -1;
-                var moved = searchCache.navPrev();
+                noteCache.focusedIndex = -1;
+                var moved = noteCache.navPrev();
 
                 expect(moved).toBe(false);
-                expect(searchCache.focusedIndex).toBe(-1);
+                expect(noteCache.focusedIndex).toBe(-1);
             });
         });
 
         describe('getFocused', function () {
             beforeEach(function () {
-                searchCache.setNavigationResults(mockResults);
+                noteCache.setNavigationResults(mockResults);
             });
 
             it('should return null when focusedIndex is -1', function () {
-                expect(searchCache.getFocused()).toBeNull();
+                expect(noteCache.getFocused()).toBeNull();
             });
 
             it('should return first match at index 0', function () {
-                searchCache.focusedIndex = 0;
-                var focused = searchCache.getFocused();
+                noteCache.focusedIndex = 0;
+                var focused = noteCache.getFocused();
 
                 expect(focused.result).toBe(mockResults[0]);
                 expect(focused.match).toBe(mockResults[0].matches[0]);
             });
 
             it('should return correct match across groups', function () {
-                searchCache.focusedIndex = 2; // Third match (in second group)
-                var focused = searchCache.getFocused();
+                noteCache.focusedIndex = 2; // Third match (in second group)
+                var focused = noteCache.getFocused();
 
                 expect(focused.result).toBe(mockResults[1]);
                 expect(focused.match).toBe(mockResults[1].matches[0]);
             });
 
             it('should return null for out of bounds index', function () {
-                searchCache.focusedIndex = 99;
-                expect(searchCache.getFocused()).toBeNull();
+                noteCache.focusedIndex = 99;
+                expect(noteCache.getFocused()).toBeNull();
             });
         });
 
         describe('isFocused', function () {
             beforeEach(function () {
-                searchCache.setNavigationResults(mockResults);
+                noteCache.setNavigationResults(mockResults);
             });
 
             it('should return false when nothing is focused', function () {
-                var result = searchCache.isFocused(mockResults[0], mockResults[0].matches[0]);
+                var result = noteCache.isFocused(mockResults[0], mockResults[0].matches[0]);
                 expect(result).toBe(false);
             });
 
             it('should return true for focused match', function () {
-                searchCache.focusedIndex = 0;
-                var result = searchCache.isFocused(mockResults[0], mockResults[0].matches[0]);
+                noteCache.focusedIndex = 0;
+                var result = noteCache.isFocused(mockResults[0], mockResults[0].matches[0]);
                 expect(result).toBe(true);
             });
 
             it('should return false for non-focused match', function () {
-                searchCache.focusedIndex = 0;
-                var result = searchCache.isFocused(mockResults[0], mockResults[0].matches[1]);
+                noteCache.focusedIndex = 0;
+                var result = noteCache.isFocused(mockResults[0], mockResults[0].matches[1]);
                 expect(result).toBe(false);
             });
         });
 
         describe('resetNav', function () {
             it('should reset focusedIndex to -1', function () {
-                searchCache.focusedIndex = 5;
-                searchCache.resetNav();
+                noteCache.focusedIndex = 5;
+                noteCache.resetNav();
 
-                expect(searchCache.focusedIndex).toBe(-1);
+                expect(noteCache.focusedIndex).toBe(-1);
             });
         });
     });

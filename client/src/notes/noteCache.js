@@ -3,7 +3,7 @@
 /* global store */
 
 /**
- * SearchCacheManager - Manages unified cache for search and rendering
+ * NoteCacheManager - Manages unified cache for search and rendering
  *
  * Cache format (compact tree): [text, attrs, children]
  * - text: original HTML text content
@@ -18,12 +18,12 @@
  *   ]]
  * ]]
  */
-class SearchCacheManager {
+class NoteCacheManager {
     constructor(noteStore) {
         this.store = noteStore;
 
-        if (!this.store.searchCache) {
-            this.store.searchCache = {};
+        if (!this.store.noteCache) {
+            this.store.noteCache = {};
         }
 
         // Navigation state for keyboard navigation of search results
@@ -109,7 +109,7 @@ class SearchCacheManager {
         if (!note || !note.key) return;
 
         const { tree, expansionState } = this.extractTreeFromNote(note);
-        this.store.searchCache[note.key] = {
+        this.store.noteCache[note.key] = {
             title: note.title || '',
             tree: tree,
             expansionState: expansionState
@@ -117,8 +117,8 @@ class SearchCacheManager {
     }
 
     deleteNote(noteKey) {
-        if (this.store.searchCache[noteKey]) {
-            delete this.store.searchCache[noteKey];
+        if (this.store.noteCache[noteKey]) {
+            delete this.store.noteCache[noteKey];
             console.debug(`Search cache removed for note: ${noteKey}`);
         }
     }
@@ -130,7 +130,7 @@ class SearchCacheManager {
         console.debug('Rebuilding search cache...');
         const startTime = performance.now();
 
-        this.store.searchCache = {};
+        this.store.noteCache = {};
 
         this.store.notes.forEach((note) => {
             this.updateNote(note);
@@ -139,7 +139,7 @@ class SearchCacheManager {
         const duration = Math.round(performance.now() - startTime);
         console.debug(
             `Search cache rebuilt: ${
-                Object.keys(this.store.searchCache).length
+                Object.keys(this.store.noteCache).length
             } notes indexed in ${duration}ms`
         );
     }
@@ -155,7 +155,7 @@ class SearchCacheManager {
         const results = [];
 
         this.store.notes.forEach((note) => {
-            const cached = this.store.searchCache[note.key];
+            const cached = this.store.noteCache[note.key];
 
             // Handle missing or old format cache
             if (!cached || !cached.tree) {
@@ -211,7 +211,7 @@ class SearchCacheManager {
      * Find matches in a specific note (for backward compatibility)
      */
     findMatches(note, lowerQuery) {
-        const cached = this.store.searchCache[note.key];
+        const cached = this.store.noteCache[note.key];
         if (!cached || !cached.tree) return [];
 
         return this.findMatchesInTree(cached.tree, lowerQuery);
@@ -249,9 +249,9 @@ class SearchCacheManager {
      * Get cache statistics
      */
     getStats() {
-        const cacheSize = Object.keys(this.store.searchCache).length;
+        const cacheSize = Object.keys(this.store.noteCache).length;
         const noteCount = this.store.notes.length;
-        const totalBytes = JSON.stringify(this.store.searchCache).length;
+        const totalBytes = JSON.stringify(this.store.noteCache).length;
 
         return {
             cachedNotes: cacheSize,
@@ -265,7 +265,7 @@ class SearchCacheManager {
      * Get cached tree for a note (for rendering)
      */
     getTree(noteKey) {
-        const cached = this.store.searchCache[noteKey];
+        const cached = this.store.noteCache[noteKey];
         return cached ? cached.tree : null;
     }
 
@@ -273,7 +273,7 @@ class SearchCacheManager {
      * Get cached expansion state for a note
      */
     getExpansionState(noteKey) {
-        const cached = this.store.searchCache[noteKey];
+        const cached = this.store.noteCache[noteKey];
         return cached ? cached.expansionState : null;
     }
 

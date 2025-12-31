@@ -431,8 +431,8 @@ describe('Note Service functions', function () {
             _store.addNote(n2);
 
             // Initialize search cache (normally done in tryFinishLoading)
-            ns.searchCacheManager = new SearchCacheManager(_store);
-            ns.searchCacheManager.rebuildCache();
+            ns.noteCacheManager = new NoteCacheManager(_store);
+            ns.noteCacheManager.rebuildCache();
         });
 
         it('should return search results when query matches', function () {
@@ -455,8 +455,8 @@ describe('Note Service functions', function () {
             expect(results).toEqual([]);
         });
 
-        it('should return empty array when searchCacheManager not initialized', function () {
-            ns.searchCacheManager = null;
+        it('should return empty array when noteCacheManager not initialized', function () {
+            ns.noteCacheManager = null;
 
             var results = ns.searchNotes('javascript');
 
@@ -470,7 +470,7 @@ describe('Note Service functions', function () {
             n3.key = '3';
             n3.version = 1;
             _store.addNote(n3);
-            ns.searchCacheManager.updateNote(n3);
+            ns.noteCacheManager.updateNote(n3);
 
             var results = ns.searchNotes('javascript');
 

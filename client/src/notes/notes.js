@@ -171,7 +171,7 @@ function NoteService(concord) {
     this.np = new NoteProvider();
     this.outliner = concord;
     this.ngScope = null; //MainScope
-    this.searchCacheManager = null; // Search cache manager (initialized after store loads)
+    this.noteCacheManager = null;
 
     this.m = {
         sessionExpired: 'Session expired.',
@@ -213,9 +213,8 @@ function NoteService(concord) {
         this.ngScope.store = store;
         this.ngScope.initialize();
 
-        // Initialize search cache manager
-        if (!this.searchCacheManager)
-            this.searchCacheManager = new SearchCacheManager(store);
+        if (!this.noteCacheManager)
+            this.noteCacheManager = new NoteCacheManager(store);
 
         if (store.requiresUpdate()) {
             store = new NoteStore();
@@ -271,9 +270,8 @@ function NoteService(concord) {
             store.note.value = ns.outlineToXml();
             store.save();
 
-            // Update search cache
-            if (this.searchCacheManager)
-                this.searchCacheManager.updateNote(store.note);
+            if (this.noteCacheManager)
+                this.noteCacheManager.updateNote(store.note);
         }
 
         this.ngScope.setSaveState(saveStates.saving);
@@ -476,8 +474,8 @@ function NoteService(concord) {
                 store.removeNote(snote.key);
 
                 // Remove from search cache
-                if (this.searchCacheManager)
-                    this.searchCacheManager.deleteNote(snote.key);
+                if (this.noteCacheManager)
+                    this.noteCacheManager.deleteNote(snote.key);
             } else {
                 var isNewNote = false;
 
@@ -503,9 +501,8 @@ function NoteService(concord) {
                     }
                     store.save();
 
-                    // Update search cache
-                    if (this.searchCacheManager && snote.content != undefined)
-                        this.searchCacheManager.updateNote(saveNote);
+                    if (this.noteCacheManager && snote.content != undefined)
+                        this.noteCacheManager.updateNote(saveNote);
 
                     console.log(
                         'Saved note: ' +
@@ -580,8 +577,8 @@ function NoteService(concord) {
                 );
             });
 
-            // Rebuild search cache after all notes are loaded
-            if (this.searchCacheManager) this.searchCacheManager.rebuildCache();
+            // Rebuild cache after all notes are loaded
+            if (this.noteCacheManager) this.noteCacheManager.rebuildCache();
 
             if (!store.note && store.notes.length > 0)
                 this.launchNote(null, true);
@@ -603,11 +600,11 @@ function NoteService(concord) {
      * @returns {Array} Array of search results with highlighted matches
      */
     this.searchNotes = function (query) {
-        if (!this.searchCacheManager) {
+        if (!this.noteCacheManager) {
             console.warn('Search cache not initialized');
             return [];
         }
-        return this.searchCacheManager.search(query);
+        return this.noteCacheManager.search(query);
     }.bind(this);
 
     /**
@@ -731,14 +728,14 @@ function NoteService(concord) {
                 store.save();
 
                 // Try to use cached tree for faster rendering
-                var cachedTree = this.searchCacheManager
-                    ? this.searchCacheManager.getTree(note.key)
+                var cachedTree = this.noteCacheManager
+                    ? this.noteCacheManager.getTree(note.key)
                     : null;
                 var cachedExpansionState =
-                    this.searchCacheManager &&
-                    typeof this.searchCacheManager.getExpansionState ===
+                    this.noteCacheManager &&
+                    typeof this.noteCacheManager.getExpansionState ===
                         'function'
-                        ? this.searchCacheManager.getExpansionState(note.key)
+                        ? this.noteCacheManager.getExpansionState(note.key)
                         : null;
 
                 if (cachedTree && cachedTree.length > 0) {
@@ -831,7 +828,7 @@ function NoteStore() {
     this.notes = [];
     this.selectedNoteKey = null;
     this.storageName = 'nsxData';
-    this.searchCache = {};
+    this.noteCache = {};
     //Remember: Add inflation code to load() for each new property
 
     //Current Note
@@ -907,7 +904,7 @@ function NoteStore() {
 
                         this.version = obj.version;
                         this.selectedNoteKey = obj.selectedNoteKey;
-                        this.searchCache = obj.searchCache || {}; // Restore search cache
+                        this.noteCache = obj.noteCache || obj.searchCache || {};
 
                         resolve(this);
                     } catch (err) {
@@ -1480,14 +1477,14 @@ function Note(v, k, ver, date) {
                 $scope.performSearch = function () {
                     if (!$scope.searchQuery || $scope.searchQuery.length < 2) {
                         $scope.searchResults = [];
-                        if (ns.searchCacheManager)
-                            ns.searchCacheManager.setNavigationResults([]);
+                        if (ns.noteCacheManager)
+                            ns.noteCacheManager.setNavigationResults([]);
                         return;
                     }
 
                     $scope.searchResults = ns.searchNotes($scope.searchQuery);
-                    if (ns.searchCacheManager)
-                        ns.searchCacheManager.setNavigationResults(
+                    if (ns.noteCacheManager)
+                        ns.noteCacheManager.setNavigationResults(
                             $scope.searchResults
                         );
                 };
@@ -1495,8 +1492,8 @@ function Note(v, k, ver, date) {
                 // Check if a search result match is focused (for keyboard navigation)
                 $scope.isResultFocused = function (result, match) {
                     return (
-                        ns.searchCacheManager &&
-                        ns.searchCacheManager.isFocused(result, match)
+                        ns.noteCacheManager &&
+                        ns.noteCacheManager.isFocused(result, match)
                     );
                 };
 
@@ -1552,11 +1549,11 @@ function Note(v, k, ver, date) {
                     if (
                         e.key === 'ArrowDown' &&
                         $scope.showSearch &&
-                        ns.searchCacheManager
+                        ns.noteCacheManager
                     ) {
                         e.preventDefault();
                         $scope.$apply(function () {
-                            ns.searchCacheManager.navNext();
+                            ns.noteCacheManager.navNext();
                         });
                     }
 
@@ -1564,12 +1561,12 @@ function Note(v, k, ver, date) {
                     if (
                         e.key === 'ArrowUp' &&
                         $scope.showSearch &&
-                        ns.searchCacheManager
+                        ns.noteCacheManager
                     ) {
                         e.preventDefault();
                         $scope.$apply(function () {
-                            ns.searchCacheManager.navPrev();
-                            if (ns.searchCacheManager.focusedIndex === -1) {
+                            ns.noteCacheManager.navPrev();
+                            if (ns.noteCacheManager.focusedIndex === -1) {
                                 document.getElementById('searchInput').focus();
                             }
                         });
@@ -1579,11 +1576,11 @@ function Note(v, k, ver, date) {
                     if (
                         e.key === 'Enter' &&
                         $scope.showSearch &&
-                        ns.searchCacheManager &&
-                        ns.searchCacheManager.focusedIndex >= 0
+                        ns.noteCacheManager &&
+                        ns.noteCacheManager.focusedIndex >= 0
                     ) {
                         e.preventDefault();
-                        var focused = ns.searchCacheManager.getFocused();
+                        var focused = ns.noteCacheManager.getFocused();
                         if (focused) {
                             $scope.$apply(function () {
                                 $scope.openSearchResult(
