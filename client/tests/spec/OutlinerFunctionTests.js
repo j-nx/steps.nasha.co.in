@@ -39,6 +39,155 @@ describe('Outliner Functions', function () {
 	    //check outline with empty text is set
 	});*/
 
+    describe('Expansion State Preservation', function () {
+        it('should preserve expanded/collapsed states when saving and loading notes', function () {
+            // Load a hierarchical outline
+            op.xmlToOutline(SAMPLE_HIERARCHICAL_OPML, false);
+
+            // Initially all nodes are collapsed by default (built with collapsed=true)
+            var allNodes = concord.root.find('.concord-node');
+            expect(allNodes.length).toBeGreaterThan(2);
+
+            // Check that nodes with children are collapsed
+            var nodesWithChildren = allNodes.filter(function() {
+                return $(this).children('ol').children().length > 0;
+            });
+            expect(nodesWithChildren.length).toBeGreaterThan(0);
+
+            // All nodes with children should be collapsed initially
+            nodesWithChildren.each(function() {
+                expect($(this).hasClass('collapsed')).toBe(true);
+            });
+
+            // Expand specific nodes (first and third node with children)
+            var firstNodeWithChildren = $(nodesWithChildren[0]);
+            var thirdNodeWithChildren = $(nodesWithChildren[2]);
+
+            firstNodeWithChildren.removeClass('collapsed');
+            if (thirdNodeWithChildren.length > 0) {
+                thirdNodeWithChildren.removeClass('collapsed');
+            }
+
+            // Save the outline to XML (this should capture expansion state)
+            var savedXml = op.outlineToXml(null, 'test@example.com', null, 'Test Note');
+
+            // Verify the saved XML contains an expansionState tag
+            expect(savedXml).toContain('<expansionState>');
+            expect(savedXml).toContain('</expansionState>');
+
+            // Parse the expansion state to verify it's not empty
+            var parser = new DOMParser();
+            var xmlDoc = parser.parseFromString(savedXml, 'text/xml');
+            var expansionStateElement = xmlDoc.querySelector('expansionState');
+            expect(expansionStateElement).not.toBeNull();
+
+            var expansionStateValue = expansionStateElement.textContent;
+            expect(expansionStateValue).not.toBe('');
+
+            // The expansion state should contain comma-separated node IDs
+            var expandedNodeIds = expansionStateValue.split(',').map(function(id) {
+                return id.trim();
+            }).filter(function(id) {
+                return id !== '';
+            });
+            expect(expandedNodeIds.length).toBeGreaterThan(0);
+
+            // Clear the outline and reload from saved XML
+            op.xmlToOutline(savedXml, false);
+
+            // Verify nodes are in the correct expanded/collapsed state
+            var reloadedNodes = concord.root.find('.concord-node');
+            expect(reloadedNodes.length).toBe(allNodes.length);
+
+            // Check that the expansion state was restored correctly
+            var nodeId = 1;
+            var expandedNodeIdsSet = new Set(expandedNodeIds);
+
+            reloadedNodes.each(function() {
+                var node = $(this);
+                var hasChildren = node.children('ol').children().length > 0;
+                var shouldBeExpanded = expandedNodeIdsSet.has(String(nodeId));
+
+                if (hasChildren) {
+                    if (shouldBeExpanded) {
+                        expect(node.hasClass('collapsed')).toBe(false,
+                            'Node ' + nodeId + ' should be expanded');
+                    } else {
+                        expect(node.hasClass('collapsed')).toBe(true,
+                            'Node ' + nodeId + ' should be collapsed');
+                    }
+                }
+                nodeId++;
+            });
+        });
+
+        it('should handle notes with all nodes collapsed', function () {
+            // Load and ensure all are collapsed
+            op.xmlToOutline(SAMPLE_HIERARCHICAL_OPML, false);
+
+            // Collapse all nodes
+            concord.root.find('.concord-node').each(function() {
+                if ($(this).children('ol').children().length > 0) {
+                    $(this).addClass('collapsed');
+                }
+            });
+
+            // Save and reload
+            var savedXml = op.outlineToXml(null, 'test@example.com', null, 'All Collapsed');
+
+            // expansionState should be empty or contain no IDs
+            var parser = new DOMParser();
+            var xmlDoc = parser.parseFromString(savedXml, 'text/xml');
+            var expansionStateElement = xmlDoc.querySelector('expansionState');
+
+            // Empty expansion state means all collapsed
+            var expansionStateValue = expansionStateElement ? expansionStateElement.textContent.trim() : '';
+
+            // Reload and verify all still collapsed
+            op.xmlToOutline(savedXml, false);
+
+            concord.root.find('.concord-node').each(function() {
+                if ($(this).children('ol').children().length > 0) {
+                    expect($(this).hasClass('collapsed')).toBe(true);
+                }
+            });
+        });
+
+        it('should handle notes with all nodes expanded', function () {
+            // Load outline
+            op.xmlToOutline(SAMPLE_HIERARCHICAL_OPML, false);
+
+            // Expand all nodes
+            concord.root.find('.concord-node').each(function() {
+                $(this).removeClass('collapsed');
+            });
+
+            // Save and reload
+            var savedXml = op.outlineToXml(null, 'test@example.com', null, 'All Expanded');
+
+            // expansionState should contain all node IDs with children
+            var parser = new DOMParser();
+            var xmlDoc = parser.parseFromString(savedXml, 'text/xml');
+            var expansionStateElement = xmlDoc.querySelector('expansionState');
+            expect(expansionStateElement).not.toBeNull();
+
+            var expansionStateValue = expansionStateElement.textContent;
+            expect(expansionStateValue).not.toBe('');
+
+            // Reload and verify all still expanded
+            op.xmlToOutline(savedXml, false);
+
+            var allNodes = concord.root.find('.concord-node');
+            var nodesWithChildren = allNodes.filter(function() {
+                return $(this).children('ol').children().length > 0;
+            });
+
+            nodesWithChildren.each(function() {
+                expect($(this).hasClass('collapsed')).toBe(false);
+            });
+        });
+    });
+
     describe('Outlier Utils Functions ', function () {
         it('should consolidate duplicate tags', function () {
             /* MUST BE IN ORDER b,i,u
@@ -259,4 +408,35 @@ opXmlToOutline\n(localStorage.savedOpmltext);';
 - New Line Test 1\n\
 - New Line Test 2 \n\
 - New Line Test 3';
+
+    // Sample hierarchical OPML for testing expansion state
+    var SAMPLE_HIERARCHICAL_OPML =
+        '<?xml version="1.0"?>\n\
+<opml version="2.0">\n\
+<head>\n\
+<title>Test Hierarchy</title>\n\
+</head>\n\
+<body>\n\
+<outline text="Parent 1">\n\
+<outline text="Child 1.1">\n\
+<outline text="Grandchild 1.1.1"/>\n\
+<outline text="Grandchild 1.1.2"/>\n\
+</outline>\n\
+<outline text="Child 1.2"/>\n\
+</outline>\n\
+<outline text="Parent 2">\n\
+<outline text="Child 2.1"/>\n\
+<outline text="Child 2.2">\n\
+<outline text="Grandchild 2.2.1"/>\n\
+</outline>\n\
+</outline>\n\
+<outline text="Parent 3">\n\
+<outline text="Child 3.1">\n\
+<outline text="Grandchild 3.1.1">\n\
+<outline text="Great-grandchild 3.1.1.1"/>\n\
+</outline>\n\
+</outline>\n\
+</outline>\n\
+</body>\n\
+</opml>';
 }
