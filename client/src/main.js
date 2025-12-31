@@ -25,18 +25,18 @@ var store;
 var idler;
 var api;
 
-let TIMEOUT = 20; // min
-let TIMEOUT_AUTO_REFRESH = 10; // min
-let AUTOSAVE_DELAY = 5; // seconds
+var TIMEOUT = 20; // min
+var TIMEOUT_AUTO_REFRESH = 10; // min
+var AUTOSAVE_DELAY = 5; // seconds
 const MOBILE = {
     TIMEOUT: 0.2, // min, 0.2 = 12 seconds
     AUTOSAVE_DELAY: 1 // seconds
 };
 
-let interval_auto_refresh; // polling update
-let interval_auto_save; // automatically save note
-let interval_away_time; // auto-lock screen PC
-let lastSeen = Date.now(); // epoch
+var interval_auto_refresh; // polling update
+var interval_auto_save; // automatically save note
+var interval_away_time; // auto-lock screen PC
+var lastSeen = Date.now(); // epoch
 
 var isLoaded = false;
 var isDebug = false;
@@ -126,6 +126,7 @@ var storage = new NSXStorage();
 
 function saveOutlineNow() {
     if (ns.canPersist() == false || ns.isCookieValid() === false) return;
+    if (!opHasChanged()) return; // Skip save if note hasn't been modified
 
     ns.saveNote();
 
@@ -314,9 +315,14 @@ function onVisible() {
     console.debug('**** PAGE VISIBLE');
     if (!isMobile || !lastSeen) return;
 
-    if (isOnWake()) {
+    // Only trigger away mode if we're not already in a disabled state
+    // This prevents unnecessary wake triggers when the app wasn't in timeout mode
+    if (isOnWake() && !isAppDisabled()) {
         if (idler) idler.away();
     }
+
+    // Reset lastSeen to prevent stale comparisons on subsequent visibility changes
+    lastSeen = Date.now();
 }
 
 function onFocus() {
