@@ -8,9 +8,9 @@
     <link rel="stylesheet" href="css/main.css" type="text/css" media="all" />
     <!-- /build -->
     <!-- build:template
-    <link rel="stylesheet" href="css/main.min.css" type="text/css" media="all" />
-    <link rel="stylesheet" href="css/768.min.css" type="text/css" media="only screen and (min-width: 540px)" />
-    <link rel="stylesheet" href="css/922.min.css" type="text/css" media="only screen and (min-width: 800px)" />
+    <link rel="stylesheet" href="css/main.min.css?v=<%= version %>" type="text/css" media="all" />
+    <link rel="stylesheet" href="css/768.min.css?v=<%= version %>" type="text/css" media="only screen and (min-width: 540px)" />
+    <link rel="stylesheet" href="css/922.min.css?v=<%= version %>" type="text/css" media="only screen and (min-width: 800px)" />
     <!-- /build -->
 
     <link rel="manifest" href="manifest.json">
@@ -62,7 +62,7 @@
         var cb = function () {
             var l = document.createElement('link');
             l.rel = 'stylesheet';
-            l.href = 'css/style.min.css';
+            l.href = 'css/style.min.css?v=<%= version %>';
             var h = document.getElementsByTagName('head')[0];
             h.parentNode.insertBefore(l, h);
         };
@@ -95,7 +95,7 @@
     <!-- /build -->
 
     <!-- build:template
-        <script src="script.min.js"></script>
+        <script src="script.min.js?v=<%= version %>"></script>
     <script>
         var appVersionHash = '<%= version %>';
         console.log('Application VersionHash: ' + appVersionHash)
@@ -430,7 +430,7 @@
 	<script>
 		if ('serviceWorker' in navigator) {
 			const register = () => navigator.serviceWorker
-				.register('/init.min.js')
+				.register('/init.min.js?v=<%= version %>')
 				.then(function () {
 					console.debug("Service Worker Registered");
                 });

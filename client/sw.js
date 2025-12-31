@@ -1,7 +1,6 @@
 var swKey = 'steps-VERSION_NUMBER';
 
 self.addEventListener('install', function (e) {
-    e.waitUntil(self.skipWaiting());
     e.waitUntil(
         caches.open(swKey).then(function (cache) {
             return cache.addAll([
@@ -32,13 +31,20 @@ self.addEventListener('install', function (e) {
                 '/css/fonts/fira-sans/font/fira-sans.ttf',
                 '/css/fonts/fira-sans/font/fira-sans.woff'
             ]);
+        }).then(function () {
+            return self.skipWaiting();
         })
     );
 });
 
 self.addEventListener('fetch', function (event) {
+    // Strip query string for cache matching (allows ?v=hash cache busting)
+    var url = new URL(event.request.url);
+    url.search = '';
+    var cacheRequest = new Request(url.toString());
+
     event.respondWith(
-        caches.match(event.request).then(function (response) {
+        caches.match(cacheRequest).then(function (response) {
             return response || fetch(event.request);
         })
     );
@@ -56,7 +62,8 @@ self.addEventListener('activate', function (event) {
                     }
                 })
             );
+        }).then(function () {
+            return self.clients.claim();
         })
     );
-    event.waitUntil(self.clients.claim());
 });

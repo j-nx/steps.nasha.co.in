@@ -20,6 +20,7 @@ const config = {
 
 -   Create `config-prod.js`
 -   Run `npm run build` or `grunt`
+-   If running build locally will need to switch access key to dev (do not push that to prod)
 
 **Run Test Spec**
 
