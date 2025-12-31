@@ -28,11 +28,11 @@ class SearchCacheManager {
     }
 
     /**
-     * Extract compact tree from OPML note
-     * Returns: Array of [text, attrs, children] nodes
+     * Extract compact tree and expansion state from OPML note
+     * Returns: { tree: Array of [text, attrs, children] nodes, expansionState: number[] }
      */
     extractTreeFromNote(note) {
-        if (!note || !note.value) return [];
+        if (!note || !note.value) return { tree: [], expansionState: [] };
 
         try {
             const parser = new DOMParser();
@@ -65,7 +65,7 @@ class SearchCacheManager {
             };
 
             const body = xmlDoc.getElementsByTagName('body')[0];
-            if (!body) return [];
+            if (!body) return { tree: [], expansionState: [] };
 
             const tree = [];
             const topLevel = body.children;
@@ -75,10 +75,20 @@ class SearchCacheManager {
                 }
             }
 
-            return tree;
+            // Extract expansion state from head
+            let expansionState = [];
+            const expansionStateEl = xmlDoc.getElementsByTagName('expansionState')[0];
+            if (expansionStateEl && expansionStateEl.textContent) {
+                expansionState = expansionStateEl.textContent
+                    .split(/\s*,\s*/)
+                    .filter(s => s !== '')
+                    .map(s => parseInt(s, 10));
+            }
+
+            return { tree, expansionState };
         } catch (error) {
             console.error('Error extracting tree from note:', error);
-            return [];
+            return { tree: [], expansionState: [] };
         }
     }
 
@@ -94,10 +104,11 @@ class SearchCacheManager {
     updateNote(note) {
         if (!note || !note.key) return;
 
-        const tree = this.extractTreeFromNote(note);
+        const { tree, expansionState } = this.extractTreeFromNote(note);
         this.store.searchCache[note.key] = {
             title: note.title || '',
-            tree: tree
+            tree: tree,
+            expansionState: expansionState
         };
     }
 
@@ -252,5 +263,13 @@ class SearchCacheManager {
     getTree(noteKey) {
         const cached = this.store.searchCache[noteKey];
         return cached ? cached.tree : null;
+    }
+
+    /**
+     * Get cached expansion state for a note
+     */
+    getExpansionState(noteKey) {
+        const cached = this.store.searchCache[noteKey];
+        return cached ? cached.expansionState : null;
     }
 }

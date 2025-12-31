@@ -595,10 +595,10 @@ function NoteService(concord) {
      * @returns {Array} Array of search results with highlighted matches
      */
     this.searchNotes = function (query) {
-        if (!this.searchCacheManager)
+        if (!this.searchCacheManager) {
             console.warn('Search cache not initialized');
-        return [];
-
+            return [];
+        }
         return this.searchCacheManager.search(query);
     }.bind(this);
 
@@ -726,12 +726,18 @@ function NoteService(concord) {
                 var cachedTree = this.searchCacheManager
                     ? this.searchCacheManager.getTree(note.key)
                     : null;
+                var cachedExpansionState =
+                    this.searchCacheManager &&
+                    typeof this.searchCacheManager.getExpansionState === 'function'
+                        ? this.searchCacheManager.getExpansionState(note.key)
+                        : null;
 
                 if (cachedTree && cachedTree.length > 0) {
                     this.outliner.op.treeToOutline(
                         cachedTree,
                         note.title,
-                        false
+                        false,
+                        cachedExpansionState
                     );
                 } else {
                     // Fall back to XML parsing

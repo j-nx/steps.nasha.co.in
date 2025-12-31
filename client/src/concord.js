@@ -3331,8 +3331,9 @@ function ConcordOp(root, concordInstance, _cursor) {
      * @param {Array} tree - Array of [text, attrs, children] nodes
      * @param {string} title - Note title
      * @param {boolean} flSetFocus - Whether to set focus after building
+     * @param {number[]} expansionState - Array of node IDs that should be expanded
      */
-    this.treeToOutline = function (tree, title, flSetFocus) {
+    this.treeToOutline = function (tree, title, flSetFocus, expansionState) {
         if (flSetFocus == undefined) {
             flSetFocus = true;
         }
@@ -3347,6 +3348,34 @@ function ConcordOp(root, concordInstance, _cursor) {
 
         root.data('changed', false);
         root.removeData('previousChange');
+
+        // Restore expansion state if provided
+        if (expansionState && expansionState.length > 0) {
+            var nodeId = 1;
+            var cursor = root.find('.concord-node:first');
+            while (cursor && cursor.length === 1) {
+                if (expansionState.indexOf(nodeId) >= 0) {
+                    cursor.removeClass('collapsed');
+                }
+                nodeId++;
+
+                // Navigate to next node in depth-first order
+                var next = null;
+                if (!cursor.hasClass('collapsed')) {
+                    var outline = cursor.children('ol');
+                    if (outline.length == 1) {
+                        var firstChild = outline.children('.concord-node:first');
+                        if (firstChild.length == 1) {
+                            next = firstChild;
+                        }
+                    }
+                }
+                if (!next) {
+                    next = this._walk_down(cursor);
+                }
+                cursor = next;
+            }
+        }
 
         this.setCursor(root.find('.concord-node:first'));
         this.setTextMode(!flSetFocus && !concord.mobile);

@@ -412,4 +412,69 @@ describe('Note Service functions', function () {
         if (id) div.id = id;
         return div;
     }
+
+    describe('searchNotes', function () {
+        beforeEach(function () {
+            // Add notes with searchable content
+            var n1 = new Note(
+                '<opml><head/><body><outline text="JavaScript tutorial for beginners"></outline></body></opml>'
+            );
+            n1.key = '1';
+            n1.version = 1;
+            _store.addNote(n1);
+
+            var n2 = new Note(
+                '<opml><head/><body><outline text="Python programming guide"></outline></body></opml>'
+            );
+            n2.key = '2';
+            n2.version = 1;
+            _store.addNote(n2);
+
+            // Initialize search cache (normally done in tryFinishLoading)
+            ns.searchCacheManager = new SearchCacheManager(_store);
+            ns.searchCacheManager.rebuildCache();
+        });
+
+        it('should return search results when query matches', function () {
+            var results = ns.searchNotes('javascript');
+
+            expect(results.length).toBe(1);
+            expect(results[0].noteKey).toBe('1');
+            expect(results[0].matches.length).toBeGreaterThan(0);
+        });
+
+        it('should return empty array when no matches found', function () {
+            var results = ns.searchNotes('nonexistent');
+
+            expect(results).toEqual([]);
+        });
+
+        it('should return empty array for short queries', function () {
+            var results = ns.searchNotes('a');
+
+            expect(results).toEqual([]);
+        });
+
+        it('should return empty array when searchCacheManager not initialized', function () {
+            ns.searchCacheManager = null;
+
+            var results = ns.searchNotes('javascript');
+
+            expect(results).toEqual([]);
+        });
+
+        it('should find matches across multiple notes', function () {
+            var n3 = new Note(
+                '<opml><head/><body><outline text="Advanced JavaScript patterns"></outline></body></opml>'
+            );
+            n3.key = '3';
+            n3.version = 1;
+            _store.addNote(n3);
+            ns.searchCacheManager.updateNote(n3);
+
+            var results = ns.searchNotes('javascript');
+
+            expect(results.length).toBe(2);
+        });
+    });
 });

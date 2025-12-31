@@ -54,31 +54,36 @@ describe('SearchCacheManager', function () {
     describe('extractTreeFromNote', function () {
         it('should extract tree from OPML note', function () {
             var note = createNote('123', 'My Title', 'Hello World');
-            var tree = searchCache.extractTreeFromNote(note);
+            var result = searchCache.extractTreeFromNote(note);
 
-            expect(tree.length).toBe(1);
-            expect(tree[0][0]).toBe('Hello World'); // text
-            expect(tree[0][1]).toBe(null); // no attrs
-            expect(tree[0][2]).toEqual([]); // no children
+            expect(result.tree.length).toBe(1);
+            expect(result.tree[0][0]).toBe('Hello World'); // text
+            expect(result.tree[0][1]).toBe(null); // no attrs
+            expect(result.tree[0][2]).toEqual([]); // no children
+            expect(result.expansionState).toEqual([]); // no expansion state
         });
 
-        it('should return empty array for null note', function () {
-            expect(searchCache.extractTreeFromNote(null)).toEqual([]);
+        it('should return empty arrays for null note', function () {
+            var result = searchCache.extractTreeFromNote(null);
+            expect(result.tree).toEqual([]);
+            expect(result.expansionState).toEqual([]);
         });
 
-        it('should return empty array for note without value', function () {
-            expect(searchCache.extractTreeFromNote({ key: '123' })).toEqual([]);
+        it('should return empty arrays for note without value', function () {
+            var result = searchCache.extractTreeFromNote({ key: '123' });
+            expect(result.tree).toEqual([]);
+            expect(result.expansionState).toEqual([]);
         });
 
         it('should preserve hierarchy', function () {
             var note = createNoteWithHierarchy('123', 'Test');
-            var tree = searchCache.extractTreeFromNote(note);
+            var result = searchCache.extractTreeFromNote(note);
 
-            expect(tree.length).toBe(1);
-            expect(tree[0][0]).toBe('Parent');
-            expect(tree[0][2].length).toBe(2); // 2 children
-            expect(tree[0][2][0][0]).toBe('Child 1');
-            expect(tree[0][2][1][0]).toBe('Child 2');
+            expect(result.tree.length).toBe(1);
+            expect(result.tree[0][0]).toBe('Parent');
+            expect(result.tree[0][2].length).toBe(2); // 2 children
+            expect(result.tree[0][2][0][0]).toBe('Child 1');
+            expect(result.tree[0][2][1][0]).toBe('Child 2');
         });
 
         it('should extract attributes', function () {
@@ -88,9 +93,49 @@ describe('SearchCacheManager', function () {
                 value:
                     '<opml><body><outline text="Task" type="task" icon="check"/></body></opml>'
             };
-            var tree = searchCache.extractTreeFromNote(note);
+            var result = searchCache.extractTreeFromNote(note);
 
-            expect(tree[0][1]).toEqual({ type: 'task', icon: 'check' });
+            expect(result.tree[0][1]).toEqual({ type: 'task', icon: 'check' });
+        });
+
+        it('should extract expansion state from OPML', function () {
+            var note = {
+                key: '123',
+                title: 'Test',
+                value:
+                    '<opml><head><expansionState>1,2,5</expansionState></head><body>' +
+                    '<outline text="Parent"><outline text="Child"/></outline>' +
+                    '</body></opml>'
+            };
+            var result = searchCache.extractTreeFromNote(note);
+
+            expect(result.expansionState).toEqual([1, 2, 5]);
+        });
+
+        it('should handle empty expansion state', function () {
+            var note = {
+                key: '123',
+                title: 'Test',
+                value:
+                    '<opml><head><expansionState></expansionState></head><body>' +
+                    '<outline text="Content"/></body></opml>'
+            };
+            var result = searchCache.extractTreeFromNote(note);
+
+            expect(result.expansionState).toEqual([]);
+        });
+
+        it('should handle expansion state with whitespace', function () {
+            var note = {
+                key: '123',
+                title: 'Test',
+                value:
+                    '<opml><head><expansionState>1, 3 , 7</expansionState></head><body>' +
+                    '<outline text="Content"/></body></opml>'
+            };
+            var result = searchCache.extractTreeFromNote(note);
+
+            expect(result.expansionState).toEqual([1, 3, 7]);
         });
     });
 
@@ -119,6 +164,20 @@ describe('SearchCacheManager', function () {
             searchCache.updateNote(note);
 
             expect(mockStore.searchCache['123'].tree[0][0]).toBe('Updated');
+        });
+
+        it('should store expansion state in cache', function () {
+            var note = {
+                key: '123',
+                title: 'Test',
+                value:
+                    '<opml><head><expansionState>1,3,5</expansionState></head><body>' +
+                    '<outline text="Parent"><outline text="Child"/></outline>' +
+                    '</body></opml>'
+            };
+            searchCache.updateNote(note);
+
+            expect(mockStore.searchCache['123'].expansionState).toEqual([1, 3, 5]);
         });
     });
 
@@ -299,6 +358,38 @@ describe('SearchCacheManager', function () {
             var tree = searchCache.getTree('nonexistent');
 
             expect(tree).toBeNull();
+        });
+    });
+
+    describe('getExpansionState', function () {
+        it('should return cached expansion state for a note', function () {
+            var note = {
+                key: '123',
+                title: 'Test',
+                value:
+                    '<opml><head><expansionState>1,2,3</expansionState></head><body>' +
+                    '<outline text="Content"/></body></opml>'
+            };
+            searchCache.updateNote(note);
+
+            var expansionState = searchCache.getExpansionState('123');
+
+            expect(expansionState).toEqual([1, 2, 3]);
+        });
+
+        it('should return null for non-existent note', function () {
+            var expansionState = searchCache.getExpansionState('nonexistent');
+
+            expect(expansionState).toBeNull();
+        });
+
+        it('should return empty array for note without expansion state', function () {
+            var note = createNote('123', 'Test', 'Content');
+            searchCache.updateNote(note);
+
+            var expansionState = searchCache.getExpansionState('123');
+
+            expect(expansionState).toEqual([]);
         });
     });
 
