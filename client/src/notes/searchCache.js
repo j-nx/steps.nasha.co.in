@@ -20,36 +20,50 @@ class SearchCacheManager {
     }
 
     /**
-     * Extract all text from OPML note value
-     * Returns: Plain text string with all outline text concatenated
+     * Extract all elements from OPML note with their path indices for navigation
+     * Returns: Array of { pathIndices: [0,1,2], text: "lowercase", originalText: "Original" }
      */
-    extractTextFromNote(note) {
-        if (!note || !note.value) return '';
+    extractElementsFromNote(note) {
+        if (!note || !note.value) return [];
 
         try {
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(note.value, 'text/xml');
-            const outlines = xmlDoc.getElementsByTagName('outline');
+            const elements = [];
 
-            const textParts = [note.title || '']; // Start with title
+            // Recursive function to traverse outline with path tracking
+            const traverse = (node, pathIndices) => {
+                const children = Array.from(node.children).filter(
+                    (el) => el.tagName === 'outline'
+                );
 
-            for (let i = 0; i < outlines.length; i++) {
-                const text = outlines[i].getAttribute('text') || '';
-                if (text.trim()) {
-                    // Strip HTML tags but keep text
+                children.forEach((child, index) => {
+                    const currentPath = [...pathIndices, index];
+                    const text = child.getAttribute('text') || '';
                     const cleanText = this.stripHtml(text);
-                    textParts.push(cleanText);
-                }
+
+                    if (cleanText.trim()) {
+                        elements.push({
+                            pathIndices: currentPath,
+                            text: cleanText.toLowerCase(),
+                            originalText: cleanText
+                        });
+                    }
+
+                    // Recurse into children
+                    traverse(child, currentPath);
+                });
+            };
+
+            const body = xmlDoc.getElementsByTagName('body')[0];
+            if (body) {
+                traverse(body, []);
             }
 
-            // Join with newlines and convert to lowercase for case-insensitive search
-            const fullText = textParts.join('\n').toLowerCase();
-
-            // Limit cache size per note to 500KB to prevent bloat
-            return fullText.substring(0, 500000);
+            return elements;
         } catch (error) {
-            console.error('Error extracting text from note:', error);
-            return '';
+            console.error('Error extracting elements from note:', error);
+            return [];
         }
     }
 
@@ -65,8 +79,11 @@ class SearchCacheManager {
     updateNote(note) {
         if (!note || !note.key) return;
 
-        const searchText = this.extractTextFromNote(note);
-        this.store.searchCache[note.key] = searchText;
+        const elements = this.extractElementsFromNote(note);
+        this.store.searchCache[note.key] = {
+            title: (note.title || '').toLowerCase(),
+            elements: elements
+        };
     }
 
     deleteNote(noteKey) {
@@ -109,16 +126,22 @@ class SearchCacheManager {
         const results = [];
 
         this.store.notes.forEach((note) => {
-            const cachedText = this.store.searchCache[note.key];
+            const cached = this.store.searchCache[note.key];
 
-            // Skip if note not in cache
-            if (!cachedText) {
+            // Skip if note not in cache or has old format
+            if (!cached || !cached.elements) {
                 console.warn(`Note ${note.key} not in cache, updating...`);
                 this.updateNote(note);
                 return;
             }
 
-            if (cachedText.includes(lowerQuery)) {
+            // Check title or any element matches
+            const titleMatches = cached.title.includes(lowerQuery);
+            const elementMatches = cached.elements.some((el) =>
+                el.text.includes(lowerQuery)
+            );
+
+            if (titleMatches || elementMatches) {
                 const matches = this.findMatches(note, lowerQuery);
                 if (matches.length > 0) {
                     results.push({
@@ -130,41 +153,33 @@ class SearchCacheManager {
             }
         });
 
-        // console.debug(`Search for "${query}" found ${results.length} results`);
         return results;
     }
 
     /**
-     * Find specific matching lines in the note
-     * Re-parses OPML to get original (non-lowercase) text for display
+     * Find specific matching elements in the note from cache
+     * Returns matches with pathIndices for navigation
      */
     findMatches(note, lowerQuery) {
         const matches = [];
+        const cached = this.store.searchCache[note.key];
 
-        try {
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(note.value, 'text/xml');
-            const outlines = xmlDoc.getElementsByTagName('outline');
+        if (!cached || !cached.elements) return matches;
 
-            for (let i = 0; i < outlines.length; i++) {
-                const text = outlines[i].getAttribute('text') || '';
-                const cleanText = this.stripHtml(text);
+        for (const element of cached.elements) {
+            if (element.text.includes(lowerQuery)) {
+                matches.push({
+                    text: element.originalText,
+                    pathIndices: element.pathIndices,
+                    highlightedText: this.highlightMatch(
+                        element.originalText,
+                        lowerQuery
+                    )
+                });
 
-                if (cleanText.toLowerCase().includes(lowerQuery)) {
-                    matches.push({
-                        text: cleanText,
-                        highlightedText: this.highlightMatch(
-                            cleanText,
-                            lowerQuery
-                        )
-                    });
-
-                    // Limit to 5 matches per note to avoid clutter
-                    if (matches.length >= 5) break;
-                }
+                // Limit to 5 matches per note to avoid clutter
+                if (matches.length >= 5) break;
             }
-        } catch (error) {
-            console.error('Error finding matches in note:', error);
         }
 
         return matches;

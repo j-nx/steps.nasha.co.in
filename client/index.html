@@ -306,7 +306,7 @@
                     </div>
                     <div ng-repeat="match in result.matches"
                          class="search-result-match"
-                         ng-click="openSearchResult(result)"
+                         ng-click="openSearchResult(result, match)"
                          ng-bind-html="trustAsHtml(match.highlightedText)">
                     </div>
                 </div>
