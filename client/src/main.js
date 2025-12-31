@@ -129,8 +129,7 @@ function saveOutlineNow() {
     if (!opHasChanged()) return; // Skip save if note hasn't been modified
 
     ns.saveNote();
-
-    opClearChanged();
+    // Note: opClearChanged() is called in parseReceivedNote on successful save
 }
 
 function backgroundProcess() {

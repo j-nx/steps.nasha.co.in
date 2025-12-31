@@ -531,6 +531,7 @@ function NoteService(concord) {
             this.ngScope.finishMainRefresh();
         }
 
+        opClearChanged();
         this.ngScope.setSaveState(saveStates.saved);
         this.tryFinishLoading();
     }.bind(this);
