@@ -728,7 +728,8 @@ function NoteService(concord) {
                     : null;
                 var cachedExpansionState =
                     this.searchCacheManager &&
-                    typeof this.searchCacheManager.getExpansionState === 'function'
+                    typeof this.searchCacheManager.getExpansionState ===
+                        'function'
                         ? this.searchCacheManager.getExpansionState(note.key)
                         : null;
 
@@ -1127,6 +1128,10 @@ function Note(v, k, ver, date) {
                 {
                     function: 'Indent all below ',
                     code: 'Ctrl + Shift + [ or ]'
+                },
+                {
+                    function: 'Search',
+                    code: 'Ctrl + F'
                 }
             ];
 
@@ -1448,10 +1453,17 @@ function Note(v, k, ver, date) {
                 $scope.performSearch = function () {
                     if (!$scope.searchQuery || $scope.searchQuery.length < 2) {
                         $scope.searchResults = [];
+                        if (ns.searchCacheManager) ns.searchCacheManager.setNavigationResults([]);
                         return;
                     }
 
                     $scope.searchResults = ns.searchNotes($scope.searchQuery);
+                    if (ns.searchCacheManager) ns.searchCacheManager.setNavigationResults($scope.searchResults);
+                };
+
+                // Check if a search result match is focused (for keyboard navigation)
+                $scope.isResultFocused = function (result, match) {
+                    return ns.searchCacheManager && ns.searchCacheManager.isFocused(result, match);
                 };
 
                 $scope.openSearchResult = function (result, match) {
@@ -1496,6 +1508,36 @@ function Note(v, k, ver, date) {
                         $scope.$apply(function () {
                             $scope.toggleSearchDialog();
                         });
+                    }
+
+                    // Arrow Down - navigate to next search result
+                    if (e.key === 'ArrowDown' && $scope.showSearch && ns.searchCacheManager) {
+                        e.preventDefault();
+                        $scope.$apply(function () {
+                            ns.searchCacheManager.navNext();
+                        });
+                    }
+
+                    // Arrow Up - navigate to previous search result
+                    if (e.key === 'ArrowUp' && $scope.showSearch && ns.searchCacheManager) {
+                        e.preventDefault();
+                        $scope.$apply(function () {
+                            ns.searchCacheManager.navPrev();
+                            if (ns.searchCacheManager.focusedIndex === -1) {
+                                document.getElementById('searchInput').focus();
+                            }
+                        });
+                    }
+
+                    // Enter - select focused search result
+                    if (e.key === 'Enter' && $scope.showSearch && ns.searchCacheManager && ns.searchCacheManager.focusedIndex >= 0) {
+                        e.preventDefault();
+                        var focused = ns.searchCacheManager.getFocused();
+                        if (focused) {
+                            $scope.$apply(function () {
+                                $scope.openSearchResult(focused.result, focused.match);
+                            });
+                        }
                     }
                 });
             }

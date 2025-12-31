@@ -25,6 +25,10 @@ class SearchCacheManager {
         if (!this.store.searchCache) {
             this.store.searchCache = {};
         }
+
+        // Navigation state for keyboard navigation of search results
+        this.lastResults = [];
+        this.focusedIndex = -1; // -1 = input focused, 0+ = match index
     }
 
     /**
@@ -271,5 +275,82 @@ class SearchCacheManager {
     getExpansionState(noteKey) {
         const cached = this.store.searchCache[noteKey];
         return cached ? cached.expansionState : null;
+    }
+
+    // ========== Keyboard Navigation Methods ==========
+
+    /**
+     * Store results after search for keyboard navigation
+     */
+    setNavigationResults(results) {
+        this.lastResults = results;
+        this.focusedIndex = -1;
+    }
+
+    /**
+     * Count total matches across all result groups
+     */
+    getTotalMatches() {
+        let count = 0;
+        this.lastResults.forEach(r => count += r.matches.length);
+        return count;
+    }
+
+    /**
+     * Navigate to next match, returns true if moved
+     */
+    navNext() {
+        const total = this.getTotalMatches();
+        if (total > 0 && this.focusedIndex < total - 1) {
+            this.focusedIndex++;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Navigate to previous match, returns true if moved
+     */
+    navPrev() {
+        if (this.focusedIndex > 0) {
+            this.focusedIndex--;
+            return true;
+        } else if (this.focusedIndex === 0) {
+            this.focusedIndex = -1;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Get the currently focused (result, match) pair
+     */
+    getFocused() {
+        if (this.focusedIndex < 0) return null;
+        let idx = 0;
+        for (const result of this.lastResults) {
+            for (const match of result.matches) {
+                if (idx === this.focusedIndex) {
+                    return { result, match };
+                }
+                idx++;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Check if a specific match is currently focused
+     */
+    isFocused(result, match) {
+        const focused = this.getFocused();
+        return focused !== null && focused.result === result && focused.match === match;
+    }
+
+    /**
+     * Reset navigation to input focus
+     */
+    resetNav() {
+        this.focusedIndex = -1;
     }
 }

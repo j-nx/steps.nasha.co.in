@@ -189,7 +189,9 @@ var ConcordUtil = {
 
         var caretOffset = 0;
         if (w3) {
-            var range = window.getSelection().getRangeAt(0);
+            var selection = window.getSelection();
+            if (selection.rangeCount === 0) return 0;
+            var range = selection.getRangeAt(0);
             var preCaretRange = range.cloneRange();
             if (preCaretRange.startOffset == 0) return 0;
             preCaretRange.selectNodeContents(element);

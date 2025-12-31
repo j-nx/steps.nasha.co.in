@@ -417,4 +417,181 @@ describe('SearchCacheManager', function () {
             expect(stats.syncStatus).toBe('out of sync');
         });
     });
+
+    describe('Keyboard Navigation', function () {
+        var mockResults;
+
+        beforeEach(function () {
+            // Create mock search results with 2 groups, 3 total matches
+            mockResults = [
+                {
+                    noteKey: '1',
+                    noteTitle: 'Note One',
+                    matches: [
+                        { text: 'Match 1', pathIndices: [0] },
+                        { text: 'Match 2', pathIndices: [1] }
+                    ]
+                },
+                {
+                    noteKey: '2',
+                    noteTitle: 'Note Two',
+                    matches: [
+                        { text: 'Match 3', pathIndices: [0] }
+                    ]
+                }
+            ];
+        });
+
+        describe('setNavigationResults', function () {
+            it('should store results and reset focusedIndex', function () {
+                searchCache.focusedIndex = 5;
+                searchCache.setNavigationResults(mockResults);
+
+                expect(searchCache.lastResults).toBe(mockResults);
+                expect(searchCache.focusedIndex).toBe(-1);
+            });
+        });
+
+        describe('getTotalMatches', function () {
+            it('should count all matches across groups', function () {
+                searchCache.setNavigationResults(mockResults);
+
+                expect(searchCache.getTotalMatches()).toBe(3);
+            });
+
+            it('should return 0 for empty results', function () {
+                searchCache.setNavigationResults([]);
+
+                expect(searchCache.getTotalMatches()).toBe(0);
+            });
+        });
+
+        describe('navNext', function () {
+            beforeEach(function () {
+                searchCache.setNavigationResults(mockResults);
+            });
+
+            it('should move from -1 to 0 on first call', function () {
+                var moved = searchCache.navNext();
+
+                expect(moved).toBe(true);
+                expect(searchCache.focusedIndex).toBe(0);
+            });
+
+            it('should increment focusedIndex', function () {
+                searchCache.navNext();
+                searchCache.navNext();
+
+                expect(searchCache.focusedIndex).toBe(1);
+            });
+
+            it('should not go past last result', function () {
+                searchCache.focusedIndex = 2; // last item (0-indexed)
+                var moved = searchCache.navNext();
+
+                expect(moved).toBe(false);
+                expect(searchCache.focusedIndex).toBe(2);
+            });
+
+            it('should return false for empty results', function () {
+                searchCache.setNavigationResults([]);
+                var moved = searchCache.navNext();
+
+                expect(moved).toBe(false);
+            });
+        });
+
+        describe('navPrev', function () {
+            beforeEach(function () {
+                searchCache.setNavigationResults(mockResults);
+            });
+
+            it('should decrement focusedIndex', function () {
+                searchCache.focusedIndex = 2;
+                var moved = searchCache.navPrev();
+
+                expect(moved).toBe(true);
+                expect(searchCache.focusedIndex).toBe(1);
+            });
+
+            it('should go from 0 to -1', function () {
+                searchCache.focusedIndex = 0;
+                var moved = searchCache.navPrev();
+
+                expect(moved).toBe(true);
+                expect(searchCache.focusedIndex).toBe(-1);
+            });
+
+            it('should return false when already at -1', function () {
+                searchCache.focusedIndex = -1;
+                var moved = searchCache.navPrev();
+
+                expect(moved).toBe(false);
+                expect(searchCache.focusedIndex).toBe(-1);
+            });
+        });
+
+        describe('getFocused', function () {
+            beforeEach(function () {
+                searchCache.setNavigationResults(mockResults);
+            });
+
+            it('should return null when focusedIndex is -1', function () {
+                expect(searchCache.getFocused()).toBeNull();
+            });
+
+            it('should return first match at index 0', function () {
+                searchCache.focusedIndex = 0;
+                var focused = searchCache.getFocused();
+
+                expect(focused.result).toBe(mockResults[0]);
+                expect(focused.match).toBe(mockResults[0].matches[0]);
+            });
+
+            it('should return correct match across groups', function () {
+                searchCache.focusedIndex = 2; // Third match (in second group)
+                var focused = searchCache.getFocused();
+
+                expect(focused.result).toBe(mockResults[1]);
+                expect(focused.match).toBe(mockResults[1].matches[0]);
+            });
+
+            it('should return null for out of bounds index', function () {
+                searchCache.focusedIndex = 99;
+                expect(searchCache.getFocused()).toBeNull();
+            });
+        });
+
+        describe('isFocused', function () {
+            beforeEach(function () {
+                searchCache.setNavigationResults(mockResults);
+            });
+
+            it('should return false when nothing is focused', function () {
+                var result = searchCache.isFocused(mockResults[0], mockResults[0].matches[0]);
+                expect(result).toBe(false);
+            });
+
+            it('should return true for focused match', function () {
+                searchCache.focusedIndex = 0;
+                var result = searchCache.isFocused(mockResults[0], mockResults[0].matches[0]);
+                expect(result).toBe(true);
+            });
+
+            it('should return false for non-focused match', function () {
+                searchCache.focusedIndex = 0;
+                var result = searchCache.isFocused(mockResults[0], mockResults[0].matches[1]);
+                expect(result).toBe(false);
+            });
+        });
+
+        describe('resetNav', function () {
+            it('should reset focusedIndex to -1', function () {
+                searchCache.focusedIndex = 5;
+                searchCache.resetNav();
+
+                expect(searchCache.focusedIndex).toBe(-1);
+            });
+        });
+    });
 });

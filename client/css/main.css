@@ -197,8 +197,8 @@ body {
 
 /* Individual match result */
 .search-result-match {
-    padding: 6px 0px;
-    margin: 2px 0 2px 25px;
+    padding: 6px 4px;
+    margin: 2px 6px 2px 20px;
     /* background: #f9f9f9; */
     /* border-left: 3px solid #926e8a; */
     cursor: pointer;
@@ -217,6 +217,11 @@ body {
 
 .search-result-match:hover {
     background-color: #f0f0f0;
+}
+
+/* Keyboard navigation focus state */
+.search-result-focused {
+    background-color: #e3f2fd !important;
 }
 
 /* Highlighted text in matches */
