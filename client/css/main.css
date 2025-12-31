@@ -89,7 +89,7 @@ body {
     top: 20px;
     font-size: 20px;
     cursor: pointer;
-    color: #777879;
+    color: #c3c3c3;
     transition: color 0.2s ease;
 }
 
@@ -128,6 +128,7 @@ body {
     border: 1px solid #ddd;
     border-radius: 4px;
     outline: none;
+    outline-style: none;
     font-family: 'Fira Sans', sans-serif;
 }
 
@@ -151,7 +152,7 @@ body {
 /* Search results container */
 .searchResults {
     overflow-y: auto;
-    padding: 15px 20px;
+    padding: 8px 12px;
     flex: 1;
     min-height: 0; /* Needed for flex overflow scrolling */
 }
@@ -160,22 +161,23 @@ body {
 .search-hint,
 .search-no-results {
     text-align: center;
-    padding: 30px;
+    padding: 15px;
     color: #999;
-    font-style: italic;
+    /* font-style: italic; */
 }
 
 /* Individual search result group */
 .search-result-group {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 /* Note title in search results */
 .search-result-note-title {
-    font-weight: bold;
+    font-weight: normal;
     color: #926e8a;
-    padding: 8px 12px;
-    margin-bottom: 8px;
+    background: #f9f9f9;
+    padding: 4px 8px;
+    margin-bottom: 4px;
     cursor: pointer;
     border-radius: 4px;
     transition: background-color 0.2s ease;
@@ -191,14 +193,22 @@ body {
 
 /* Individual match result */
 .search-result-match {
-    padding: 10px 15px;
-    margin: 4px 0 4px 20px;
-    background: #f9f9f9;
-    border-left: 3px solid #926e8a;
+    padding: 6px 10px;
+    margin: 2px 0 2px 25px;
+    /* background: #f9f9f9; */
+    /* border-left: 3px solid #926e8a; */
     cursor: pointer;
     border-radius: 3px;
     transition: background-color 0.2s ease;
-    line-height: 1.5;
+    line-height: 1.2;
+    color: #6a6a6a;
+}
+
+/* Override any bold/strong/other formatting from note content */
+.search-result-match *,
+.search-result-match b,
+.search-result-match strong {
+    font-weight: 400 !important;
 }
 
 .search-result-match:hover {

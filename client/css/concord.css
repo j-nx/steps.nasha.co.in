@@ -786,9 +786,9 @@ input[type='color'],
 .uneditable-input {
     display: inline-block;
     height: 18px;
-    padding: 4px 6px;
+    /* padding: 4px 6px; */
     margin-bottom: 5px;
-    font-size: 14px;
+    font-size: 1em;
     line-height: 20px;
     color: #555555;
     vertical-align: middle;

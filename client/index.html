@@ -294,15 +294,15 @@
                 <i class="icon-remove search-close" ng-click="toggleSearchDialog()" title="Close (Esc)"></i>
             </div>
             <div class="searchResults">
-                <div ng-show="searchQuery.length < 2 && searchQuery.length > 0" class="search-hint">
+                <!-- <div ng-show="searchQuery.length < 2 && searchQuery.length > 0" class="search-hint">
                     Type at least 2 characters to search...
-                </div>
+                </div> -->
                 <div ng-show="searchQuery.length >= 2 && searchResults.length === 0" class="search-no-results">
                     No results found for "{{searchQuery}}"
                 </div>
                 <div ng-repeat="result in searchResults" class="search-result-group">
                     <div class="search-result-note-title" ng-click="openSearchResult(result)">
-                        <i class="icon-file-text"></i> {{result.noteTitle}}
+                        <i class="icon-caret-right"></i> {{result.noteTitle}}
                     </div>
                     <div ng-repeat="match in result.matches"
                          class="search-result-match"

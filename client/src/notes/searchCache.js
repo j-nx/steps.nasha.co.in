@@ -130,7 +130,7 @@ class SearchCacheManager {
             }
         });
 
-        console.debug(`Search for "${query}" found ${results.length} results`);
+        // console.debug(`Search for "${query}" found ${results.length} results`);
         return results;
     }
 
