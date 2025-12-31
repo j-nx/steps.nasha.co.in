@@ -340,7 +340,7 @@
         </div>
         <div class="mainrefreshpopup" ng-show="showMainRefresh">
             <img class="logo" src="images/spin.svg" alt="Loading..." />
-            <br />Loading...
+            <div class="loading-countdown">Loading{{loadingCountdownMessage}}</div>
         </div>
         <section class="footer drop-shadow-upwards" ng-hide="!isLoggedIn() && showLogin && !context.hello.isVisible">
             <div class="footer-extra" ng-if="statusMessage && isReadOnly && isAppReady()">
