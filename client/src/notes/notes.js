@@ -547,6 +547,14 @@ function NoteService(concord) {
             console.log('blocked save, on mobile');
             return false;
         }
+        // Safety check: prevent saving empty content if note previously had content
+        var nodeCount = opGetNodeCount();
+        if (nodeCount === 0 && store.note && store.note.key) {
+            this.ngScope.disableApp(
+                'Save blocked: empty content detected. Please refresh.'
+            );
+            return false;
+        }
         return true;
     }.bind(this);
 
@@ -743,6 +751,23 @@ function NoteService(concord) {
                 } else {
                     // Fall back to XML parsing
                     this.outliner.op.xmlToOutline(note.value, false);
+                }
+
+                // Safety check: verify outline rendered correctly
+                var nodeCount = opGetNodeCount();
+                var noteHadContent =
+                    note.value &&
+                    note.value.indexOf('<outline ') !== -1 &&
+                    note.value.indexOf('<outline text=""/>') === -1;
+
+                if (nodeCount === 0 && noteHadContent) {
+                    console.error(
+                        'SAFETY: Outline failed to render - note had content but no nodes rendered'
+                    );
+                    this.ngScope.disableApp(
+                        'Render failed. Please refresh the page.'
+                    );
+                    return;
                 }
             }
 
@@ -1353,7 +1378,9 @@ function Note(v, k, ver, date) {
                     else {
                         event.stopPropagation();
                         event.preventDefault();
-                        ns.saveNote();
+                        if (opHasChanged()) {
+                            ns.saveNote();
+                        }
                         concord.removeFocus(true);
                     }
                 };
