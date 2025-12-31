@@ -1506,7 +1506,11 @@ function Note(v, k, ver, date) {
                     });
 
                     if (note) {
-                        ns.launchNote(note);
+                        // Only save and launch if switching to a different note
+                        if (!store.note || note.key !== store.note.key) {
+                            saveOutlineNow();
+                            ns.launchNote(note);
+                        }
 
                         // Navigate to specific element if match has path info
                         if (match && match.pathIndices) {
