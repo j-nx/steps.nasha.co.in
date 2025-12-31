@@ -214,9 +214,8 @@ function NoteService(concord) {
         this.ngScope.initialize();
 
         // Initialize search cache manager
-        if (!this.searchCacheManager) {
+        if (!this.searchCacheManager)
             this.searchCacheManager = new SearchCacheManager(store);
-        }
 
         if (store.requiresUpdate()) {
             store = new NoteStore();
@@ -273,9 +272,8 @@ function NoteService(concord) {
             store.save();
 
             // Update search cache
-            if (this.searchCacheManager) {
+            if (this.searchCacheManager)
                 this.searchCacheManager.updateNote(store.note);
-            }
         }
 
         this.ngScope.setSaveState(saveStates.saving);
@@ -478,9 +476,8 @@ function NoteService(concord) {
                 store.removeNote(snote.key);
 
                 // Remove from search cache
-                if (this.searchCacheManager) {
+                if (this.searchCacheManager)
                     this.searchCacheManager.deleteNote(snote.key);
-                }
             } else {
                 var isNewNote = false;
 
@@ -507,9 +504,8 @@ function NoteService(concord) {
                     store.save();
 
                     // Update search cache
-                    if (this.searchCacheManager && snote.content != undefined) {
+                    if (this.searchCacheManager && snote.content != undefined)
                         this.searchCacheManager.updateNote(saveNote);
-                    }
 
                     console.log(
                         'Saved note: ' +
@@ -599,10 +595,10 @@ function NoteService(concord) {
      * @returns {Array} Array of search results with highlighted matches
      */
     this.searchNotes = function (query) {
-        if (!this.searchCacheManager) {
+        if (!this.searchCacheManager)
             console.warn('Search cache not initialized');
-            return [];
-        }
+        return [];
+
         return this.searchCacheManager.search(query);
     }.bind(this);
 
