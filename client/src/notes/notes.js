@@ -740,12 +740,23 @@ function NoteService(concord) {
                         : null;
 
                 if (cachedTree && cachedTree.length > 0) {
-                    this.outliner.op.treeToOutline(
-                        cachedTree,
-                        note.title,
-                        false,
-                        cachedExpansionState
-                    );
+                    try {
+                        this.outliner.op.treeToOutline(
+                            cachedTree,
+                            note.title,
+                            false,
+                            cachedExpansionState
+                        );
+                    } catch (cacheError) {
+                        console.warn(
+                            'Cache data corrupted, falling back to XML parsing:',
+                            cacheError
+                        );
+                        if (this.noteCacheManager) {
+                            this.noteCacheManager.deleteNote(note.key);
+                        }
+                        this.outliner.op.xmlToOutline(note.value, false);
+                    }
                 } else {
                     // Fall back to XML parsing
                     this.outliner.op.xmlToOutline(note.value, false);
