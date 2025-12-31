@@ -28,6 +28,7 @@ if (!Array.prototype.indexOf) {
 var concord = {
     version: '2.49',
     mobile: isMobile,
+    animationSpeed: 150, // ms - controls expand/collapse animation speed
     ready: false,
     handleEvents: true,
     resumeCallbacks: [],
@@ -189,7 +190,9 @@ var ConcordUtil = {
 
         var caretOffset = 0;
         if (w3) {
-            var range = window.getSelection().getRangeAt(0);
+            var selection = window.getSelection();
+            if (selection.rangeCount === 0) return 0;
+            var range = selection.getRangeAt(0);
             var preCaretRange = range.cloneRange();
             if (preCaretRange.startOffset == 0) return 0;
             preCaretRange.selectNodeContents(element);
@@ -525,13 +528,14 @@ function ConcordOutline(container, options) {
                     prefs.outlineFont;
             }
             if (prefs.outlineFontSize) {
-                var diff = (prefs.nodeLineHeight*16) - (prefs.outlineFontSize*16); // Rem to Px = REM*BASE_FONT_SIZE e.g. 1.2*16
+                var diff =
+                    prefs.nodeLineHeight * 16 - prefs.outlineFontSize * 16; // Rem to Px = REM*BASE_FONT_SIZE e.g. 1.2*16
                 nodeStyle['font-size'] = style['font-size'] =
                     prefs.outlineFontSize + 'em';
                 nodeStyle['min-height'] = style['min-height'] =
-                    (prefs.outlineFontSize*16) + diff + 'px';
+                    prefs.outlineFontSize * 16 + diff + 'px';
                 nodeStyle['line-height'] = style['line-height'] =
-                    (prefs.outlineFontSize*16) + diff + 'px';
+                    prefs.outlineFontSize * 16 + diff + 'px';
             }
 
             this.root.parent().find('style.prefsStyle').remove();
@@ -1097,6 +1101,81 @@ function ConcordEditor(root, concordInstance) {
         text.appendTo(wrapper);
         wrapper.appendTo(node);
         children.appendTo(node);
+        return node;
+    };
+    /**
+     * Build DOM node from cached tree format [text, attrs, children]
+     */
+    this.buildFromTree = function (treeNode, collapsed, level) {
+        if (!level) {
+            level = 1;
+        }
+        var nodeText = treeNode[0] || '';
+        var attrs = treeNode[1] || {};
+        var nodeChildren = treeNode[2] || [];
+
+        var node = $('<li></li>');
+        node.addClass('concord-node');
+        node.addClass('concord-level-' + level);
+
+        node.data('attributes', attrs);
+
+        var wrapper = $("<div class='concord-wrapper'></div>");
+        var nodeIcon = attrs['icon'] || attrs['type'];
+        var localIcon = iconName; // Use global default (circle)
+
+        if (nodeIcon) {
+            if (
+                concordInstance.prefs() &&
+                concordInstance.prefs().typeIcons &&
+                concordInstance.prefs().typeIcons[nodeIcon]
+            ) {
+                localIcon = concordInstance.prefs().typeIcons[nodeIcon];
+            } else if (attrs['icon']) {
+                localIcon = attrs['icon'];
+            }
+            if (attrs['type']) {
+                node.attr('opml-type', attrs['type']);
+            }
+        }
+
+        var icon = '<span class="node-icon icon-' + localIcon + '"></span>';
+        wrapper.append(icon);
+        wrapper.addClass('type-icon');
+
+        if (attrs['isComment'] == 'true') {
+            node.addClass('concord-comment');
+        }
+
+        var text = $("<div class='concord-text' contenteditable='true'></div>");
+        text.addClass('concord-level-' + level + '-text');
+        text.html(this.escape(nodeText));
+
+        if (attrs['cssTextClass']) {
+            var cssClasses = attrs['cssTextClass'].split(/\s+/);
+            for (var c in cssClasses) {
+                text.addClass(cssClasses[c]);
+            }
+        }
+
+        var childrenOl = $('<ol></ol>');
+        var editor = this;
+        for (var i = 0; i < nodeChildren.length; i++) {
+            var child = editor.buildFromTree(
+                nodeChildren[i],
+                collapsed,
+                level + 1
+            );
+            child.appendTo(childrenOl);
+        }
+
+        if (collapsed && nodeChildren.length > 0) {
+            node.addClass('collapsed');
+        }
+
+        text.appendTo(wrapper);
+        wrapper.appendTo(node);
+        childrenOl.appendTo(node);
         return node;
     };
     this.hideContextMenu = function () {
@@ -2026,12 +2105,24 @@ function ConcordOp(root, concordInstance, _cursor) {
                     this.setCursorContext(node)
                 );
             }
-            node.addClass('collapsed');
-            node.find('ol').each(function () {
-                if ($(this).children().length > 0) {
-                    $(this).parent().addClass('collapsed');
-                }
-            });
+            // Animate collapse: slideUp then add collapsed class
+            var ol = node.children('ol');
+            if (ol.length && ol.children().length > 0) {
+                ol.stop(true, true).slideUp(
+                    concord.animationSpeed,
+                    function () {
+                        node.addClass('collapsed');
+                        ol.css('display', ''); // Clear inline style, let CSS handle it
+                        node.find('ol').each(function () {
+                            if ($(this).children().length > 0) {
+                                $(this).parent().addClass('collapsed');
+                            }
+                        });
+                    }
+                );
+            } else {
+                node.addClass('collapsed');
+            }
             this.markChanged();
         }
     };
@@ -2164,7 +2255,19 @@ function ConcordOp(root, concordInstance, _cursor) {
             if (!node.hasClass('collapsed')) {
                 return;
             }
-            node.removeClass('collapsed');
+            // Animate expand: clear inline styles, keep hidden via CSS, then slideDown
+            var ol = node.children('ol');
+            if (ol.length) {
+                ol.stop(true, true); // Stop any running animation
+                ol.css('display', ''); // Clear any inline display style
+                ol.hide(); // Now hide with jQuery
+                node.removeClass('collapsed'); // CSS no longer hides it
+                ol.slideDown(concord.animationSpeed, function () {
+                    ol.css('display', ''); // Clear inline style after animation
+                });
+            } else {
+                node.removeClass('collapsed');
+            }
             var cursorPosition = node.offset().top;
             var cursorHeight = node.height();
             var windowPosition = $(window).scrollTop();
@@ -2521,9 +2624,8 @@ function ConcordOp(root, concordInstance, _cursor) {
                 var node = concordInstance.editor.makeNode();
                 var nodeText = concordInstance.editor.escape(matches[2]);
                 if (workflowy) {
-                    var nodeTextMatches = nodeText.match(
-                        /^([\t\s]*)\-\s*(.+)$/
-                    );
+                    var nodeTextMatches =
+                        nodeText.match(/^([\t\s]*)\-\s*(.+)$/);
                     if (nodeTextMatches !== null) {
                         nodeText = nodeTextMatches[2];
                     }
@@ -3255,6 +3357,65 @@ function ConcordOp(root, concordInstance, _cursor) {
         root.data('currentChange', root.children().clone(true, true));
         return true;
     };
+    /**
+     * Build outline from cached tree format (faster than parsing OPML)
+     * @param {Array} tree - Array of [text, attrs, children] nodes
+     * @param {string} title - Note title
+     * @param {boolean} flSetFocus - Whether to set focus after building
+     * @param {number[]} expansionState - Array of node IDs that should be expanded
+     */
+    this.treeToOutline = function (tree, title, flSetFocus, expansionState) {
+        if (flSetFocus == undefined) {
+            flSetFocus = true;
+        }
+
+        root.empty();
+        this.setTitle(title || '');
+        root.data('head', {});
+
+        for (var i = 0; i < tree.length; i++) {
+            root.append(concordInstance.editor.buildFromTree(tree[i], true));
+        }
+
+        root.data('changed', false);
+        root.removeData('previousChange');
+
+        // Restore expansion state if provided
+        if (expansionState && expansionState.length > 0) {
+            var nodeId = 1;
+            var cursor = root.find('.concord-node:first');
+            while (cursor && cursor.length === 1) {
+                if (expansionState.indexOf(nodeId) >= 0) {
+                    cursor.removeClass('collapsed');
+                }
+                nodeId++;
+
+                // Navigate to next node in depth-first order
+                var next = null;
+                if (!cursor.hasClass('collapsed')) {
+                    var outline = cursor.children('ol');
+                    if (outline.length == 1) {
+                        var firstChild = outline.children(
+                            '.concord-node:first'
+                        );
+                        if (firstChild.length == 1) {
+                            next = firstChild;
+                        }
+                    }
+                }
+                if (!next) {
+                    next = this._walk_down(cursor);
+                }
+                cursor = next;
+            }
+        }
+
+        this.setCursor(root.find('.concord-node:first'));
+        this.setTextMode(!flSetFocus && !concord.mobile);
+
+        root.data('currentChange', root.children().clone(true, true));
+        return true;
+    };
     this.textToOutline = function (text, bulletChar) {
         var c = bulletChar; //currently unused
         var rows = text.split('\n');
@@ -3689,8 +3850,8 @@ window.currentInstance;
                                 */
 
                                 //Append text to previous (now focused) row and set caret
-                                var newCaretPosition = concordInstance.op.getLineText()
-                                    .length;
+                                var newCaretPosition =
+                                    concordInstance.op.getLineText().length;
                                 concordInstance.op.setLineText(
                                     ConcordUtil.consolidateTags(
                                         concordInstance.op.getLineText(
@@ -3721,9 +3882,10 @@ window.currentInstance;
                                             prevNode
                                         ) == 0
                                     ) {
-                                        var prevNodeText = concordInstance.op.getLineText(
-                                            prevNode
-                                        );
+                                        var prevNodeText =
+                                            concordInstance.op.getLineText(
+                                                prevNode
+                                            );
                                         if (
                                             prevNodeText == undefined ||
                                             prevNodeText == null
@@ -4236,7 +4398,8 @@ window.currentInstance;
                             ConcordUtil.getTextNode(concordInstance.op),
                             caret
                         );
-                    } else if (false &&
+                    } else if (
+                        false &&
                         lastWord.startsWith('**') &&
                         lastWord.endsWith('**')
                     ) {

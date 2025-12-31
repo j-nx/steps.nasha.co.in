@@ -2,7 +2,8 @@
 
 **Setup**
 
-Create a config.js in the root folder with your [Google Cloud Configuration](https://console.cloud.google.com/):
+Create a `config.js` in the client folder with your [Google Cloud Configuration](https://console.cloud.google.com/):
+_(APIs & Services → Credentials in your selected project)_
 
 ```
 const config = {
@@ -17,13 +18,19 @@ const config = {
 
 **Create Build**
 
--   Create config-prod.js
+-   Create `config-prod.js`
 -   Run `npm run build` or `grunt`
+
+**Run Test Spec**
+
+`http://localhost:8000/tests/SpecRunner.html`
 
 **Remote Debugging**
 
 -   Connect phone to USB
     -   Enable Remote debugging on the phone
+-   If asked, connect to transfer files vs charge only
+-   You might need to enable the IP in Google Cloud e.g. `http://10.103.25.151.nip.io:8000`
 
 To connect to localhost,
 

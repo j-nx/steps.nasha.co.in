@@ -79,3 +79,166 @@ body {
     display: none;
     z-index: 9999;
 }
+
+/* Search Feature Styles */
+
+/* Search button in header */
+.search-button {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    font-size: 20px;
+    cursor: pointer;
+    color: #c3c3c3;
+    transition: color 0.2s ease;
+}
+
+.search-button:hover {
+    color: #926e8a;
+}
+
+/* Search container modal */
+.searchContainer {
+    position: fixed;
+    top: 66px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.90);
+    z-index: 450;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Search header with input and close button */
+.search-header {
+    display: flex;
+    align-items: center;
+    padding: 5px 5px;
+    border-bottom: 1px solid #e0e0e0;
+    background: #f9f9f9;
+    flex-shrink: 0; /* Prevent header from shrinking */
+}
+
+.search-input {
+    flex: 1;
+    padding: 5px 5px;
+    font-size: 12px;
+    border: 0px !important;
+    background:  #f9f9f9;
+    margin-bottom: 0px !important;
+    /* border-radius: 4px; */
+    outline: none;
+    outline-style: none;
+    font-family: 'Fira Sans', sans-serif;
+}
+
+.search-input:focus {
+    border-color: #ddd !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    outline: none !important;
+}
+
+.search-close {
+    margin-left: 7px;
+    font-size: 20px;
+    cursor: pointer;
+    color: #777879;
+    transition: color 0.2s ease;
+}
+
+.search-close:hover {
+    color: #926e8a;
+}
+
+/* Search results container */
+.searchResults {
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0; /* Needed for flex overflow scrolling */
+}
+
+/* Hint and no results messages */
+.search-hint,
+.search-no-results {
+    text-align: center;
+    padding: 15px;
+    color: #999;
+    /* font-style: italic; */
+}
+
+/* Individual search result group */
+.search-result-group {
+    margin-bottom: 10px;
+}
+
+/* Note title in search results */
+.search-result-note-title {
+    font-weight: normal;
+    color: #926e8a;
+    background: #f9f9f9;
+    padding: 4px 8px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.search-result-note-title:hover {
+    background-color: #f5f0f4;
+}
+
+.search-result-note-title i {
+    font-size: 0.9em;
+    margin-right: 8px;
+}
+
+/* Individual match result */
+.search-result-match {
+    padding: 6px 4px;
+    margin: 2px 6px 2px 20px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background-color 0.2s ease;
+    color: #6a6a6a;
+    font-size: 0.9em;
+}
+
+/* Override any bold/strong/other formatting from note content */
+.search-result-match *,
+.search-result-match b,
+.search-result-match strong {
+    font-weight: 400 !important;
+}
+
+.search-result-match:hover {
+    background-color: #f0f0f0;
+}
+
+/* Keyboard navigation focus state */
+.search-result-focused {
+    background-color: #e3f2fd !important;
+}
+
+/* Highlighted text in matches */
+.search-result-match mark {
+    background-color: #ffd700;
+    border-radius: 2px;
+    font-weight: 500;
+}
+
+/* Flash highlight for navigated search result */
+.search-highlight {
+    animation: flash-highlight 2s ease-out;
+}
+
+@keyframes flash-highlight {
+    0% {
+        background-color: #ffd700;
+    }
+    100% {
+        background-color: transparent;
+    }
+}

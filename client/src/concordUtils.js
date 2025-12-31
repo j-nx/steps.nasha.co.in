@@ -231,6 +231,10 @@ function opMarkChanged() {
     return $(defaultUtilsOutliner).concord().op.markChanged();
 }
 
+function opGetNodeCount() {
+    return $(defaultUtilsOutliner).find('.concord-node').length;
+}
+
 function opRedraw() {
     return $(defaultUtilsOutliner).concord().op.redraw();
 }
