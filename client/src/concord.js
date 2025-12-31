@@ -28,7 +28,7 @@ if (!Array.prototype.indexOf) {
 var concord = {
     version: '2.49',
     mobile: isMobile,
-    animationSpeed: 100, // ms - controls expand/collapse animation speed
+    animationSpeed: 150, // ms - controls expand/collapse animation speed
     ready: false,
     handleEvents: true,
     resumeCallbacks: [],
@@ -2108,15 +2108,18 @@ function ConcordOp(root, concordInstance, _cursor) {
             // Animate collapse: slideUp then add collapsed class
             var ol = node.children('ol');
             if (ol.length && ol.children().length > 0) {
-                ol.slideUp(concord.animationSpeed, function () {
-                    node.addClass('collapsed');
-                    ol.css('display', ''); // Clear inline style, let CSS handle it
-                    node.find('ol').each(function () {
-                        if ($(this).children().length > 0) {
-                            $(this).parent().addClass('collapsed');
-                        }
-                    });
-                });
+                ol.stop(true, true).slideUp(
+                    concord.animationSpeed,
+                    function () {
+                        node.addClass('collapsed');
+                        ol.css('display', ''); // Clear inline style, let CSS handle it
+                        node.find('ol').each(function () {
+                            if ($(this).children().length > 0) {
+                                $(this).parent().addClass('collapsed');
+                            }
+                        });
+                    }
+                );
             } else {
                 node.addClass('collapsed');
             }
@@ -2255,6 +2258,7 @@ function ConcordOp(root, concordInstance, _cursor) {
             // Animate expand: clear inline styles, keep hidden via CSS, then slideDown
             var ol = node.children('ol');
             if (ol.length) {
+                ol.stop(true, true); // Stop any running animation
                 ol.css('display', ''); // Clear any inline display style
                 ol.hide(); // Now hide with jQuery
                 node.removeClass('collapsed'); // CSS no longer hides it

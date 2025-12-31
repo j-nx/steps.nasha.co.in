@@ -18,7 +18,7 @@ const config = {
 
 **Create Build**
 
--   Create config-prod.js
+-   Create `config-prod.js`
 -   Run `npm run build` or `grunt`
 
 **Run Test Spec**
