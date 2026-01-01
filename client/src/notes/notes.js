@@ -446,7 +446,9 @@ function NoteService(concord) {
             if (errXHR.status == 0)
                 this.setOffline('Unable to save note. Try refreshing.');
         }
-        this.ngScope.setSaveState(saveStates.saved);
+        // Set state to failed, not saved - and don't clear the changed flag
+        // so the timer will retry the save on the next interval
+        this.ngScope.setSaveState(saveStates.failed);
 
         this.tryFinishLoading();
     }.bind(this);
@@ -539,6 +541,8 @@ function NoteService(concord) {
         }
 
         this.ngScope.setSaveState(saveStates.saved);
+        // Clear the changed flag only after successful save
+        opClearChanged();
         this.tryFinishLoading();
     }.bind(this);
 

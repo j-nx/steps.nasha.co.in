@@ -128,8 +128,8 @@ function saveOutlineNow() {
     if (ns.canPersist() == false || ns.isCookieValid() === false) return;
 
     ns.saveNote();
-
-    opClearChanged();
+    // Note: opClearChanged() is now called in the save success callback
+    // to ensure we only clear the flag after the save actually completes
 }
 
 function backgroundProcess() {
