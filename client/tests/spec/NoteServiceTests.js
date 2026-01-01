@@ -412,4 +412,96 @@ describe('Note Service functions', function () {
         if (id) div.id = id;
         return div;
     }
+
+    describe('Save Timer Flow', function() {
+        beforeEach(function() {
+            // Ensure the outliner is available for opClearChanged
+            if (!window.opClearChanged) {
+                window.opClearChanged = jasmine.createSpy('opClearChanged');
+            }
+            if (!window.opMarkChanged) {
+                window.opMarkChanged = jasmine.createSpy('opMarkChanged');
+            }
+        });
+
+        it('should call opClearChanged() only after successful save', function() {
+            spyOn(window, 'opClearChanged');
+
+            // Setup a note to save
+            var note = createSimpleNote('save-test-123', 0, 'Test Content', 1);
+            _store.addNote(new Note(note.content, note.key, note.version));
+            _store.selectedNoteKey = note.key;
+
+            // Simulate successful save by calling parseReceivedNote
+            ns.parseReceivedNote(note);
+
+            // Verify opClearChanged was called after successful save
+            expect(window.opClearChanged).toHaveBeenCalled();
+            expect(ns.ngScope.saveState).toBe(saveStates.saved);
+        });
+
+        it('should NOT call opClearChanged() after failed save', function() {
+            spyOn(window, 'opClearChanged');
+
+            // Simulate a failed save
+            ns.onNoteActionFailure('Network Error', { status: 0 });
+
+            // Verify opClearChanged was NOT called
+            expect(window.opClearChanged).not.toHaveBeenCalled();
+        });
+
+        it('should set save state to "failed" on error, not "saved"', function() {
+            // Simulate a failed save with network error
+            ns.onNoteActionFailure('Network Error', { status: 0 });
+
+            // Verify state is failed, not saved
+            expect(ns.ngScope.saveState).toBe(saveStates.failed);
+            expect(ns.ngScope.saveState).not.toBe(saveStates.saved);
+        });
+
+        it('should set save state to "saved" on successful save', function() {
+            var note = createSimpleNote('success-test-456', 0, 'Success Content', 1);
+
+            ns.parseReceivedNote(note);
+
+            expect(ns.ngScope.saveState).toBe(saveStates.saved);
+        });
+
+        it('should allow timer to retry if save fails (changed flag not cleared)', function() {
+            spyOn(window, 'opClearChanged');
+
+            // First save fails
+            ns.onNoteActionFailure('Error', { status: 0 });
+
+            // Verify changed flag was not cleared (so timer can retry)
+            expect(window.opClearChanged).not.toHaveBeenCalled();
+            expect(ns.ngScope.saveState).toBe(saveStates.failed);
+
+            // Now simulate successful retry
+            var note = createSimpleNote('retry-test-789', 0, 'Retry Content', 1);
+            ns.parseReceivedNote(note);
+
+            // Verify changed flag is now cleared after success
+            expect(window.opClearChanged).toHaveBeenCalled();
+            expect(ns.ngScope.saveState).toBe(saveStates.saved);
+        });
+
+        it('should handle 401 auth errors without clearing changed flag', function() {
+            spyOn(window, 'opClearChanged');
+
+            ns.onNoteActionFailure('Unauthorized', { status: 401 });
+
+            expect(window.opClearChanged).not.toHaveBeenCalled();
+            expect(ns.ngScope.showLogin).toBe(true);
+        });
+
+        it('should handle 403 session expired errors without clearing changed flag', function() {
+            spyOn(window, 'opClearChanged');
+
+            ns.onNoteActionFailure('Forbidden', { status: 403 });
+
+            expect(window.opClearChanged).not.toHaveBeenCalled();
+            expect(ns.ngScope.showLogin).toBe(true);
+        });
+    });
 });
