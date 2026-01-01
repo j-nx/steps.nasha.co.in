@@ -30,7 +30,7 @@ var TIMEOUT_AUTO_REFRESH = 10; // min
 var AUTOSAVE_DELAY = 5; // seconds
 const MOBILE = {
     TIMEOUT: 0.2, // min, 0.2 = 12 seconds
-    AUTOSAVE_DELAY: 1 // seconds
+    AUTOSAVE_DELAY: 2 // seconds
 };
 
 var interval_auto_refresh; // polling update
@@ -128,13 +128,14 @@ function saveOutlineNow() {
     if (ns.canPersist() == false || ns.isCookieValid() === false) return;
     if (!opHasChanged()) return; // Skip save if note hasn't been modified
 
-    ns.saveNote();
-    // Note: opClearChanged() is called in parseReceivedNote on successful save
+    ns.saveNote(); // Note: opClearChanged is called in saveNote, optimistically
 }
 
 function backgroundProcess() {
     if (opHasChanged()) {
         if (secondsSince(whenLastKeystroke) >= AUTOSAVE_DELAY) {
+            // This is being called every second while the state is in "saving mode"
+            console.debug('Auto save triggered');
             saveOutlineNow();
         }
     }
@@ -184,12 +185,19 @@ function opKeystrokeCallback(event) {
     if (
         event.srcElement != null &&
         event.srcElement.className.indexOf('concord-wrapper') == -1 &&
-        event.srcElement.className.indexOf('note-icon') === -1
-    )
+        event.srcElement.className.indexOf('note-icon') === -1 &&
+        event.srcElement.className.indexOf('concord-text') === -1 &&
+        event.srcElement.className.indexOf('taskbar-button') === -1
+    ) {
+        // console.debug('Ignoring click callback');
         return;
+    }
     if (navigationKeystrokes.has(event.which)) return;
 
     if (ns) ns.setNoteState(saveStates.modified);
+
+    opMarkChanged();
+
     if (idler) idler.resetTimer();
 }
 
@@ -287,7 +295,7 @@ function isAppDisabled() {
 }
 
 document.addEventListener('touchstart', opKeystrokeCallback, false);
-document.addEventListener('click', opKeystrokeCallback);
+document.addEventListener('input', opKeystrokeCallback);
 
 /** Use the visbility change listener to check is on wake */
 document.addEventListener('visibilitychange', function () {

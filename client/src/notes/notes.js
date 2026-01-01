@@ -265,6 +265,7 @@ function NoteService(concord) {
      */
     this.saveNote = function () {
         if (this.canPersist() == false) return;
+        opClearChanged(); // Done optimistically, Tooo: async
 
         if (store.note) {
             store.note.value = ns.outlineToXml();
@@ -531,7 +532,6 @@ function NoteService(concord) {
             this.ngScope.finishMainRefresh();
         }
 
-        opClearChanged();
         this.ngScope.setSaveState(saveStates.saved);
         this.tryFinishLoading();
     }.bind(this);
@@ -547,12 +547,8 @@ function NoteService(concord) {
         }
         // Safety check: prevent saving empty content if note previously had content
         var nodeCount = opGetNodeCount();
-        if (nodeCount === 0 && store.note && store.note.key) {
-            this.ngScope.disableApp(
-                'Save blocked: empty content detected. Please refresh.'
-            );
-            return false;
-        }
+        if (nodeCount === 0 && store.note && store.note.key) return false;
+
         return true;
     }.bind(this);
 
@@ -704,6 +700,7 @@ function NoteService(concord) {
         try {
             if (
                 useDefault == true ||
+                !note ||
                 !note.key ||
                 (note &&
                     store.note &&
@@ -772,9 +769,6 @@ function NoteService(concord) {
                 if (nodeCount === 0 && noteHadContent) {
                     console.error(
                         'SAFETY: Outline failed to render - note had content but no nodes rendered'
-                    );
-                    this.ngScope.disableApp(
-                        'Render failed. Please refresh the page.'
                     );
                     return;
                 }
@@ -1384,14 +1378,15 @@ function Note(v, k, ver, date) {
                         appPrefs.readonly
                     )
                         return;
-                    else {
-                        event.stopPropagation();
-                        event.preventDefault();
-                        if (opHasChanged()) {
-                            ns.saveNote();
-                        }
-                        concord.removeFocus(true);
-                    }
+
+                    event.stopPropagation();
+                    event.preventDefault();
+                    console.debug(
+                        'Force Sync, changed status:' + opHasChanged()
+                    );
+                    console.log('calling save inside forcesync');
+                    ns.saveNote();
+                    concord.removeFocus(true);
                 };
 
                 $scope.makeBold = function (e, style) {
