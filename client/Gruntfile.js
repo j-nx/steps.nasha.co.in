@@ -18,6 +18,7 @@ module.exports = function (grunt) {
                         'src/lib/velocity/velocity.ui.angular.min.js',
                         'src/lib/gapi.js',
                         'src/main.js',
+                        'src/concordTextModel.js',
                         'src/concord.js',
                         'src/concordUtils.js',
                         'src/notes/notes.js',
@@ -106,7 +107,7 @@ module.exports = function (grunt) {
         }
     });
 
-    grunt.loadNpmTasks('grunt-contrib-uglify-es');
+    grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-cssmin');
     grunt.loadNpmTasks('grunt-processhtml');
     grunt.loadNpmTasks('grunt-contrib-copy');
