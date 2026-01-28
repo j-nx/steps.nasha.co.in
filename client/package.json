@@ -9,7 +9,8 @@
     "scripts": {
         "start": "python -m http.server",
         "build": "grunt",
-        "test": "echo \"Info: Run SpecRunner.html to execute tests\" && exit 1"
+        "test": "echo \"Info: Run SpecRunner.html to execute tests\" && exit 1",
+        "sync": "aws s3 sync ./build  s3://steps.nasha.co.in --profile steps"
     },
     "author": "jnx@nasha.co.in",
     "license": "ISC",
@@ -27,7 +28,8 @@
         "grunt-terser": "^0.1.0",
         "grunt-text-replace": "^0.4.0",
         "jshint": "^2.9.1",
-        "lodash": "^4.17.14"
+        "lodash": "^4.17.14",
+        "puppeteer": "^24.34.0"
     },
     "jshintConfig": {
         "globals": {
@@ -36,6 +38,5 @@
         "devel": true,
         "strict": true,
         "maxerr": 9999
-    },
-    "dependencies": {}
+    }
 }

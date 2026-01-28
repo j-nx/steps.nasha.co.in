@@ -171,6 +171,7 @@ function NoteService(concord) {
     this.np = new NoteProvider();
     this.outliner = concord;
     this.ngScope = null; //MainScope
+    this.noteCacheManager = null;
 
     this.m = {
         sessionExpired: 'Session expired.',
@@ -211,6 +212,9 @@ function NoteService(concord) {
         if (!store) store = new NoteStore();
         this.ngScope.store = store;
         this.ngScope.initialize();
+
+        if (!this.noteCacheManager)
+            this.noteCacheManager = new NoteCacheManager(store);
 
         if (store.requiresUpdate()) {
             store = new NoteStore();
@@ -261,10 +265,14 @@ function NoteService(concord) {
      */
     this.saveNote = function () {
         if (this.canPersist() == false) return;
+        opClearChanged(); // Done optimistically, Tooo: async
 
         if (store.note) {
             store.note.value = ns.outlineToXml();
             store.save();
+
+            if (this.noteCacheManager)
+                this.noteCacheManager.updateNote(store.note);
         }
 
         this.ngScope.setSaveState(saveStates.saving);
@@ -465,6 +473,10 @@ function NoteService(concord) {
             if (snote.deleted == 1) {
                 console.debug('Removing deleted note...');
                 store.removeNote(snote.key);
+
+                // Remove from search cache
+                if (this.noteCacheManager)
+                    this.noteCacheManager.deleteNote(snote.key);
             } else {
                 var isNewNote = false;
 
@@ -489,6 +501,10 @@ function NoteService(concord) {
                         store.addNote(saveNote);
                     }
                     store.save();
+
+                    if (this.noteCacheManager && snote.content != undefined)
+                        this.noteCacheManager.updateNote(saveNote);
+
                     console.log(
                         'Saved note: ' +
                             saveNote.title +
@@ -529,6 +545,10 @@ function NoteService(concord) {
             console.log('blocked save, on mobile');
             return false;
         }
+        // Safety check: prevent saving empty content if note previously had content
+        var nodeCount = opGetNodeCount();
+        if (nodeCount === 0 && store.note && store.note.key) return false;
+
         return true;
     }.bind(this);
 
@@ -553,6 +573,10 @@ function NoteService(concord) {
                     new Date(b.modifydate).getTime()
                 );
             });
+
+            // Rebuild cache after all notes are loaded
+            if (this.noteCacheManager) this.noteCacheManager.rebuildCache();
+
             if (!store.note && store.notes.length > 0)
                 this.launchNote(null, true);
             this.ngScope.hideWorkingDialog();
@@ -567,12 +591,116 @@ function NoteService(concord) {
         this.saveNote();
     }.bind(this);
 
+    /**
+     * Search across all notes using the search cache
+     * @param {string} query - Search query string
+     * @returns {Array} Array of search results with highlighted matches
+     */
+    this.searchNotes = function (query) {
+        if (!this.noteCacheManager) {
+            console.warn('Search cache not initialized');
+            return [];
+        }
+        return this.noteCacheManager.search(query);
+    }.bind(this);
+
+    /**
+     * Navigate to specific outline element by path indices
+     * @param {Array} pathIndices - e.g., [0, 2, 1] means first outline → third child → second child
+     */
+    this.scrollToElement = function (pathIndices) {
+        if (!pathIndices || pathIndices.length === 0) return;
+
+        // Wait for the outline to render
+        setTimeout(
+            function () {
+                try {
+                    // .concord-root is the <ul> element itself
+                    var root = $('.concord-root');
+                    var currentNode = null;
+
+                    // Navigate down the path
+                    for (var i = 0; i < pathIndices.length; i++) {
+                        var index = pathIndices[i];
+
+                        if (i === 0) {
+                            // First level: direct children of root (the ul.concord-root)
+                            var topLevel = root.children('li.concord-node');
+                            if (index < topLevel.length) {
+                                currentNode = topLevel.eq(index);
+                            } else {
+                                console.warn(
+                                    'Path index out of bounds at level 0:',
+                                    index,
+                                    'max:',
+                                    topLevel.length
+                                );
+                                return;
+                            }
+                        } else {
+                            // Expand if collapsed before accessing children
+                            if (currentNode.hasClass('collapsed')) {
+                                this.outliner.op.setCursor(currentNode);
+                                this.outliner.op.expand();
+                            }
+
+                            // Get child at this index from the <ol> inside current node
+                            var children = currentNode
+                                .children('ol')
+                                .children('li.concord-node');
+                            if (index < children.length) {
+                                currentNode = children.eq(index);
+                            } else {
+                                console.warn(
+                                    'Path index out of bounds at level ' +
+                                        i +
+                                        ':',
+                                    index,
+                                    'max:',
+                                    children.length
+                                );
+                                break;
+                            }
+                        }
+                    }
+
+                    if (currentNode && currentNode.length) {
+                        // Set cursor on the found node (but don't enter edit mode)
+                        this.outliner.op.setCursor(currentNode);
+                        this.outliner.op.setTextMode(false);
+
+                        // Scroll element into view
+                        var wrapper = currentNode
+                            .children('.concord-wrapper')
+                            .first();
+                        if (wrapper.length) {
+                            wrapper[0].scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'center'
+                            });
+
+                            // Flash highlight effect
+                            wrapper.addClass('search-highlight');
+                            setTimeout(function () {
+                                wrapper.removeClass('search-highlight');
+                            }, 2000);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error scrolling to element:', error);
+                }
+            }.bind(this),
+            150
+        );
+    }.bind(this);
+
     this.launchNote = function (note, useDefault) {
         if (useDefault == undefined) useDefault = false;
 
         try {
             if (
                 useDefault == true ||
+                !note ||
                 !note.key ||
                 (note &&
                     store.note &&
@@ -596,7 +724,54 @@ function NoteService(concord) {
 
                 store.note = note;
                 store.save();
-                this.outliner.op.xmlToOutline(note.value, false);
+
+                // Try to use cached tree for faster rendering
+                var cachedTree = this.noteCacheManager
+                    ? this.noteCacheManager.getTree(note.key)
+                    : null;
+                var cachedExpansionState =
+                    this.noteCacheManager &&
+                    typeof this.noteCacheManager.getExpansionState ===
+                        'function'
+                        ? this.noteCacheManager.getExpansionState(note.key)
+                        : null;
+
+                if (cachedTree && cachedTree.length > 0) {
+                    try {
+                        this.outliner.op.treeToOutline(
+                            cachedTree,
+                            note.title,
+                            false,
+                            cachedExpansionState
+                        );
+                    } catch (cacheError) {
+                        console.warn(
+                            'Cache data corrupted, falling back to XML parsing:',
+                            cacheError
+                        );
+                        if (this.noteCacheManager) {
+                            this.noteCacheManager.deleteNote(note.key);
+                        }
+                        this.outliner.op.xmlToOutline(note.value, false);
+                    }
+                } else {
+                    // Fall back to XML parsing
+                    this.outliner.op.xmlToOutline(note.value, false);
+                }
+
+                // Safety check: verify outline rendered correctly
+                var nodeCount = opGetNodeCount();
+                var noteHadContent =
+                    note.value &&
+                    note.value.indexOf('<outline ') !== -1 &&
+                    note.value.indexOf('<outline text=""/>') === -1;
+
+                if (nodeCount === 0 && noteHadContent) {
+                    console.error(
+                        'SAFETY: Outline failed to render - note had content but no nodes rendered'
+                    );
+                    return;
+                }
             }
 
             this.ngScope.hideLoginDialog();
@@ -659,6 +834,7 @@ function NoteStore() {
     this.notes = [];
     this.selectedNoteKey = null;
     this.storageName = 'nsxData';
+    this.noteCache = {};
     //Remember: Add inflation code to load() for each new property
 
     //Current Note
@@ -734,6 +910,7 @@ function NoteStore() {
 
                         this.version = obj.version;
                         this.selectedNoteKey = obj.selectedNoteKey;
+                        this.noteCache = obj.noteCache || obj.searchCache || {};
 
                         resolve(this);
                     } catch (err) {
@@ -908,8 +1085,9 @@ function Note(v, k, ver, date) {
     myApp.controller('MainCtrl', [
         '$scope',
         '$timeout',
+        '$sce',
         'context',
-        function ($scope, $timeout, context) {
+        function ($scope, $timeout, $sce, context) {
             /* Safe Apply */
             {
                 $scope.update = function (fn) {
@@ -978,6 +1156,10 @@ function Note(v, k, ver, date) {
                 {
                     function: 'Indent all below ',
                     code: 'Ctrl + Shift + [ or ]'
+                },
+                {
+                    function: 'Search',
+                    code: 'Ctrl + F'
                 }
             ];
 
@@ -994,6 +1176,10 @@ function Note(v, k, ver, date) {
                 $scope.showBarMenu = false;
                 $scope.idleTimeout = false;
                 $scope.showWorking = false;
+                $scope.showSearch = false;
+                $scope.searchQuery = '';
+                $scope.searchResults = [];
+                $scope.searchInputFocused = false;
                 $scope.showMainRefresh = false;
                 $scope.statusMessage = '';
                 $scope.loadingCountdownMessage = defaultloadingSuffix;
@@ -1192,12 +1378,15 @@ function Note(v, k, ver, date) {
                         appPrefs.readonly
                     )
                         return;
-                    else {
-                        event.stopPropagation();
-                        event.preventDefault();
-                        ns.saveNote();
-                        concord.removeFocus(true);
-                    }
+
+                    event.stopPropagation();
+                    event.preventDefault();
+                    console.debug(
+                        'Force Sync, changed status:' + opHasChanged()
+                    );
+                    console.log('calling save inside forcesync');
+                    ns.saveNote();
+                    concord.removeFocus(true);
                 };
 
                 $scope.makeBold = function (e, style) {
@@ -1273,6 +1462,142 @@ function Note(v, k, ver, date) {
                 $scope.toggleNotesDialog = function () {
                     $scope.showNotesList = !$scope.showNotesList;
                 };
+
+                /* Search */
+                $scope.toggleSearchDialog = function () {
+                    $scope.showSearch = !$scope.showSearch;
+
+                    if ($scope.showSearch) {
+                        // Reset search state
+                        $scope.searchQuery = '';
+                        $scope.searchResults = [];
+
+                        // Focus search input after UI renders
+                        $timeout(function () {
+                            var searchInput =
+                                document.getElementById('searchInput');
+                            if (searchInput) searchInput.focus();
+                        }, 100);
+                    }
+                };
+
+                $scope.performSearch = function () {
+                    if (!$scope.searchQuery || $scope.searchQuery.length < 2) {
+                        $scope.searchResults = [];
+                        if (ns.noteCacheManager)
+                            ns.noteCacheManager.setNavigationResults([]);
+                        return;
+                    }
+
+                    $scope.searchResults = ns.searchNotes($scope.searchQuery);
+                    if (ns.noteCacheManager)
+                        ns.noteCacheManager.setNavigationResults(
+                            $scope.searchResults
+                        );
+                };
+
+                // Check if a search result match is focused (for keyboard navigation)
+                $scope.isResultFocused = function (result, match) {
+                    return (
+                        ns.noteCacheManager &&
+                        ns.noteCacheManager.isFocused(result, match)
+                    );
+                };
+
+                $scope.openSearchResult = function (result, match) {
+                    var note = store.notes.find(function (n) {
+                        return n.key === result.noteKey;
+                    });
+
+                    if (note) {
+                        // Only save and launch if switching to a different note
+                        if (!store.note || note.key !== store.note.key) {
+                            saveOutlineNow();
+                            ns.launchNote(note);
+                        }
+
+                        // Navigate to specific element if match has path info
+                        if (match && match.pathIndices) {
+                            ns.scrollToElement(match.pathIndices);
+                        }
+
+                        $scope.showSearch = false;
+                        $scope.searchQuery = '';
+                        $scope.searchResults = [];
+                    }
+                };
+
+                // Helper function for ng-bind-html to trust HTML content
+                $scope.trustAsHtml = function (html) {
+                    return $sce.trustAsHtml(html);
+                };
+
+                // Keyboard shortcuts for search
+                document.addEventListener('keydown', function (e) {
+                    // Ctrl+F or Cmd+F to open search
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                        e.preventDefault();
+                        $scope.$apply(function () {
+                            if (!$scope.showSearch) {
+                                $scope.toggleSearchDialog();
+                            }
+                        });
+                    }
+
+                    // Escape to close search
+                    if (e.key === 'Escape' && $scope.showSearch) {
+                        e.preventDefault();
+                        $scope.$apply(function () {
+                            $scope.toggleSearchDialog();
+                        });
+                    }
+
+                    // Arrow Down - navigate to next search result
+                    if (
+                        e.key === 'ArrowDown' &&
+                        $scope.showSearch &&
+                        ns.noteCacheManager
+                    ) {
+                        e.preventDefault();
+                        $scope.$apply(function () {
+                            ns.noteCacheManager.navNext();
+                        });
+                    }
+
+                    // Arrow Up - navigate to previous search result
+                    if (
+                        e.key === 'ArrowUp' &&
+                        $scope.showSearch &&
+                        ns.noteCacheManager
+                    ) {
+                        e.preventDefault();
+                        $scope.$apply(function () {
+                            ns.noteCacheManager.navPrev();
+                            if (ns.noteCacheManager.focusedIndex === -1) {
+                                document.getElementById('searchInput').focus();
+                            }
+                        });
+                    }
+
+                    // Enter - select focused search result
+                    if (
+                        e.key === 'Enter' &&
+                        $scope.showSearch &&
+                        ns.noteCacheManager &&
+                        ns.noteCacheManager.focusedIndex >= 0
+                    ) {
+                        e.preventDefault();
+                        var focused = ns.noteCacheManager.getFocused();
+                        if (focused) {
+                            $scope.$apply(function () {
+                                $scope.openSearchResult(
+                                    focused.result,
+                                    focused.match
+                                );
+                            });
+                        }
+                    }
+                });
             }
 
             /* Notes */

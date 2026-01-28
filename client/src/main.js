@@ -25,18 +25,18 @@ var store;
 var idler;
 var api;
 
-let TIMEOUT = 20; // min
-let TIMEOUT_AUTO_REFRESH = 10; // min
-let AUTOSAVE_DELAY = 5; // seconds
+var TIMEOUT = 20; // min
+var TIMEOUT_AUTO_REFRESH = 10; // min
+var AUTOSAVE_DELAY = 5; // seconds
 const MOBILE = {
     TIMEOUT: 0.2, // min, 0.2 = 12 seconds
-    AUTOSAVE_DELAY: 1 // seconds
+    AUTOSAVE_DELAY: 2 // seconds
 };
 
-let interval_auto_refresh; // polling update
-let interval_auto_save; // automatically save note
-let interval_away_time; // auto-lock screen PC
-let lastSeen = Date.now(); // epoch
+var interval_auto_refresh; // polling update
+var interval_auto_save; // automatically save note
+var interval_away_time; // auto-lock screen PC
+var lastSeen = Date.now(); // epoch
 
 var isLoaded = false;
 var isDebug = false;
@@ -93,7 +93,6 @@ class NSXStorage {
     set(data) {
         const transaction = this.db.transaction([this.storeName], 'readwrite');
         transaction.objectStore(this.storeName).put(data, this.storeName);
-        console.debug('Data saved locally');
     }
 
     get() {
@@ -123,19 +122,20 @@ class NSXStorage {
     }
 }
 
-const storage = new NSXStorage();
+var storage = new NSXStorage();
 
 function saveOutlineNow() {
     if (ns.canPersist() == false || ns.isCookieValid() === false) return;
+    if (!opHasChanged()) return; // Skip save if note hasn't been modified
 
-    ns.saveNote();
-
-    opClearChanged();
+    ns.saveNote(); // Note: opClearChanged is called in saveNote, optimistically
 }
 
 function backgroundProcess() {
     if (opHasChanged()) {
         if (secondsSince(whenLastKeystroke) >= AUTOSAVE_DELAY) {
+            // This is being called every second while the state is in "saving mode"
+            console.debug('Auto save triggered');
             saveOutlineNow();
         }
     }
@@ -185,12 +185,19 @@ function opKeystrokeCallback(event) {
     if (
         event.srcElement != null &&
         event.srcElement.className.indexOf('concord-wrapper') == -1 &&
-        event.srcElement.className.indexOf('note-icon') === -1
-    )
+        event.srcElement.className.indexOf('note-icon') === -1 &&
+        event.srcElement.className.indexOf('concord-text') === -1 &&
+        event.srcElement.className.indexOf('taskbar-button') === -1
+    ) {
+        // console.debug('Ignoring click callback');
         return;
+    }
     if (navigationKeystrokes.has(event.which)) return;
 
     if (ns) ns.setNoteState(saveStates.modified);
+
+    opMarkChanged();
+
     if (idler) idler.resetTimer();
 }
 
@@ -288,7 +295,7 @@ function isAppDisabled() {
 }
 
 document.addEventListener('touchstart', opKeystrokeCallback, false);
-document.addEventListener('click', opKeystrokeCallback);
+document.addEventListener('input', opKeystrokeCallback);
 
 /** Use the visbility change listener to check is on wake */
 document.addEventListener('visibilitychange', function () {
@@ -315,9 +322,14 @@ function onVisible() {
     console.debug('**** PAGE VISIBLE');
     if (!isMobile || !lastSeen) return;
 
-    if (isOnWake()) {
+    // Only trigger away mode if we're not already in a disabled state
+    // This prevents unnecessary wake triggers when the app wasn't in timeout mode
+    if (isOnWake() && !isAppDisabled()) {
         if (idler) idler.away();
     }
+
+    // Reset lastSeen to prevent stale comparisons on subsequent visibility changes
+    lastSeen = Date.now();
 }
 
 function onFocus() {

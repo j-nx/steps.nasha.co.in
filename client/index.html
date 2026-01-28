@@ -8,9 +8,9 @@
     <link rel="stylesheet" href="css/main.css" type="text/css" media="all" />
     <!-- /build -->
     <!-- build:template
-    <link rel="stylesheet" href="css/main.min.css" type="text/css" media="all" />
-    <link rel="stylesheet" href="css/768.min.css" type="text/css" media="only screen and (min-width: 540px)" />
-    <link rel="stylesheet" href="css/922.min.css" type="text/css" media="only screen and (min-width: 800px)" />
+    <link rel="stylesheet" href="css/main.min.css?v=<%= version %>" type="text/css" media="all" />
+    <link rel="stylesheet" href="css/768.min.css?v=<%= version %>" type="text/css" media="only screen and (min-width: 540px)" />
+    <link rel="stylesheet" href="css/922.min.css?v=<%= version %>" type="text/css" media="only screen and (min-width: 800px)" />
     <!-- /build -->
 
     <link rel="manifest" href="manifest.json">
@@ -62,7 +62,7 @@
         var cb = function () {
             var l = document.createElement('link');
             l.rel = 'stylesheet';
-            l.href = 'css/style.min.css';
+            l.href = 'css/style.min.css?v=<%= version %>';
             var h = document.getElementsByTagName('head')[0];
             h.parentNode.insertBefore(l, h);
         };
@@ -89,12 +89,14 @@
     <script src="src/main.js"></script>
     <script src="src/concord.js"></script>
     <script src="src/concordUtils.js"></script>
+    <script src="src/concordTextModel.js"></script>
     <script src="src/notes/notes.js"></script>
     <script src="src/notes/api.js"></script>
+    <script src="src/notes/noteCache.js"></script>
     <!-- /build -->
 
     <!-- build:template
-        <script src="script.min.js"></script>
+        <script src="script.min.js?v=<%= version %>"></script>
     <script>
         var appVersionHash = '<%= version %>';
         console.log('Application VersionHash: ' + appVersionHash)
@@ -178,6 +180,7 @@
                 <!--svg3336 -->
                 <img class="svg3336" src="images/el2.png" alt="Steps"
                     style="height: auto; width:240px;opacity: 0.2;padding-bottom: 5px;">
+                <i class="icon-search search-button" ng-click="toggleSearchDialog()" title="Search notes (Ctrl+F)"></i>
             </div>
             <div class="divOutlinerContainer word-break">
                 <div id="outliner">
@@ -279,6 +282,36 @@
                 </div>
             </div>
         </div>
+        <div class="searchContainer drop-shadow-upwards" ng-show="showSearch">
+            <div class="search-header">
+                <input type="text"
+                       class="search-input"
+                       ng-model="searchQuery"
+                       ng-model-options="{ debounce: 300 }"
+                       ng-change="performSearch()"
+                       placeholder="Search notes..."
+                       ng-focus="searchInputFocused = true"
+                       ng-blur="searchInputFocused = false"
+                       id="searchInput">
+                <i class="icon-remove search-close" ng-click="toggleSearchDialog()" title="Close (Esc)"></i>
+            </div>
+            <div class="searchResults">
+                <div ng-show="searchQuery.length >= 2 && searchResults.length === 0" class="search-no-results">
+                    No results found for "{{searchQuery}}"
+                </div>
+                <div ng-repeat="result in searchResults" class="search-result-group">
+                    <div class="search-result-note-title" ng-click="openSearchResult(result)">
+                        <i class="icon-caret-right"></i> {{result.noteTitle}}
+                    </div>
+                    <div ng-repeat="match in result.matches"
+                         class="search-result-match"
+                         ng-class="{'search-result-focused': isResultFocused(result, match)}"
+                         ng-click="openSearchResult(result, match)"
+                         ng-bind-html="trustAsHtml(match.highlightedText)">
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="shortcuts animate-slide" ng-show="showShortcuts">
             <div class="shortcut-definition" ng-repeat="shortcut in shortcuts">
                 <div class="shortcut-function">{{shortcut.function}}</div>
@@ -286,7 +319,7 @@
             </div>
             <div style="padding: 10px; text-align: center;" ng-click="hideShortcutDialog()">Close</div>
         </div>
-        <div class="barMenu velocity-transition-slideUpBigIn velocity-duration-200" ng-show="showBarMenu">
+        <div class="barMenu" ng-show="showBarMenu">
             <div class="barMenu-item-info">
                 {{storage().email}}
             </div>
@@ -306,7 +339,7 @@
         </div>
         <div class="mainrefreshpopup" ng-show="showMainRefresh">
             <img class="logo" src="images/spin.svg" alt="Loading..." />
-            <br />Loading...
+            <div class="loading-countdown">Loading{{loadingCountdownMessage}}</div>
         </div>
         <section class="footer drop-shadow-upwards" ng-hide="!isLoggedIn() && showLogin && !context.hello.isVisible">
             <div class="footer-extra" ng-if="statusMessage && isReadOnly && isAppReady()">
@@ -399,7 +432,7 @@
 	<script>
 		if ('serviceWorker' in navigator) {
 			const register = () => navigator.serviceWorker
-				.register('/init.min.js')
+				.register('/init.min.js?v=<%= version %>')
 				.then(function () {
 					console.debug("Service Worker Registered");
                 });

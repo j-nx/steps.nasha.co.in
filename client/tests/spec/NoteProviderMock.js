@@ -3,13 +3,13 @@ function NoteProviderMock() {
     this.authData = {};
 }
 
-NoteProviderMock.prototype.login = function(login, callback) {
+NoteProviderMock.prototype.login = function (login, callback) {
     var status = {};
     status.isSuccess = false;
     status.code = 0;
 
     var that = this;
-    setTimeout(function() {
+    setTimeout(function () {
         if (login.username == 'jnx@nasha.co.in') {
             status.isSuccess = true;
             that.isLoggedInInternal = true;
@@ -19,18 +19,18 @@ NoteProviderMock.prototype.login = function(login, callback) {
     }, 2500);
 };
 
-NoteProviderMock.prototype.logOut = function(login) {
+NoteProviderMock.prototype.logOut = function (login) {
     var clear = {};
     clear.email = '';
     clear.token = '';
     //this.sn.setAuthDetails(clear);
 };
 
-NoteProviderMock.prototype.isLoggedIn = function() {
+NoteProviderMock.prototype.isLoggedIn = function () {
     return this.isLoggedInInternal;
 };
 
-NoteProviderMock.prototype.getAuthDetails = function() {
+NoteProviderMock.prototype.getAuthDetails = function () {
     if (this.isLoggedInInternal == false) return null;
 
     //new authdata after login
@@ -41,13 +41,13 @@ NoteProviderMock.prototype.getAuthDetails = function() {
     return auth;
 };
 
-NoteProviderMock.prototype.setAuthDetails = function(authDetails) {
+NoteProviderMock.prototype.setAuthDetails = function (authDetails) {
     this.isLoggedInInternal = true;
     this.authData.token = authDetails.token;
     this.authData.email = authDetails.email;
 };
 
-NoteProviderMock.prototype.getNotes = function(callback) {
+NoteProviderMock.prototype.getNotes = function (callback) {
     var results = {};
 
     results.isSuccess = true;
@@ -73,14 +73,14 @@ NoteProviderMock.prototype.getNotes = function(callback) {
     results.data[1] = n2;
     results.data[2] = n3;
 
-    setTimeout(function() {
+    setTimeout(function () {
         callback(results);
     }, 1000);
 };
 
-NoteProviderMock.prototype.getNote = function(key, callback, errorCallback) {};
+NoteProviderMock.prototype.getNote = function (key, callback, errorCallback) {};
 
-NoteProviderMock.prototype.updateNote = function(
+NoteProviderMock.prototype.updateNote = function (
     key,
     noteBody,
     tag,
@@ -90,6 +90,26 @@ NoteProviderMock.prototype.updateNote = function(
     errorCallback
 ) {};
 
-NoteProviderMock.prototype.deleteNote = function(key, onDelete, onFailure) {
-    onDelete({key, deleted: 1});
+NoteProviderMock.prototype.deleteNote = function (key, onDelete, onFailure) {
+    onDelete({ key, deleted: 1 });
+};
+
+/**
+ *  Storage layer (IndexedDB get/set) - used by global
+ */
+function StorageMock() {
+    this.data = null;
+    this.db = true;
+}
+
+StorageMock.prototype.set = function (data) {
+    this.data = data;
+};
+
+StorageMock.prototype.get = function () {
+    return Promise.resolve(this.data);
+};
+
+StorageMock.prototype.clear = function () {
+    this.data = null;
 };

@@ -28,6 +28,7 @@ if (!Array.prototype.indexOf) {
 var concord = {
     version: '2.49',
     mobile: isMobile,
+    animationSpeed: 150, // ms - controls expand/collapse animation speed
     ready: false,
     handleEvents: true,
     resumeCallbacks: [],
@@ -189,7 +190,9 @@ var ConcordUtil = {
 
         var caretOffset = 0;
         if (w3) {
-            var range = window.getSelection().getRangeAt(0);
+            var selection = window.getSelection();
+            if (selection.rangeCount === 0) return 0;
+            var range = selection.getRangeAt(0);
             var preCaretRange = range.cloneRange();
             if (preCaretRange.startOffset == 0) return 0;
             preCaretRange.selectNodeContents(element);
@@ -203,6 +206,77 @@ var ConcordUtil = {
             caretOffset = preCaretTextRange.text.length;
         }
         return caretOffset;
+    },
+    /**
+     * Get the selection range in plain text coordinates
+     * @param {Element} element - Container element
+     * @returns {{start: number, end: number}|null} Selection range or null if no selection
+     */
+    getSelectionRange: function (element) {
+        var selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return null;
+
+        var range = selection.getRangeAt(0);
+
+        // Calculate start offset
+        var startRange = document.createRange();
+        startRange.selectNodeContents(element);
+        startRange.setEnd(range.startContainer, range.startOffset);
+        var start = startRange.toString().length;
+
+        // Calculate end offset
+        var endRange = document.createRange();
+        endRange.selectNodeContents(element);
+        endRange.setEnd(range.endContainer, range.endOffset);
+        var end = endRange.toString().length;
+
+        return { start: start, end: end };
+    },
+    /**
+     * Set the selection range in plain text coordinates
+     * @param {Element} element - Container element
+     * @param {number} start - Start offset in plain text
+     * @param {number} end - End offset in plain text
+     */
+    setSelectionRange: function (element, start, end) {
+        var selection = window.getSelection();
+        if (!selection) return;
+
+        // Helper function to find node and offset for a text position
+        function findPosition(container, targetOffset) {
+            var offset = 0;
+            var stack = [container];
+
+            while (stack.length > 0) {
+                var node = stack.pop();
+
+                if (node.nodeType === Node.TEXT_NODE) {
+                    var nodeLen = node.textContent.length;
+                    if (offset + nodeLen >= targetOffset) {
+                        return { node: node, offset: targetOffset - offset };
+                    }
+                    offset += nodeLen;
+                } else if (node.childNodes) {
+                    // Push children in reverse order so we process them left-to-right
+                    for (var i = node.childNodes.length - 1; i >= 0; i--) {
+                        stack.push(node.childNodes[i]);
+                    }
+                }
+            }
+
+            // If we've exhausted all nodes, return the last position
+            return { node: container, offset: container.childNodes.length };
+        }
+
+        var startPos = findPosition(element, start);
+        var endPos = findPosition(element, end);
+
+        var range = document.createRange();
+        range.setStart(startPos.node, startPos.offset);
+        range.setEnd(endPos.node, endPos.offset);
+
+        selection.removeAllRanges();
+        selection.addRange(range);
     },
     getCaret2: function () {
         if (window.getSelection && window.getSelection().getRangeAt) {
@@ -525,13 +599,14 @@ function ConcordOutline(container, options) {
                     prefs.outlineFont;
             }
             if (prefs.outlineFontSize) {
-                var diff = (prefs.nodeLineHeight*16) - (prefs.outlineFontSize*16); // Rem to Px = REM*BASE_FONT_SIZE e.g. 1.2*16
+                var diff =
+                    prefs.nodeLineHeight * 16 - prefs.outlineFontSize * 16; // Rem to Px = REM*BASE_FONT_SIZE e.g. 1.2*16
                 nodeStyle['font-size'] = style['font-size'] =
                     prefs.outlineFontSize + 'em';
                 nodeStyle['min-height'] = style['min-height'] =
-                    (prefs.outlineFontSize*16) + diff + 'px';
+                    prefs.outlineFontSize * 16 + diff + 'px';
                 nodeStyle['line-height'] = style['line-height'] =
-                    (prefs.outlineFontSize*16) + diff + 'px';
+                    prefs.outlineFontSize * 16 + diff + 'px';
             }
 
             this.root.parent().find('style.prefsStyle').remove();
@@ -1097,6 +1172,81 @@ function ConcordEditor(root, concordInstance) {
         text.appendTo(wrapper);
         wrapper.appendTo(node);
         children.appendTo(node);
+        return node;
+    };
+    /**
+     * Build DOM node from cached tree format [text, attrs, children]
+     */
+    this.buildFromTree = function (treeNode, collapsed, level) {
+        if (!level) {
+            level = 1;
+        }
+        var nodeText = treeNode[0] || '';
+        var attrs = treeNode[1] || {};
+        var nodeChildren = treeNode[2] || [];
+
+        var node = $('<li></li>');
+        node.addClass('concord-node');
+        node.addClass('concord-level-' + level);
+
+        node.data('attributes', attrs);
+
+        var wrapper = $("<div class='concord-wrapper'></div>");
+        var nodeIcon = attrs['icon'] || attrs['type'];
+        var localIcon = iconName; // Use global default (circle)
+
+        if (nodeIcon) {
+            if (
+                concordInstance.prefs() &&
+                concordInstance.prefs().typeIcons &&
+                concordInstance.prefs().typeIcons[nodeIcon]
+            ) {
+                localIcon = concordInstance.prefs().typeIcons[nodeIcon];
+            } else if (attrs['icon']) {
+                localIcon = attrs['icon'];
+            }
+            if (attrs['type']) {
+                node.attr('opml-type', attrs['type']);
+            }
+        }
+
+        var icon = '<span class="node-icon icon-' + localIcon + '"></span>';
+        wrapper.append(icon);
+        wrapper.addClass('type-icon');
+
+        if (attrs['isComment'] == 'true') {
+            node.addClass('concord-comment');
+        }
+
+        var text = $("<div class='concord-text' contenteditable='true'></div>");
+        text.addClass('concord-level-' + level + '-text');
+        text.html(this.escape(nodeText));
+
+        if (attrs['cssTextClass']) {
+            var cssClasses = attrs['cssTextClass'].split(/\s+/);
+            for (var c in cssClasses) {
+                text.addClass(cssClasses[c]);
+            }
+        }
+
+        var childrenOl = $('<ol></ol>');
+        var editor = this;
+        for (var i = 0; i < nodeChildren.length; i++) {
+            var child = editor.buildFromTree(
+                nodeChildren[i],
+                collapsed,
+                level + 1
+            );
+            child.appendTo(childrenOl);
+        }
+
+        if (collapsed && nodeChildren.length > 0) {
+            node.addClass('collapsed');
+        }
+
+        text.appendTo(wrapper);
+        wrapper.appendTo(node);
+        childrenOl.appendTo(node);
         return node;
     };
     this.hideContextMenu = function () {
@@ -1975,36 +2125,76 @@ function ConcordOp(root, concordInstance, _cursor) {
         this.stylize('italic');
     };
     this.stylize = function (style) {
-        const styles = [];
-
-        const checkStyle = (s) => {
-            const hasStyle = document.queryCommandState(s);
-            if (style === s) {
-                if (hasStyle === false) styles.push(s);
-            } else if (hasStyle) {
-                styles.push(s);
-            }
+        // Map execCommand style names to ConcordTextModel mark types
+        const styleMap = {
+            bold: 'bold',
+            italic: 'italic',
+            underline: 'underline',
+            strikeThrough: 'strike',
         };
 
-        checkStyle('bold');
-        checkStyle('italic');
-        checkStyle('underline');
-        checkStyle('strikeThrough');
-
-        styles.sort();
-        document.execCommand('removeFormat');
+        const markType = styleMap[style];
+        if (!markType) return;
 
         this.saveState();
-        if (this.inTextMode()) {
-            styles.forEach((style) => document.execCommand(style));
-        } else {
+
+        const node = this.getCursor();
+        const textElement = node
+            .children('.concord-wrapper:first')
+            .children('.concord-text:first')[0];
+
+        if (!textElement) return;
+
+        // Check if multiple nodes are selected
+        const selectedNodes = root.find('.selected');
+
+        if (selectedNodes.length > 1) {
+            // Multiple nodes selected - style all of them
+            const self = this;
+            selectedNodes.each(function () {
+                const selectedNode = $(this);
+                const model = self.getTextModel(selectedNode);
+                if (model.length > 0) {
+                    const newModel = model.toggleMark(0, model.length, markType);
+                    self.invalidateTextModel(selectedNode);
+                    self.setTextModel(newModel, selectedNode);
+                }
+            });
+
             this.focusCursor();
-            document.execCommand('selectAll');
-            styles.forEach((style) => document.execCommand(style));
-            document.execCommand('unselect');
+            this.blurCursor();
+            concordInstance.pasteBinFocus();
+        } else if (this.inTextMode()) {
+            // Text mode with single node: style selection range
+            const selRange = ConcordUtil.getSelectionRange(textElement);
+            if (!selRange || selRange.start === selRange.end) {
+                // No selection - nothing to style
+                return;
+            }
+
+            // Get current model and toggle the mark
+            const model = this.getTextModel(node);
+            const newModel = model.toggleMark(selRange.start, selRange.end, markType);
+
+            // Invalidate cache and set the new model
+            this.invalidateTextModel(node);
+            this.setTextModel(newModel, node);
+
+            // Restore selection
+            ConcordUtil.setSelectionRange(textElement, selRange.start, selRange.end);
+        } else {
+            // Non-text mode with single node: style entire node
+            const model = this.getTextModel(node);
+            const newModel = model.toggleMark(0, model.length, markType);
+
+            this.invalidateTextModel(node);
+            this.setTextModel(newModel, node);
+
+            this.focusCursor();
             this.blurCursor();
             concordInstance.pasteBinFocus();
         }
+
         this.markChanged();
     };
     this.changed = function () {
@@ -2026,12 +2216,24 @@ function ConcordOp(root, concordInstance, _cursor) {
                     this.setCursorContext(node)
                 );
             }
-            node.addClass('collapsed');
-            node.find('ol').each(function () {
-                if ($(this).children().length > 0) {
-                    $(this).parent().addClass('collapsed');
-                }
-            });
+            // Animate collapse: slideUp then add collapsed class
+            var ol = node.children('ol');
+            if (ol.length && ol.children().length > 0) {
+                ol.stop(true, true).slideUp(
+                    concord.animationSpeed,
+                    function () {
+                        node.addClass('collapsed');
+                        ol.css('display', ''); // Clear inline style, let CSS handle it
+                        node.find('ol').each(function () {
+                            if ($(this).children().length > 0) {
+                                $(this).parent().addClass('collapsed');
+                            }
+                        });
+                    }
+                );
+            } else {
+                node.addClass('collapsed');
+            }
             this.markChanged();
         }
     };
@@ -2164,7 +2366,19 @@ function ConcordOp(root, concordInstance, _cursor) {
             if (!node.hasClass('collapsed')) {
                 return;
             }
-            node.removeClass('collapsed');
+            // Animate expand: clear inline styles, keep hidden via CSS, then slideDown
+            var ol = node.children('ol');
+            if (ol.length) {
+                ol.stop(true, true); // Stop any running animation
+                ol.css('display', ''); // Clear any inline display style
+                ol.hide(); // Now hide with jQuery
+                node.removeClass('collapsed'); // CSS no longer hides it
+                ol.slideDown(concord.animationSpeed, function () {
+                    ol.css('display', ''); // Clear inline style after animation
+                });
+            } else {
+                node.removeClass('collapsed');
+            }
             var cursorPosition = node.offset().top;
             var cursorHeight = node.height();
             var windowPosition = $(window).scrollTop();
@@ -2276,7 +2490,82 @@ function ConcordOp(root, concordInstance, _cursor) {
         if (textMatches) {
             text = textMatches[1];
         }
-        return concordInstance.editor.unescape(text);
+        // Only unescape when returning plain text (not HTML)
+        // When getHtml=true, we want raw HTML with entities preserved
+        return getHtml ? text : concordInstance.editor.unescape(text);
+    };
+    /**
+     * Get the ConcordTextModel for a node
+     * @param {jQuery} [node] - Node to get model for (defaults to cursor)
+     * @returns {ConcordTextModel} The text model
+     */
+    this.getTextModel = function (node) {
+        if (!node) node = this.getCursor();
+        if (node.length === 0) return new ConcordTextModel('', []);
+
+        const textNode = node
+            .children('.concord-wrapper:first')
+            .children('.concord-text:first');
+
+        if (!textNode || !textNode[0]) {
+            return new ConcordTextModel('', []);
+        }
+
+        // Check if model is cached
+        let model = node.data('textModel');
+        if (!model) {
+            // Parse from raw HTML - fromHTML now handles entities correctly
+            // &lt;b&gt; becomes literal "<b>" text
+            // <b> becomes bold formatting
+            const html = textNode[0].innerHTML || '';
+            model = ConcordTextModel.fromHTML(html);
+            node.data('textModel', model);
+        }
+        return model;
+    };
+    /**
+     * Set the ConcordTextModel for a node
+     * @param {ConcordTextModel|string} modelOrText - Model or plain text
+     * @param {jQuery} [node] - Node to set (defaults to cursor)
+     * @returns {boolean} Success
+     */
+    this.setTextModel = function (modelOrText, node) {
+        if (!node) node = this.getCursor();
+        if (node.length !== 1) return false;
+
+        let model;
+        if (typeof modelOrText === 'string') {
+            // Check if it's HTML or plain text
+            if (modelOrText.includes('<') && modelOrText.includes('>')) {
+                model = ConcordTextModel.fromHTML(modelOrText);
+            } else {
+                model = new ConcordTextModel(modelOrText, []);
+            }
+        } else if (modelOrText instanceof ConcordTextModel) {
+            model = modelOrText;
+        } else {
+            return false;
+        }
+
+        // Cache the model
+        node.data('textModel', model);
+
+        // Render to HTML - toHTML() already escapes text content properly
+        // Don't escape again or tags like <b> become &lt;b&gt;
+        const html = model.toHTML();
+        node.children('.concord-wrapper:first')
+            .children('.concord-text:first')
+            .html(html);
+
+        return true;
+    };
+    /**
+     * Invalidate the cached text model for a node
+     * @param {jQuery} [node] - Node to invalidate (defaults to cursor)
+     */
+    this.invalidateTextModel = function (node) {
+        if (!node) node = this.getCursor();
+        node.removeData('textModel');
     };
     this.getRenderMode = function () {
         if (root.data('renderMode') !== undefined) {
@@ -2405,7 +2694,7 @@ function ConcordOp(root, concordInstance, _cursor) {
         this.markChanged();
         return ableToMoveInDirection;
     };
-    this.insert = function (insertText, insertDirection) {
+    this.insert = function (insertText, insertDirection, _unused, isRawHtml) {
         this.saveState();
         var level = this.getCursor().parents('.concord-node').length + 1;
         var node = $('<li></li>');
@@ -2430,7 +2719,8 @@ function ConcordOp(root, concordInstance, _cursor) {
         wrapper.appendTo(node);
         outline.appendTo(node);
         if (insertText && insertText != '') {
-            text.html(concordInstance.editor.escape(insertText));
+            var html = isRawHtml ? insertText : concordInstance.editor.escape(insertText);
+            text.html(html);
         }
         var cursor = this.getCursor();
         if (!insertDirection) {
@@ -2463,7 +2753,7 @@ function ConcordOp(root, concordInstance, _cursor) {
         if (this.inTextMode()) {
             document.execCommand('insertImage', null, url);
         } else {
-            this.insert('<img src="' + url + '">', down);
+            this.insert('<img src="' + url + '">', down, undefined, true);  // isRawHtml
         }
     };
     this.insertText = function (text) {
@@ -2521,9 +2811,8 @@ function ConcordOp(root, concordInstance, _cursor) {
                 var node = concordInstance.editor.makeNode();
                 var nodeText = concordInstance.editor.escape(matches[2]);
                 if (workflowy) {
-                    var nodeTextMatches = nodeText.match(
-                        /^([\t\s]*)\-\s*(.+)$/
-                    );
+                    var nodeTextMatches =
+                        nodeText.match(/^([\t\s]*)\-\s*(.+)$/);
                     if (nodeTextMatches !== null) {
                         nodeText = nodeTextMatches[2];
                     }
@@ -2664,15 +2953,35 @@ function ConcordOp(root, concordInstance, _cursor) {
                 });
                 return;
             }
-            var range = concordInstance.editor.getSelection();
-            if (range === undefined) {
-                concordInstance.editor.restoreSelection();
+
+            const node = this.getCursor();
+            const textElement = node
+                .children('.concord-wrapper:first')
+                .children('.concord-text:first')[0];
+
+            if (!textElement) return;
+
+            // Get selection range in plain text coordinates
+            const selRange = ConcordUtil.getSelectionRange(textElement);
+            if (!selRange || selRange.start === selRange.end) {
+                // No selection - nothing to link
+                return;
             }
-            if (concordInstance.editor.getSelection()) {
-                this.saveState();
-                document.execCommand('createLink', null, url);
-                this.markChanged();
-            }
+
+            this.saveState();
+
+            // Get current model and add the link mark
+            const model = this.getTextModel(node);
+            const newModel = model.addMark(selRange.start, selRange.end, 'link', { href: url });
+
+            // Invalidate cache and set the new model
+            this.invalidateTextModel(node);
+            this.setTextModel(newModel, node);
+
+            // Restore selection
+            ConcordUtil.setSelectionRange(textElement, selRange.start, selRange.end);
+
+            this.markChanged();
         }
     };
     this.markChanged = function () {
@@ -2916,13 +3225,14 @@ function ConcordOp(root, concordInstance, _cursor) {
         root.data('head', headers);
         this.markChanged();
     };
-    this.setLineText = function (text) {
+    this.setLineText = function (text, isRawHtml) {
         this.saveState();
         var node = this.getCursor();
         if (node.length == 1) {
+            var html = isRawHtml ? text : concordInstance.editor.escape(text);
             node.children('.concord-wrapper:first')
                 .children('.concord-text:first')
-                .html(concordInstance.editor.escape(text));
+                .html(html);
             return true;
         } else {
             return false;
@@ -2983,13 +3293,33 @@ function ConcordOp(root, concordInstance, _cursor) {
         this.stylize('strikeThrough');
     };
     this.strikethroughLine = function () {
-        var el = this.getCursor()
-            .children('.concord-wrapper')
-            .children('.concord-text')[0];
-        ConcordUtil.selectElementContents(el);
-        this.strikethrough();
-        ConcordUtil.deselectElementContents(el);
-        ConcordUtil.setCaretAtStart(el);
+        // Check if multiple nodes are selected
+        const selectedNodes = root.find('.selected');
+
+        if (selectedNodes.length > 1) {
+            // Multiple nodes selected - strikethrough all of them
+            this.saveState();
+            const self = this;
+            selectedNodes.each(function () {
+                const selectedNode = $(this);
+                const model = self.getTextModel(selectedNode);
+                if (model.length > 0) {
+                    const newModel = model.toggleMark(0, model.length, 'strike');
+                    self.invalidateTextModel(selectedNode);
+                    self.setTextModel(newModel, selectedNode);
+                }
+            });
+            this.markChanged();
+        } else {
+            // Single node
+            var el = this.getCursor()
+                .children('.concord-wrapper')
+                .children('.concord-text')[0];
+            ConcordUtil.selectElementContents(el);
+            this.strikethrough();
+            ConcordUtil.deselectElementContents(el);
+            ConcordUtil.setCaretAtStart(el);
+        }
     };
     this.isStrikethrough = function (node) {
         if (!node) node = this.getCursor();
@@ -3250,6 +3580,65 @@ function ConcordOp(root, concordInstance, _cursor) {
 
         this.setCursor(root.find('.concord-node:first'));
 
+        this.setTextMode(!flSetFocus && !concord.mobile);
+
+        root.data('currentChange', root.children().clone(true, true));
+        return true;
+    };
+    /**
+     * Build outline from cached tree format (faster than parsing OPML)
+     * @param {Array} tree - Array of [text, attrs, children] nodes
+     * @param {string} title - Note title
+     * @param {boolean} flSetFocus - Whether to set focus after building
+     * @param {number[]} expansionState - Array of node IDs that should be expanded
+     */
+    this.treeToOutline = function (tree, title, flSetFocus, expansionState) {
+        if (flSetFocus == undefined) {
+            flSetFocus = true;
+        }
+
+        root.empty();
+        this.setTitle(title || '');
+        root.data('head', {});
+
+        for (var i = 0; i < tree.length; i++) {
+            root.append(concordInstance.editor.buildFromTree(tree[i], true));
+        }
+
+        root.data('changed', false);
+        root.removeData('previousChange');
+
+        // Restore expansion state if provided
+        if (expansionState && expansionState.length > 0) {
+            var nodeId = 1;
+            var cursor = root.find('.concord-node:first');
+            while (cursor && cursor.length === 1) {
+                if (expansionState.indexOf(nodeId) >= 0) {
+                    cursor.removeClass('collapsed');
+                }
+                nodeId++;
+
+                // Navigate to next node in depth-first order
+                var next = null;
+                if (!cursor.hasClass('collapsed')) {
+                    var outline = cursor.children('ol');
+                    if (outline.length == 1) {
+                        var firstChild = outline.children(
+                            '.concord-node:first'
+                        );
+                        if (firstChild.length == 1) {
+                            next = firstChild;
+                        }
+                    }
+                }
+                if (!next) {
+                    next = this._walk_down(cursor);
+                }
+                cursor = next;
+            }
+        }
+
+        this.setCursor(root.find('.concord-node:first'));
         this.setTextMode(!flSetFocus && !concord.mobile);
 
         root.data('currentChange', root.children().clone(true, true));
@@ -3689,8 +4078,8 @@ window.currentInstance;
                                 */
 
                                 //Append text to previous (now focused) row and set caret
-                                var newCaretPosition = concordInstance.op.getLineText()
-                                    .length;
+                                var newCaretPosition =
+                                    concordInstance.op.getLineText().length;
                                 concordInstance.op.setLineText(
                                     ConcordUtil.consolidateTags(
                                         concordInstance.op.getLineText(
@@ -3698,7 +4087,8 @@ window.currentInstance;
                                             true
                                         ),
                                         text
-                                    )
+                                    ),
+                                    true  // isRawHtml - consolidateTags returns HTML
                                 );
                                 ConcordUtil.setCaret2(
                                     ConcordUtil.getTextNode(concordInstance.op),
@@ -3721,9 +4111,10 @@ window.currentInstance;
                                             prevNode
                                         ) == 0
                                     ) {
-                                        var prevNodeText = concordInstance.op.getLineText(
-                                            prevNode
-                                        );
+                                        var prevNodeText =
+                                            concordInstance.op.getLineText(
+                                                prevNode
+                                            );
                                         if (
                                             prevNodeText == undefined ||
                                             prevNodeText == null
@@ -3867,53 +4258,60 @@ window.currentInstance;
                             if caret in end position - do not move current node, focus on new (below)
                             */
 
-                            /* Todo: 
-                            1 Newlining  <abc with styles has issues 
-                            2 Applying style across mixed-styles text will only maintain full-selection's scommon styles
-                            */
+                            // Use ConcordTextModel for reliable text splitting
+                            // This fixes the bug where Enter key would break HTML tags
+                            // e.g., <strike>strike</strike> -> <strik\ne>strike</strike>
 
-                            const textNode = concordInstance.editor.unescape(
-                                currentCursor[0].firstChild.children[1]
-                                    .innerHTML
-                            );
-
-                            let topLineText;
-                            let bottomLineText;
+                            const model = concordInstance.op.getTextModel(currentCursor);
                             var isActionAllowed = true;
                             var isStrike = concordInstance.op.isStrikethrough();
 
-                            if (isCaretAtEndOfLine) {
-                                [bottomLineText, topLineText] = sliceHtmlText(
-                                    textNode,
-                                    caretPosition
-                                );
+                            // Split the model at the caret position
+                            // beforeModel = text before caret
+                            // afterModel = text after caret
+                            const [beforeModel, afterModel] = model.splitAt(caretPosition);
 
+                            // Original logic: when Enter is pressed in middle of line,
+                            // text AFTER caret stays on current line (becomes "bottom")
+                            // text BEFORE caret is inserted ABOVE (becomes "top")
+                            let bottomLineText = afterModel.toHTML();
+                            let topLineText = beforeModel.toHTML();
+
+                            if (isCaretAtEndOfLine) {
+                                // Caret at end: insert empty line below/right
+                                // bottomLineText is empty (from afterModel), topLineText has full text
+                                // But we want full text to stay, empty line below
+                                // So swap them for this case
+                                bottomLineText = topLineText; // full text stays on current
+                                topLineText = ''; // empty line inserted below
                                 caretPosition = 0;
 
                                 direction = concordInstance.op.subsExpanded()
                                     ? right
                                     : down;
                             } else {
-                                let [top, bottom] = sliceHtmlText(
-                                    textNode,
-                                    caretPosition
-                                );
-
-                                topLineText = !top
-                                    ? ''
-                                    : top.replace('<ol></ol>', ''); // To remove Child holder
-                                bottomLineText = bottom || '';
-
+                                // Caret in middle: split the text
+                                // bottomLineText = text after caret (stays on current line)
+                                // topLineText = text before caret (goes to new line above)
                                 direction = up;
                                 isActionAllowed =
                                     !isStrike || caretPosition == 0;
                             }
 
                             if (isActionAllowed) {
-                                concordInstance.op.setLineText(bottomLineText);
+                                // Invalidate cached model since we're changing the text
+                                concordInstance.op.invalidateTextModel(currentCursor);
+
+                                // Set current line to bottomLineText (text after caret, or full text at end)
+                                // Use isRawHtml=true because toHTML() already produces properly escaped HTML
+                                concordInstance.op.setLineText(bottomLineText, true);
+
+                                // Insert topLineText (text before caret, or empty at end) in direction
                                 var node = concordInstance.op.insert(
                                     topLineText,
-                                    direction
+                                    direction,
+                                    undefined,
+                                    true  // isRawHtml
                                 );
 
                                 if (
@@ -4230,13 +4628,17 @@ window.currentInstance;
 
                     /** Apply formatting on space  */
                     if (lastWord.startsWith('http')) {
-                        const lineHtml = convertToHref(lastWord, html);
-                        concordInstance.op.setLineText(lineHtml);
+                        // Pass caret position for accurate link placement
+                        const lineHtml = convertToHref(lastWord, html, caret);
+                        // Invalidate cached model since we're changing the text
+                        concordInstance.op.invalidateTextModel();
+                        concordInstance.op.setLineText(lineHtml, true);  // isRawHtml
                         ConcordUtil.setCaret2(
                             ConcordUtil.getTextNode(concordInstance.op),
                             caret
                         );
-                    } else if (false &&
+                    } else if (
+                        false &&
                         lastWord.startsWith('**') &&
                         lastWord.endsWith('**')
                     ) {
@@ -4271,7 +4673,7 @@ window.currentInstance;
                             lastWord,
                             lastWord.replaceAll('**', '')
                         );
-                        concordInstance.op.setLineText(html);
+                        concordInstance.op.setLineText(html, true);  // isRawHtml
 
                         // Unselect text
                         window.getSelection().empty();
