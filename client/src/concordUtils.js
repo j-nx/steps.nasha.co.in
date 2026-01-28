@@ -336,6 +336,10 @@ function secondsSince(when) {
  *  b: <div>o <strong>There</strong></div>
  * Assumes that the input string is well formed
  * This code only works because of the unit tests behind it
+ *
+ * @deprecated Use ConcordTextModel.fromHTML(html).splitAt(pos) instead.
+ * The new approach separates text from styling metadata, eliminating
+ * the bug where pressing Enter could break HTML tags (e.g., <strik\ne>).
  */
 function sliceHtmlText(str, index, allowedTags = ['<b>', '<i>', '<u>', '<a ']) {
     // Up until index, how many incomplete tags exist
@@ -452,10 +456,53 @@ function getLastWord(str, endIndex) {
     return wArray.join('');
 }
 
-function convertToHref(word, lineHtml) {
-    // Todo: Strip word from start,end index and replace with below
-    // BUG: Error if adding same link multiple times in a node
+/**
+ * Convert a URL word to a hyperlink using ConcordTextModel
+ * @param {string} word - The URL to convert to a link
+ * @param {string} lineHtml - The current line HTML
+ * @param {number} caretPosition - The caret position (after the word)
+ * @returns {string} The updated HTML with the link
+ */
+function convertToHref(word, lineHtml, caretPosition) {
+    // Use ConcordTextModel for reliable link insertion
+    // This fixes the bug where only the first occurrence was replaced
+    const model = ConcordTextModel.fromHTML(lineHtml);
+    const text = model.text;
 
+    // Find the occurrence of the word that ends at or just before the caret
+    // The word ends at caretPosition (before the space that was typed)
+    const wordEnd = caretPosition;
+    const wordStart = wordEnd - word.length;
+
+    // Verify the word is at the expected position
+    if (wordStart >= 0 && text.substring(wordStart, wordEnd) === word) {
+        // Add link mark to this specific occurrence
+        const newModel = model.addMark(wordStart, wordEnd, 'link', { href: word });
+        return newModel.toHTML();
+    }
+
+    // Fallback: search for the word ending closest to caret position
+    let searchStart = 0;
+    let bestMatch = -1;
+
+    while (true) {
+        const idx = text.indexOf(word, searchStart);
+        if (idx === -1) break;
+
+        const matchEnd = idx + word.length;
+        // Prefer the match closest to (but not after) the caret
+        if (matchEnd <= caretPosition) {
+            bestMatch = idx;
+        }
+        searchStart = idx + 1;
+    }
+
+    if (bestMatch !== -1) {
+        const newModel = model.addMark(bestMatch, bestMatch + word.length, 'link', { href: word });
+        return newModel.toHTML();
+    }
+
+    // If no match found, fall back to original behavior
     const link = document.createElement('a');
     link.innerHTML = word;
     link.setAttribute('href', word);
