@@ -51,5 +51,3 @@ To connect to localhost,
 - Allow access from this domain on firebase
 - [Setup Chrome Debugging](https://developer.chrome.com/docs/devtools/remote-debugging/) on Desktop
     - `chrome://inspect/#devices`
-
-**Deployment Steps on Trello**
