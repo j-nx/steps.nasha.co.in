@@ -24,12 +24,7 @@ self.addEventListener('install', function (e) {
                 '/css/fonts/font-awesome/font/fontawesome-webfont.svg?v=3.2.1',
                 '/css/fonts/font-awesome/font/fontawesome-webfont.ttf?v=3.2.1',
                 '/css/fonts/font-awesome/font/fontawesome-webfont.woff?v=3.2.1',
-                '/css/fonts/fira-sans/css/fira-sans.css',
-                '/css/fonts/fira-sans/font/fira-sans.eot',
-                '/css/fonts/fira-sans/font/fira-sans.otf',
-                '/css/fonts/fira-sans/font/fira-sans.svg',
-                '/css/fonts/fira-sans/font/fira-sans.ttf',
-                '/css/fonts/fira-sans/font/fira-sans.woff'
+                '/css/fonts/ibm-plex-sans/font/IBMPlexSans-Variable.woff2'
             ]);
         }).then(function () {
             return self.skipWaiting();

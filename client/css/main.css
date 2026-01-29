@@ -131,7 +131,7 @@ body {
     /* border-radius: 4px; */
     outline: none;
     outline-style: none;
-    font-family: 'Fira Sans', sans-serif;
+    font-family: 'IBM Plex Sans', sans-serif;
 }
 
 .search-input:focus {
