@@ -12,7 +12,7 @@ var appPrefs = {
     readonly: isOffline,
     outlineFontSize: isMobile ? 0.95 : 1, // em
     iconSize: 0.5, // em
-    paddingLeft: isMobile ? 8 : 11, // px
+    paddingLeft: isMobile ? 8 : 30, // px
     nodeLineHeight: isMobile ? 1.4 : 1.6, // em
     authorName: 'DJ',
     authorEmail: 'jnx@nasha.co.in'
