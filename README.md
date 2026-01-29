@@ -1,4 +1,4 @@
-# Steps.nasha.co.in
+# steps.nasha.co.in
 
 **Setup**
 
@@ -16,11 +16,15 @@ const config = {
 
 `npm start`
 
-**Chrome**
+**Running Locally**
 
 Might need to run Chrome with these features for local dev:
 
-`open -na Google\ Chrome --args --user-data-dir="/tmp/chrome_dev" --disable-web-security --disable-site-isolation-trials --ignore-certificate-errors --disable-gpu --allow-running-insecure-content --disable-blink-features=AutomationControlled --disable-features=SameSiteByDefaultCookies,CookiesWithoutSameSiteMustBeSecure,CrossOriginOpenerPolicy`
+Ensure Third Party Cookies are enabled
+
+```
+open -na Google\ Chrome --args --user-data-dir="/tmp/chrome_dev" --disable-web-security --disable-site-isolation-trials --ignore-certificate-errors --disable-gpu --allow-running-insecure-content --disable-blink-features=AutomationControlled --disable-features=SameSiteByDefaultCookies,CookiesWithoutSameSiteMustBeSecure,CrossOriginOpenerPolicy
+```
 
 **Create Build**
 
