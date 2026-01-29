@@ -558,9 +558,13 @@ class ConcordTextModel {
                         i = endIndex;
                         continue;
                     }
+
+                    // Valid HTML tag but not one we support - skip the tag, keep inner text
+                    i = endIndex;
+                    continue;
                 }
 
-                // Not a recognized tag - treat '<' as literal text
+                // Not a valid HTML tag - treat '<' as literal text
                 textParts.push('<');
                 pos++;
                 i++;
