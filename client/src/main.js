@@ -8,12 +8,26 @@ var isOffline = navigator.onLine === false;
 var isMobile = isMobileFn();
 console.log('isMobile evaluated to', isMobile);
 
+var fontSizeSettings = {
+    min: 0.9, // em
+    max: 1.15, // em
+    step: 0.025, // em
+    default: 1 // isMobile ? 0.95 : 1 // em
+};
+
+var savedFontSize = (function () {
+    var fs = parseFloat(localStorage.fontSize);
+    if (!isFinite(fs) || fs <= 0) return null;
+    if (fs > 2) fs = fs / 16;
+    return Math.max(fontSizeSettings.min, Math.min(fontSizeSettings.max, fs));
+})();
+
 var appPrefs = {
     readonly: isOffline,
-    outlineFontSize: isMobile ? 0.95 : 1, // em
-    iconSize: 0.5, // em
-    paddingLeft: isMobile ? 8 : 11, // px
-    nodeLineHeight: isMobile ? 1.4 : 1.6, // em
+    outlineFontSize: savedFontSize || fontSizeSettings.default, // em
+    iconSize: (savedFontSize || fontSizeSettings.default) * 0.5, // em
+    paddingLeft: isMobile ? 8 : 30, // px
+    nodeLineHeight: (savedFontSize || fontSizeSettings.default) * 1.6, // em
     authorName: 'DJ',
     authorEmail: 'jnx@nasha.co.in'
 };

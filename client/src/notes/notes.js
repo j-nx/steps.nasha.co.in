@@ -1174,6 +1174,7 @@ function Note(v, k, ver, date) {
                 $scope.appDisabledMessage = '';
                 $scope.showShortcuts = false;
                 $scope.showBarMenu = false;
+                $scope.showFontSizeModal = false;
                 $scope.idleTimeout = false;
                 $scope.showWorking = false;
                 $scope.showSearch = false;
@@ -1194,6 +1195,7 @@ function Note(v, k, ver, date) {
                 $scope.showLogin = false;
                 $scope.showBarMenu = false;
                 $scope.showShortcuts = false;
+                $scope.showFontSizeModal = false;
             };
 
             //Display force refresh gui
@@ -1451,6 +1453,7 @@ function Note(v, k, ver, date) {
                 $scope.hideAllBarMenuChildren = function () {
                     $scope.hideShortcutDialog();
                     $scope.showNotesList = false;
+                    $scope.showFontSizeModal = false;
                 };
                 $scope.hideDialogs = function ($event) {
                     if ($event.target.id != 'taskBarOptions') {
@@ -1459,6 +1462,45 @@ function Note(v, k, ver, date) {
                         }
                     }
                 };
+
+                /* Font Size */
+                $scope.toggleFontSizeModal = function () {
+                    $scope.showBarMenu = false;
+                    $scope.showFontSizeModal = !$scope.showFontSizeModal;
+                };
+
+                $scope.increaseFontSize = function ($event) {
+                    $event.stopPropagation();
+                    var current = appPrefs.outlineFontSize;
+                    if (current >= fontSizeSettings.max) return;
+                    $scope.applyFontSize(Math.min(current + fontSizeSettings.step, fontSizeSettings.max));
+                };
+
+                $scope.decreaseFontSize = function ($event) {
+                    $event.stopPropagation();
+                    var current = appPrefs.outlineFontSize;
+                    if (current <= fontSizeSettings.min) return;
+                    $scope.applyFontSize(Math.max(current - fontSizeSettings.step, fontSizeSettings.min));
+                };
+
+                $scope.applyFontSize = function (em) {
+                    em = Math.round(em * 100) / 100;
+                    appPrefs.outlineFontSize = em;
+                    appPrefs.nodeLineHeight = em * 1.6;
+                    appPrefs.iconSize = em * 0.5;
+                    $('#outliner').concord().prefs({
+                        outlineFontSize: em,
+                        nodeLineHeight: em * 1.6,
+                        iconSize: em * 0.5
+                    });
+                    localStorage.fontSize = em;
+                };
+
+                $scope.resetFontSize = function ($event) {
+                    $event.stopPropagation();
+                    $scope.applyFontSize(fontSizeSettings.default);
+                };
+
                 $scope.toggleNotesDialog = function () {
                     $scope.showNotesList = !$scope.showNotesList;
                 };

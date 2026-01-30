@@ -103,7 +103,7 @@
     </script>
     /build -->
     <link href="css/fonts/font-awesome/css/font-awesome.min.css" rel="stylesheet">
-    <link href='css/fonts/fira-sans/css/fira-sans.css' rel='stylesheet' type='text/css'>
+
     <!-- Startup -->
     <script>
         let urlParams = new URLSearchParams(window.location.search);
@@ -329,9 +329,21 @@
             <div class="barMenu-item" ng-click="showShortcutDialog()" ng-hide="isMobile()">
                 <i class="icon-keyboard barMenu-icon"></i> Shortcuts
             </div>
+            <div class="barMenu-item" ng-click="toggleFontSizeModal()">
+                <i class="icon-text-height barMenu-icon"></i> Adjust Font Size
+            </div>
             <div class="barMenu-item" style="border-bottom:0px;" onclick="ns.logOut()">
                 <i class="icon-power-off barMenu-icon"></i> Log out
             </div>
+        </div>
+        <div class="fontSizeOverlay" ng-show="showFontSizeModal" ng-click="showFontSizeModal = false">
+        </div>
+        <div class="fontSizeModal" id="fontSizeModal" ng-show="showFontSizeModal">
+            <div class="fontSizeModal-buttons">
+                <div class="fontSizeModal-btn" ng-click="decreaseFontSize($event)">aa</div>
+                <div class="fontSizeModal-btn fontSizeModal-btn-increase" ng-click="increaseFontSize($event)">AA</div>
+            </div>
+            <div class="fontSizeModal-reset" ng-click="resetFontSize($event)">Reset</div>
         </div>
         <div class="disabledpopup popup-drop-shadow" ng-show="isAppDisabled" ng-click="resetTimeout()">
             <img class="svg3336 logo" src="images/steps.svg" alt="Steps" />
