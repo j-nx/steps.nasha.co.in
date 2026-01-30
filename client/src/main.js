@@ -11,8 +11,8 @@ console.log('isMobile evaluated to', isMobile);
 var fontSizeSettings = {
     min: 0.9, // em
     max: 1.15, // em
-    step: 0.05, // em
-    default: isMobile ? 0.95 : 1 // em
+    step: 0.025, // em
+    default: 1 // isMobile ? 0.95 : 1 // em
 };
 
 var savedFontSize = (function () {

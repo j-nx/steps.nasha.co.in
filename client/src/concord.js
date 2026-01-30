@@ -633,7 +633,7 @@ function ConcordOutline(container, options) {
                 }
             }
             if (prefs.iconSize) {
-                css += 'font-size:' + prefs.iconSize + 'em;';
+                css += 'font-size:' + (prefs.iconSize * 16) + 'px;';
             }
             css += '}\n';
             var olPaddingLeft = prefs.paddingLeft;
