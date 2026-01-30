@@ -983,3 +983,79 @@ input[type='color']:focus,
     width: 240px;
     height: 52px;
 }
+
+/* Font Size Modal */
+
+.fontSizeOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.15);
+    z-index: 8999;
+}
+
+.fontSizeModal {
+    position: fixed;
+    bottom: 55px;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    width: 180px;
+    background-color: #fff;
+    border-radius: 4px;
+    z-index: 9001;
+    overflow: hidden;
+    border: 1px solid #ccc;
+}
+
+.fontSizeModal-buttons {
+    display: flex;
+}
+
+.fontSizeModal-btn {
+    cursor: pointer;
+    flex: 1;
+    text-align: center;
+    padding: 14px 0;
+    font-weight: bold;
+    color: #333;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.fontSizeModal-btn:active {
+    background-color: #eee;
+}
+
+.fontSizeModal-btn-increase {
+    font-size: 1.2em;
+    border-left: 1px solid #ccc;
+}
+
+.fontSizeModal-reset {
+    cursor: pointer;
+    text-align: center;
+    padding: 8px 0;
+    font-size: 0.7em;
+    color: #999;
+    border-top: 1px solid #ccc;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.fontSizeModal-reset:active {
+    background-color: #eee;
+}
+
+.fontSizeOverlay.ng-hide,
+.fontSizeModal.ng-hide {
+    opacity: 0;
+}
+
+.fontSizeOverlay,
+.fontSizeModal {
+    -webkit-transition: opacity 0.1s ease-out;
+    transition: opacity 0.1s ease-out;
+}
