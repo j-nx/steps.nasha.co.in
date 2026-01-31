@@ -197,6 +197,86 @@ describe('Outliner Functions', function () {
 
         })
     });
+
+    describe('Copy-Paste', function () {
+        var STYLED_OPML = '<opml><head/><body>' +
+            '<outline text="&lt;b&gt;Bold&lt;/b&gt; text">' +
+            '<outline text="Child one"/>' +
+            '<outline text="&lt;i&gt;Child&lt;/i&gt; two"/>' +
+            '</outline>' +
+            '<outline text="Plain row"/>' +
+            '</body></opml>';
+
+        beforeEach(function () {
+            op.xmlToOutline(STYLED_OPML, false);
+        });
+
+        it('should produce styled HTML from styledLine for a single row', function () {
+            // Cursor is on first node after load
+            var cursor = op.getCursor();
+            var html = editor.styledLine(cursor);
+            // Should contain <li> wrapper with bold formatting and nested children
+            expect(html).toContain('<b>Bold</b> text');
+            expect(html).toContain('<li>Child one</li>');
+            expect(html).toContain('<i>Child</i> two');
+        });
+
+        it('should produce nested ul/li for nodes with children', function () {
+            var cursor = op.getCursor();
+            var html = editor.styledLine(cursor);
+            expect(html).toMatch(/^<li>.*<ul>.*<\/ul>.*<\/li>$/);
+        });
+
+        it('should preserve bold formatting through getTextModel roundtrip', function () {
+            var cursor = op.getCursor();
+            var model = op.getTextModel(cursor);
+            expect(model.text).toBe('Bold text');
+            expect(model.marks.length).toBe(1);
+            expect(model.marks[0].type).toBe('bold');
+            expect(model.toHTML()).toBe('<b>Bold</b> text');
+        });
+
+        it('should produce raw text from textLine for clipboard matching', function () {
+            var cursor = op.getCursor();
+            var text = editor.textLine(cursor);
+            // textLine is recursive, preserves innerHTML, indents children with tabs
+            expect(text).toContain('<b>Bold</b> text');
+            expect(text).toContain('Child one');
+            expect(text).toContain('<i>Child</i> two');
+        });
+
+        it('should parse styledLine output back via insertRichText correctly', function () {
+            var cursor = op.getCursor();
+            var html = '<ul>' + editor.styledLine(cursor) + '</ul>';
+
+            // Navigate to Plain row and insert there
+            op.go('down');
+            var beforeCount = concord.root.find('.concord-node').length;
+            op.insertRichText(html);
+            var afterCount = concord.root.find('.concord-node').length;
+
+            // Should have added nodes (parent + 2 children)
+            expect(afterCount).toBeGreaterThan(beforeCount);
+        });
+
+        it('should keep flat siblings at same indent level', function () {
+            // Paste flat rows - all at indent 0
+            var flatHtml = '<ul><li>Row A</li><li>Row B</li><li>Row C</li></ul>';
+            op.insertRichText(flatHtml);
+
+            // All inserted rows should be siblings (same parent ol)
+            var lastInserted = op.getCursor();
+            var siblings = lastInserted.parent().children('.concord-node');
+            // The flat rows should not be nested under each other
+            var rowTexts = [];
+            siblings.each(function () {
+                rowTexts.push($(this).children('.concord-wrapper').children('.concord-text').text());
+            });
+            expect(rowTexts).toContain('Row A');
+            expect(rowTexts).toContain('Row B');
+            expect(rowTexts).toContain('Row C');
+        });
+    });
 });
 
 {

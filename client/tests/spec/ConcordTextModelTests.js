@@ -1916,9 +1916,62 @@ describe('ConcordTextModel', function () {
         });
 
         it('Markdown-like headers', function () {
-            const text = '# Header with <tag>';
+            const text = '# Header with &lt;tag&gt;';
             const model = ConcordTextModel.fromHTML(text);
-            expect(model.text).toBe(text);
+            expect(model.text).toBe('# Header with <tag>');
+        });
+    });
+
+    // ============================================================
+    // COPY-PASTE ROUNDTRIP TESTS
+    // ============================================================
+    describe('Copy-Paste Roundtrip', function () {
+        it('should roundtrip single styled row', function () {
+            var html = '<b>Hello</b> world';
+            var model = ConcordTextModel.fromHTML(html);
+            var pasted = ConcordTextModel.fromHTML(model.toHTML());
+
+            expect(pasted.text).toBe('Hello world');
+            expect(pasted.marks.length).toBe(1);
+            expect(pasted.marks[0]).toEqual(
+                jasmine.objectContaining({ start: 0, end: 5, type: 'bold' })
+            );
+            expect(pasted.toHTML()).toBe(html);
+        });
+
+        it('should roundtrip multiple styled rows independently', function () {
+            var rows = [
+                '<b>First</b> row',
+                'Plain row',
+                '<i>Third</i> <u>row</u>'
+            ];
+            var models = rows.map(function (html) {
+                return ConcordTextModel.fromHTML(ConcordTextModel.fromHTML(html).toHTML());
+            });
+
+            expect(models[0].text).toBe('First row');
+            expect(models[0].marks.length).toBe(1);
+            expect(models[0].marks[0].type).toBe('bold');
+
+            expect(models[1].text).toBe('Plain row');
+            expect(models[1].marks.length).toBe(0);
+
+            expect(models[2].text).toBe('Third row');
+            expect(models[2].marks.length).toBe(2);
+            expect(models[2].marks[0].type).toBe('italic');
+            expect(models[2].marks[1].type).toBe('underline');
+        });
+
+        it('should parse bold tags as formatting on reload', function () {
+            var stored = '<b>hello</b>';
+            var model = ConcordTextModel.fromHTML(stored);
+
+            expect(model.text).toBe('hello');
+            expect(model.marks.length).toBe(1);
+            expect(model.marks[0]).toEqual(
+                jasmine.objectContaining({ start: 0, end: 5, type: 'bold' })
+            );
+            expect(model.toHTML()).toBe('<b>hello</b>');
         });
     });
 });

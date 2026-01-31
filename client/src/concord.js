@@ -1033,6 +1033,21 @@ function ConcordEditor(root, concordInstance) {
             });
         return text;
     };
+    this.styledLine = function (node) {
+        var model = concordInstance.op.getTextModel(node);
+        var html = '<li>' + model.toHTML();
+        var self = this;
+        var children = node.children('ol').children('.concord-node');
+        if (children.length > 0) {
+            html += '<ul>';
+            children.each(function () {
+                html += self.styledLine($(this));
+            });
+            html += '</ul>';
+        }
+        html += '</li>';
+        return html;
+    };
     this.select = function (node, multiple, multipleRange) {
         if (multiple == undefined) {
             multiple = false;
@@ -1825,6 +1840,11 @@ function ConcordEvents(root, editor, op, concordInstance) {
             node.removeClass('dirty');
         }
     });
+    root.on('input', '.concord-text', function () {
+        if (!concord.handleEvents) return;
+        var node = $(this).parents('.concord-node:first');
+        if (node.length === 1) concordInstance.op.invalidateTextModel(node);
+    });
     root.on('paste', '.concord-text', function (event) {
         if (!concord.handleEvents) {
             return;
@@ -1846,24 +1866,41 @@ function ConcordEvents(root, editor, op, concordInstance) {
         concordInstance.pasteBin.focus();
         setTimeout(editor.sanitize, 10);
     });
-    concordInstance.pasteBin.on('copy', function () {
+    concordInstance.pasteBin.on('copy', function (event) {
         if (!concord.handleEvents) {
             return;
         }
+        var selected = root.find('.selected');
+        if (selected.length === 0) {
+            var cursor = concordInstance.op.getCursor();
+            if (cursor && cursor.length === 1) selected = cursor;
+        }
         var copyText = '';
-        root.find('.selected').each(function () {
+        selected.each(function () {
             copyText += concordInstance.editor.textLine($(this));
         });
         if (copyText != '' && copyText != '\n') {
             concordClipboard = {
                 text: copyText,
-                data: root.find('.selected').clone(true, true)
+                data: selected.clone(true, true)
             };
-            concordInstance.pasteBin.html(
-                '<pre>' + $('<div/>').text(copyText).html() + '</pre>'
-            );
-            concordInstance.pasteBin.focus();
-            document.execCommand('selectAll');
+            var clipData = event.originalEvent && event.originalEvent.clipboardData;
+            if (clipData) {
+                var copyHtml = '<ul>';
+                selected.each(function () {
+                    copyHtml += concordInstance.editor.styledLine($(this));
+                });
+                copyHtml += '</ul>';
+                event.preventDefault();
+                clipData.setData('text/html', copyHtml);
+                clipData.setData('text/plain', copyText);
+            } else {
+                concordInstance.pasteBin.html(
+                    '<pre>' + $('<div/>').text(copyText).html() + '</pre>'
+                );
+                concordInstance.pasteBin.focus();
+                document.execCommand('selectAll');
+            }
         }
     });
     concordInstance.pasteBin.on('paste', function (event) {
@@ -1881,26 +1918,43 @@ function ConcordEvents(root, editor, op, concordInstance) {
         concordInstance.pasteBin.html('');
         setTimeout(editor.sanitize, 10);
     });
-    concordInstance.pasteBin.on('cut', function () {
+    concordInstance.pasteBin.on('cut', function (event) {
         if (!concord.handleEvents) {
             return;
         }
         if (concordInstance.prefs()['readonly'] == true) {
             return;
         }
+        var selected = root.find('.selected');
+        if (selected.length === 0) {
+            var cursor = concordInstance.op.getCursor();
+            if (cursor && cursor.length === 1) selected = cursor;
+        }
         var copyText = '';
-        root.find('.selected').each(function () {
+        selected.each(function () {
             copyText += concordInstance.editor.textLine($(this));
         });
         if (copyText != '' && copyText != '\n') {
             concordClipboard = {
                 text: copyText,
-                data: root.find('.selected').clone(true, true)
+                data: selected.clone(true, true)
             };
-            concordInstance.pasteBin.html(
-                '<pre>' + $('<div/>').text(copyText).html() + '</pre>'
-            );
-            concordInstance.pasteBinFocus();
+            var clipData = event.originalEvent && event.originalEvent.clipboardData;
+            if (clipData) {
+                var copyHtml = '<ul>';
+                selected.each(function () {
+                    copyHtml += concordInstance.editor.styledLine($(this));
+                });
+                copyHtml += '</ul>';
+                event.preventDefault();
+                clipData.setData('text/html', copyHtml);
+                clipData.setData('text/plain', copyText);
+            } else {
+                concordInstance.pasteBin.html(
+                    '<pre>' + $('<div/>').text(copyText).html() + '</pre>'
+                );
+                concordInstance.pasteBinFocus();
+            }
         }
         concordInstance.op.deleteLine();
         setTimeout(function () {
@@ -3014,22 +3068,23 @@ function ConcordOp(root, concordInstance, _cursor) {
             }
         }
 
-        // Adjust indentation: first item is root, same-indent items are children
-        // This handles outliners where parent and children have same indent in raw HTML
+        // Adjust indentation: when items have mixed indent levels but some
+        // match the first item, treat first as root and bump others.
+        // Skip when all items share the same indent (flat siblings).
         if (lineElements.length > 1) {
             var firstIndent = lineElements[0].indent;
+            var allSameIndent = true;
             var hasChildrenAtSameIndent = false;
 
-            // Check if there are items at same indent as first (they should be children)
             for (var i = 1; i < lineElements.length; i++) {
-                if (lineElements[i].indent === firstIndent) {
+                if (lineElements[i].indent !== firstIndent) {
+                    allSameIndent = false;
+                } else {
                     hasChildrenAtSameIndent = true;
-                    break;
                 }
             }
 
-            // If first item has same indent as others, treat first as root and bump others
-            if (hasChildrenAtSameIndent) {
+            if (!allSameIndent && hasChildrenAtSameIndent) {
                 for (var i = 1; i < lineElements.length; i++) {
                     lineElements[i].indent = lineElements[i].indent - firstIndent + 1;
                 }
@@ -4896,16 +4951,8 @@ window.currentInstance;
                     break;
                 case 67:
                     //CMD+C
-                    if (false && commandKey) {
-                        if (concordInstance.op.inTextMode()) {
-                            if (concordInstance.op.getLineText() != '') {
-                                concordInstance.root.removeData('clipboard');
-                            }
-                        } else {
-                            keyCaptured = true;
-                            event.preventDefault();
-                            concordInstance.op.copy();
-                        }
+                    if (commandKey && !concordInstance.op.inTextMode()) {
+                        concordInstance.pasteBinFocus();
                     }
                     break;
                 case 86:
