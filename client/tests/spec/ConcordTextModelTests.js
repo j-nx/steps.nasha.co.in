@@ -1002,37 +1002,39 @@ describe('ConcordTextModel', function () {
     });
 
     // ============================================================
-    // LITERAL/UNKNOWN TAGS TESTS - PRESERVING <abc> AS TEXT
+    // NON-STYLING TAG STRIPPING - fromHTML strips tags, keeps text
+    // User-typed angle brackets arrive as &lt;/&gt; entities and are preserved.
     // ============================================================
-    describe('Literal/Unknown Tags - Preserving <abc> as text', function () {
-        it('should preserve <abc> as literal text', function () {
+    describe('Non-styling tag stripping', function () {
+        it('should strip valid non-styling tags and keep inner text', function () {
             const model = ConcordTextModel.fromHTML('Hello <abc> world');
-            expect(model.text).toBe('Hello <abc> world');
+            expect(model.text).toBe('Hello  world');
             expect(model.marks.length).toBe(0);
         });
 
-        it('should preserve <abc></abc> as literal text', function () {
+        it('should strip opening and closing non-styling tags', function () {
             const model = ConcordTextModel.fromHTML('Cannot style <abc> </abc> text');
-            expect(model.text).toBe('Cannot style <abc> </abc> text');
+            expect(model.text).toBe('Cannot style   text');
             expect(model.marks.length).toBe(0);
         });
 
-        it('should preserve unknown tags with content', function () {
+        it('should strip non-styling tags but keep content between them', function () {
             const model = ConcordTextModel.fromHTML('<xyz>content</xyz>');
-            expect(model.text).toBe('<xyz>content</xyz>');
+            expect(model.text).toBe('content');
             expect(model.marks.length).toBe(0);
         });
 
-        it('should handle mixed valid and unknown tags', function () {
+        it('should handle mixed styling and non-styling tags', function () {
             const model = ConcordTextModel.fromHTML('<b>bold</b> and <xyz>unknown</xyz>');
-            expect(model.text).toBe('bold and <xyz>unknown</xyz>');
+            expect(model.text).toBe('bold and unknown');
             expect(model.marks.length).toBe(1);
             expect(model.marks[0].type).toBe('bold');
             expect(model.marks[0].start).toBe(0);
             expect(model.marks[0].end).toBe(4);
         });
 
-        it('should preserve self-closing style unknown tags', function () {
+        it('should preserve self-closing style tags as literal (invalid tag name)', function () {
+            // <foo/> has '/' in tag name, fails validation -> '<' treated as literal
             const model = ConcordTextModel.fromHTML('Hello <foo/> world');
             expect(model.text).toBe('Hello <foo/> world');
         });
@@ -1048,14 +1050,24 @@ describe('ConcordTextModel', function () {
             expect(model.text).toBe('a < b and c > d');
         });
 
-        it('should preserve numeric-only tags as text', function () {
+        it('should preserve numeric-only tags as text (invalid tag name)', function () {
+            // <123> starts with digit, fails validation -> '<' treated as literal
             const model = ConcordTextModel.fromHTML('Value <123> test');
             expect(model.text).toBe('Value <123> test');
         });
 
-        it('should handle escaped HTML entities', function () {
+        it('should decode escaped HTML entities to literal text', function () {
+            // User typed "<abc>" which browser stored as &lt;abc&gt;
             const model = ConcordTextModel.fromHTML('&lt;abc&gt; test');
             expect(model.text).toBe('<abc> test');
+        });
+
+        it('should strip span tags from pasted content but keep text', function () {
+            const model = ConcordTextModel.fromHTML(
+                '<span style="color: rgb(227, 227, 227); font-family: monospace; font-size: 11px;">0.125rem solid var(--tpl-color-content-accent,#346EB7)</span>'
+            );
+            expect(model.text).toBe('0.125rem solid var(--tpl-color-content-accent,#346EB7)');
+            expect(model.marks.length).toBe(0);
         });
     });
 
@@ -1174,83 +1186,62 @@ describe('ConcordTextModel', function () {
     });
 
     // ============================================================
-    // SPLIT WITH LITERAL TAGS - ENTER KEY WITH <abc>
+    // SPLIT AFTER TAG STRIPPING
     // ============================================================
-    describe('splitAt - With Literal/Unknown Tags', function () {
-        // The specific user scenario
-        it('User scenario: Split "Cannot style <abc> </abc> Failed to Execute" before E', function () {
-            const html = "Cannot style <abc> </abc> Failed to Execute 'collapse' on 'Selection': There is no child at offset 9.";
-            const model = ConcordTextModel.fromHTML(html);
+    describe('splitAt - After tag stripping', function () {
+        it('Split text after non-styling tags stripped', function () {
+            // <abc> and </abc> get stripped, leaving spaces
+            const model = ConcordTextModel.fromHTML("Cannot style <abc> </abc> Failed to Execute");
+            // Text becomes: 'Cannot style   Failed to Execute'
+            expect(model.text).toBe('Cannot style   Failed to Execute');
 
-            // Verify text is preserved
-            expect(model.text).toBe(html);
-
-            // Find position before 'E' in 'Execute' (position 33)
             const executeIndex = model.text.indexOf('Execute');
-            expect(executeIndex).toBeGreaterThan(0);
-
             const [before, after] = model.splitAt(executeIndex);
 
-            expect(before.text).toBe("Cannot style <abc> </abc> Failed to ");
-            expect(after.text).toBe("Execute 'collapse' on 'Selection': There is no child at offset 9.");
+            expect(before.text).toBe('Cannot style   Failed to ');
+            expect(after.text).toBe('Execute');
         });
 
-        it('Split text with <abc> in the middle - split before <', function () {
-            const model = ConcordTextModel.fromHTML('Hello <abc> world');
-            const [before, after] = model.splitAt(6);
+        it('Split after tag stripped - content preserved', function () {
+            // <abc> stripped, inner text 'hello' kept
+            const model = ConcordTextModel.fromHTML('Before <abc>hello</abc> After');
+            expect(model.text).toBe('Before hello After');
 
-            expect(before.text).toBe('Hello ');
-            expect(after.text).toBe('<abc> world');
+            const [before, after] = model.splitAt(13);
+            expect(before.text).toBe('Before hello ');
+            expect(after.text).toBe('After');
         });
 
-        it('Split text with <abc> in the middle - split after >', function () {
-            const model = ConcordTextModel.fromHTML('Hello <abc> world');
-            const [before, after] = model.splitAt(11);
-
-            expect(before.text).toBe('Hello <abc>');
-            expect(after.text).toBe(' world');
-        });
-
-        it('Split text with <abc> in the middle - split inside <abc>', function () {
-            const model = ConcordTextModel.fromHTML('Hello <abc> world');
-            const [before, after] = model.splitAt(8); // After '<ab'
-
-            expect(before.text).toBe('Hello <a');
-            expect(after.text).toBe('bc> world');
-        });
-
-        it('Split text with <abc></abc> - split between tags', function () {
-            const model = ConcordTextModel.fromHTML('Hello <abc></abc> world');
-            const [before, after] = model.splitAt(11); // After <abc>
-
-            expect(before.text).toBe('Hello <abc>');
-            expect(after.text).toBe('</abc> world');
-        });
-
-        it('Split with mixed valid tags and literal tags', function () {
+        it('Split with mixed styling and non-styling tags', function () {
             const model = ConcordTextModel.fromHTML('<b>Bold</b> and <xyz>literal</xyz> text');
-            const [before, after] = model.splitAt(9); // After "Bold and"
+            // <xyz></xyz> stripped, content kept: 'Bold and literal text'
+            expect(model.text).toBe('Bold and literal text');
+
+            const [before, after] = model.splitAt(9);
 
             expect(before.text).toBe('Bold and ');
-            expect(after.text).toBe('<xyz>literal</xyz> text');
+            expect(after.text).toBe('literal text');
 
             // Bold mark should be on before
             expect(before.marks.length).toBe(1);
             expect(before.marks[0].type).toBe('bold');
             expect(before.marks[0].end).toBe(4);
 
-            // No marks on after (literal tags don't create marks)
+            // No marks on after (non-styling tags don't create marks)
             expect(after.marks.length).toBe(0);
         });
 
-        it('Split with nested valid tags containing literal text', function () {
-            const model = ConcordTextModel.fromHTML('<b>Code: <abc></abc></b>');
+        it('Split with bold wrapping stripped tags', function () {
+            // <abc> stripped inside bold, so text is 'Hello  world' with bold
+            const model = ConcordTextModel.fromHTML('<b>Hello <abc> world</b>');
+            expect(model.text).toBe('Hello  world');
+
             const [before, after] = model.splitAt(6);
 
-            expect(before.text).toBe('Code: ');
-            expect(after.text).toBe('<abc></abc>');
+            expect(before.text).toBe('Hello ');
+            expect(after.text).toBe(' world');
 
-            // Both parts should have bold
+            // Both parts should be bold
             expect(before.marks[0].type).toBe('bold');
             expect(after.marks[0].type).toBe('bold');
         });
@@ -1263,15 +1254,18 @@ describe('ConcordTextModel', function () {
             expect(after.text).toBe("'Cannot read property' of undefined");
         });
 
-        it('Split with multiple unknown tags', function () {
+        it('Split with multiple stripped tags - content preserved', function () {
             const model = ConcordTextModel.fromHTML('<foo>a</foo> <bar>b</bar> <baz>c</baz>');
-            const [before, after] = model.splitAt(13);
+            // Tags stripped, content kept: 'a b c'
+            expect(model.text).toBe('a b c');
 
-            expect(before.text).toBe('<foo>a</foo> ');
-            expect(after.text).toBe('<bar>b</bar> <baz>c</baz>');
+            const [before, after] = model.splitAt(2);
+            expect(before.text).toBe('a ');
+            expect(after.text).toBe('b c');
         });
 
         it('Split long text with many literal angle brackets', function () {
+            // < followed by space/digit fails tag validation -> preserved as literal
             const text = 'if (a < b && c > d) { x = 1; } else if (e < f) { y = 2; }';
             const model = ConcordTextModel.fromHTML(text);
 
@@ -1282,16 +1276,15 @@ describe('ConcordTextModel', function () {
             expect(after.text).toBe('{ x = 1; } else if (e < f) { y = 2; }');
         });
 
-        it('Split preserves bold around literal tags', function () {
-            const model = ConcordTextModel.fromHTML('<b>Hello <abc> world</b>');
-            expect(model.text).toBe('Hello <abc> world');
+        it('Split with bold around stripped tag content', function () {
+            const model = ConcordTextModel.fromHTML('<b>Code: <abc>inner</abc></b>');
+            expect(model.text).toBe('Code: inner');
 
-            const [before, after] = model.splitAt(9);
+            const [before, after] = model.splitAt(6);
+            expect(before.text).toBe('Code: ');
+            expect(after.text).toBe('inner');
 
-            expect(before.text).toBe('Hello <ab');
-            expect(after.text).toBe('c> world');
-
-            // Both parts should be bold
+            // Both parts should have bold
             expect(before.marks[0].type).toBe('bold');
             expect(after.marks[0].type).toBe('bold');
         });
@@ -1309,12 +1302,11 @@ describe('ConcordTextModel', function () {
             expect(model.toHTML()).toBe('a &lt; b &gt; c');
         });
 
-        it('Roundtrip text with unknown tags', function () {
-            const original = 'Hello <abc> world';
-            const model = ConcordTextModel.fromHTML(original);
-            expect(model.text).toBe(original);
-            // toHTML escapes the literal < and >
-            expect(model.toHTML()).toBe('Hello &lt;abc&gt; world');
+        it('Roundtrip text with non-styling tags stripped', function () {
+            // <abc> is stripped by fromHTML, leaving 'Hello  world'
+            const model = ConcordTextModel.fromHTML('Hello <abc> world');
+            expect(model.text).toBe('Hello  world');
+            expect(model.toHTML()).toBe('Hello  world');
         });
 
         it('Roundtrip styled text preserves styles', function () {
@@ -1345,15 +1337,14 @@ describe('ConcordTextModel', function () {
     // EDGE CASES FOR CURSOR POSITIONS
     // ============================================================
     describe('Edge Cases - Various Cursor Positions', function () {
-        it('Split at every position in "a<xyz>c" preserves text', function () {
-            // Use unknown tag <xyz> not allowed tag <b>
-            const text = 'a<xyz>c';
-            const model = ConcordTextModel.fromHTML(text);
-            expect(model.text).toBe(text);
+        it('Split at every position in stripped "a<xyz>c" preserves text', function () {
+            // <xyz> is stripped, leaving 'ac'
+            const model = ConcordTextModel.fromHTML('a<xyz>c');
+            expect(model.text).toBe('ac');
 
-            for (let i = 0; i <= text.length; i++) {
+            for (let i = 0; i <= model.text.length; i++) {
                 const [before, after] = model.splitAt(i);
-                expect(before.text + after.text).toBe(text);
+                expect(before.text + after.text).toBe('ac');
             }
         });
 
@@ -1670,7 +1661,7 @@ describe('ConcordTextModel', function () {
 
         it('Delete part of styled text at boundary', function () {
             const model = ConcordTextModel.fromHTML('<b>Hello</b> world');
-            const result = model.deleteRange(3, 8); // Delete "lo wor"
+            const result = model.deleteRange(3, 9); // Delete "lo wor"
 
             expect(result.text).toBe('Helld');
             expect(result.marks[0]).toEqual(jasmine.objectContaining({ start: 0, end: 3 }));
@@ -1880,34 +1871,36 @@ describe('ConcordTextModel', function () {
             expect(before.text + after.text).toBe(text);
         });
 
-        it('Error message with angle brackets (original bug)', function () {
-            const text = "Cannot style <abc> </abc> Failed to Execute 'collapse' on 'Selection': There is no child at offset 9.";
-            const model = ConcordTextModel.fromHTML(text);
-            expect(model.text).toBe(text);
+        it('Error message with angle brackets - tags stripped', function () {
+            const html = "Cannot style <abc> </abc> Failed to Execute 'collapse' on 'Selection': There is no child at offset 9.";
+            const model = ConcordTextModel.fromHTML(html);
+            // <abc> and </abc> are stripped
+            const expected = "Cannot style   Failed to Execute 'collapse' on 'Selection': There is no child at offset 9.";
+            expect(model.text).toBe(expected);
 
-            // Split at various positions
-            for (let i = 0; i <= text.length; i += 10) {
+            // Split at various positions should always reconstruct
+            for (let i = 0; i <= expected.length; i += 10) {
                 const [before, after] = model.splitAt(i);
-                expect(before.text + after.text).toBe(text);
+                expect(before.text + after.text).toBe(expected);
             }
         });
 
-        it('HTML-like content that should be literal', function () {
-            const text = 'Use <div class="foo"> to create a container';
-            const model = ConcordTextModel.fromHTML(text);
-            expect(model.text).toBe(text);
+        it('HTML-like content - tags are stripped by fromHTML', function () {
+            // <div> is a valid tag name -> stripped. User-typed would be &lt;div&gt;
+            const model = ConcordTextModel.fromHTML('Use <div class="foo"> to create a container');
+            expect(model.text).toBe('Use  to create a container');
         });
 
-        it('Code snippet with generics', function () {
-            const text = 'List<String> items = new ArrayList<String>();';
-            const model = ConcordTextModel.fromHTML(text);
-            expect(model.text).toBe(text);
+        it('Code snippet with generics - tags stripped by fromHTML', function () {
+            // <String> is a valid tag name -> stripped. User-typed would be &lt;String&gt;
+            const model = ConcordTextModel.fromHTML('List<String> items = new ArrayList<String>();');
+            expect(model.text).toBe('List items = new ArrayList();');
         });
 
-        it('XML-like content', function () {
-            const text = '<root><child attr="value">content</child></root>';
-            const model = ConcordTextModel.fromHTML(text);
-            expect(model.text).toBe(text);
+        it('XML-like content - tags stripped by fromHTML', function () {
+            // All valid tag names -> stripped. User-typed would use &lt;/&gt; entities
+            const model = ConcordTextModel.fromHTML('<root><child attr="value">content</child></root>');
+            expect(model.text).toBe('content');
         });
 
         it('Math comparison operators', function () {
