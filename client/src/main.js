@@ -43,7 +43,7 @@ var idler;
 var api;
 
 var TIMEOUT = 20; // min
-var TIMEOUT_AUTO_REFRESH = 10; // min
+var TIMEOUT_AUTO_REFRESH = 10; // seconds
 var AUTOSAVE_DELAY = 5; // seconds
 const MOBILE = {
     TIMEOUT: 0.2, // min, 0.2 = 12 seconds
@@ -287,17 +287,15 @@ function startAutoRefreshTimer() {
         if (isOnWake()) return;
 
         if (appPrefs.readonly === false && isAppDisabled() === false) {
-            console.debug('Auto-Refresh Triggered');
-            ns.loadNotes();
+            ns.pollChanges();
         }
-    }, TIMEOUT_AUTO_REFRESH * 60000);
+    }, TIMEOUT_AUTO_REFRESH * 1000);
 }
 
 //#endregion
 
 function isOnWake() {
     const isOnWake = Date.now() - lastSeen > TIMEOUT * 60000 + 120000;
-    console.debug('isOnWake: ' + isOnWake);
     if (isOnWake) console.debug('On Wake Detected');
 
     return isOnWake;

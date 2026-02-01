@@ -94,6 +94,14 @@ NoteProviderMock.prototype.deleteNote = function (key, onDelete, onFailure) {
     onDelete({ key, deleted: 1 });
 };
 
+NoteProviderMock.prototype.initPolling = function (callback) {
+    if (callback) callback('mock-token');
+};
+
+NoteProviderMock.prototype.getChanges = function (callback) {
+    callback([]);
+};
+
 /**
  *  Storage layer (IndexedDB get/set) - used by global
  */
