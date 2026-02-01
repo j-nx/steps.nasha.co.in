@@ -275,6 +275,8 @@ function gApi() {
                 discoveryDocs: this.DISCOVERY_DOCS
             })
             .then(() => {
+                if (typeof google === 'undefined' || !google)
+                    throw Error('Failed to initialize GIS');
                 console.log('Initialized Google');
 
                 that.tokenClient = google.accounts.oauth2.initTokenClient({
@@ -285,7 +287,9 @@ function gApi() {
 
                 // Try to restore a stored token from a previous session
                 var storedToken = localStorage.getItem('gis_access_token');
-                var storedExpiry = parseInt(localStorage.getItem('gis_token_expires_at'));
+                var storedExpiry = parseInt(
+                    localStorage.getItem('gis_token_expires_at')
+                );
 
                 if (storedToken && storedExpiry && Date.now() < storedExpiry) {
                     that.accessToken = storedToken;
@@ -298,22 +302,29 @@ function gApi() {
                     });
                 } else if (storedToken) {
                     // Token expired but user had a session — try silent refresh
-                    console.log('Stored token expired, attempting silent refresh');
-                    that.refreshToken().then(() => {
-                        that.getRemoteFolderId().then((id) => {
-                            that.folderId = id;
+                    console.log(
+                        'Stored token expired, attempting silent refresh'
+                    );
+                    that.refreshToken()
+                        .then(() => {
+                            that.getRemoteFolderId().then((id) => {
+                                that.folderId = id;
+                                that.onInitComplete();
+                            });
+                        })
+                        .catch(() => {
+                            console.log('Silent refresh failed, showing login');
                             that.onInitComplete();
                         });
-                    }).catch(() => {
-                        console.log('Silent refresh failed, showing login');
-                        that.onInitComplete();
-                    });
                 } else {
                     that.onInitComplete();
                 }
             })
             .catch((e) => {
-                console.error('Error Occured when initializing Google ', e.details || e);
+                console.error(
+                    'Error Occured when initializing Google ',
+                    e.details || e
+                );
                 that.onInitComplete();
             });
     };
@@ -328,10 +339,19 @@ function gApi() {
                 reject(tokenResponse);
             } else {
                 this.accessToken = tokenResponse.access_token;
-                this.tokenExpiresAt = Date.now() + (tokenResponse.expires_in * 1000);
-                gapi.client.setToken({ access_token: tokenResponse.access_token });
-                localStorage.setItem('gis_access_token', tokenResponse.access_token);
-                localStorage.setItem('gis_token_expires_at', String(this.tokenExpiresAt));
+                this.tokenExpiresAt =
+                    Date.now() + tokenResponse.expires_in * 1000;
+                gapi.client.setToken({
+                    access_token: tokenResponse.access_token
+                });
+                localStorage.setItem(
+                    'gis_access_token',
+                    tokenResponse.access_token
+                );
+                localStorage.setItem(
+                    'gis_token_expires_at',
+                    String(this.tokenExpiresAt)
+                );
                 resolve(tokenResponse);
             }
             return;
@@ -347,10 +367,13 @@ function gApi() {
         }
 
         this.accessToken = tokenResponse.access_token;
-        this.tokenExpiresAt = Date.now() + (tokenResponse.expires_in * 1000);
+        this.tokenExpiresAt = Date.now() + tokenResponse.expires_in * 1000;
         gapi.client.setToken({ access_token: tokenResponse.access_token });
         localStorage.setItem('gis_access_token', tokenResponse.access_token);
-        localStorage.setItem('gis_token_expires_at', String(this.tokenExpiresAt));
+        localStorage.setItem(
+            'gis_token_expires_at',
+            String(this.tokenExpiresAt)
+        );
         console.log('User Signed In');
 
         this.getRemoteFolderId().then((id) => {
@@ -380,22 +403,24 @@ function gApi() {
             return;
         }
 
-        gapi.client.drive.changes.list({
-            pageToken: this.changesPageToken,
-            fields: 'newStartPageToken, changes(fileId, removed, file(id, version, modifiedTime))'
-        }).then(
-            (response) => {
-                var result = response.result;
-                if (result.newStartPageToken) {
-                    this.changesPageToken = result.newStartPageToken;
+        gapi.client.drive.changes
+            .list({
+                pageToken: this.changesPageToken,
+                fields: 'newStartPageToken, changes(fileId, removed, file(id, version, modifiedTime))'
+            })
+            .then(
+                (response) => {
+                    var result = response.result;
+                    if (result.newStartPageToken) {
+                        this.changesPageToken = result.newStartPageToken;
+                    }
+                    successCallback(result.changes || []);
+                },
+                (error) => {
+                    console.error('Failed to get changes', error);
+                    if (failCallback) failCallback(error);
                 }
-                successCallback(result.changes || []);
-            },
-            (error) => {
-                console.error('Failed to get changes', error);
-                if (failCallback) failCallback(error);
-            }
-        );
+            );
     };
 
     this.getRemoteFolderId = () => {
@@ -436,8 +461,7 @@ function gApi() {
             gapi.client.drive.files
                 .list({
                     pageSize: 1000,
-                    q:
-                        "mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+                    q: "mimeType = 'application/vnd.google-apps.folder' and trashed = false",
                     fields: 'nextPageToken, files(id, name)'
                 })
                 .then(getFoldersSuccess);

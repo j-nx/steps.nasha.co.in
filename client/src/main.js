@@ -149,7 +149,7 @@ function saveOutlineNow() {
 }
 
 function backgroundProcess() {
-    if (opHasChanged()) {
+    if (opHasChanged() && ns.canPersist()) {
         if (secondsSince(whenLastKeystroke) >= AUTOSAVE_DELAY) {
             // This is being called every second while the state is in "saving mode"
             console.debug('Auto save triggered');

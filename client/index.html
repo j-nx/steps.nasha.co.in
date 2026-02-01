@@ -97,7 +97,9 @@
     <!-- /build -->
 
     <!-- build:template
-        <script src="script.min.js?v=<%= version %>"></script>
+    <script src="src/lib/gapi.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="script.min.js?v=<%= version %>"></script>
     <script>
         var appVersionHash = '<%= version %>';
         console.log('Application VersionHash: ' + appVersionHash)
