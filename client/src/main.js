@@ -280,7 +280,7 @@ function startAutoRefreshTimer() {
     /** No Auto Refresh on Mobile since
      *  it is unlikely that the mobile view will remain open for a long time
      * */
-    if (isMobile) return;
+    // if (isMobile) return;
 
     // Polling for new notes (Poor man's push)
     interval_auto_refresh = setInterval(() => {
@@ -331,6 +331,11 @@ window.addEventListener('focus', onFocus);
 function onHidden() {
     console.debug('**** PAGE HIDDEN');
     lastSeen = Date.now();
+
+    if (isMobile && ns && !isAppDisabled()) {
+        saveOutlineNow();
+        if (idler) idler.away();
+    }
 }
 
 function onVisible() {
@@ -339,9 +344,9 @@ function onVisible() {
 
     // Only trigger away mode if we're not already in a disabled state
     // This prevents unnecessary wake triggers when the app wasn't in timeout mode
-    if (isOnWake() && !isAppDisabled()) {
-        if (idler) idler.away();
-    }
+    // if (isOnWake() && !isAppDisabled()) {
+    //     if (idler) idler.away();
+    // }
 
     // Reset lastSeen to prevent stale comparisons on subsequent visibility changes
     lastSeen = Date.now();
