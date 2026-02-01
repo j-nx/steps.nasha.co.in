@@ -78,11 +78,56 @@ function gApi() {
     this.initialize = (onInitComplete) => {
         this.onInitComplete = onInitComplete;
 
-        // Load the API client library (auth handled by GIS)
-        const init = () => gapi.load('client', this.initClient);
+        // On wake recovery, reuse the existing tokenClient instead of
+        // recreating it. A fresh initTokenClient() loses the prior user
+        // consent state, causing requestAccessToken({ prompt: '' }) to
+        // open an unnecessary OAuth popup.
+        if (this.tokenClient) {
+            this._restoreSession();
+            return;
+        }
 
-        // Delay to allow wake up
+        // First-time init: Load the API client library (auth handled by GIS)
+        const init = () => gapi.load('client', this.initClient);
         setTimeout(init, isOnWake() ? 500 : 0);
+    };
+
+    this._restoreSession = () => {
+        const that = this;
+        var storedToken = localStorage.getItem('gis_access_token');
+        var storedExpiry = parseInt(
+            localStorage.getItem('gis_token_expires_at')
+        );
+
+        if (storedToken && storedExpiry && Date.now() < storedExpiry) {
+            that.accessToken = storedToken;
+            that.tokenExpiresAt = storedExpiry;
+            gapi.client.setToken({ access_token: storedToken });
+            console.log('Restored session from stored token');
+            that.getRemoteFolderId().then((id) => {
+                that.folderId = id;
+                that.onInitComplete();
+            });
+        } else if (storedToken) {
+            // Token expired — try silent refresh with the existing
+            // tokenClient (which retains prior consent).
+            console.log('Stored token expired, attempting silent refresh');
+            that.refreshToken()
+                .then(() => {
+                    that.getRemoteFolderId().then((id) => {
+                        that.folderId = id;
+                        that.onInitComplete();
+                    });
+                })
+                .catch(() => {
+                    console.log('Silent refresh failed, needs login');
+                    localStorage.removeItem('gis_access_token');
+                    localStorage.removeItem('gis_token_expires_at');
+                    that.onInitComplete();
+                });
+        } else {
+            that.onInitComplete();
+        }
     };
 
     this.isLoggedIn = () => {
