@@ -1916,9 +1916,192 @@ describe('ConcordTextModel', function () {
         });
 
         it('Markdown-like headers', function () {
-            const text = '# Header with <tag>';
+            const text = '# Header with &lt;tag&gt;';
             const model = ConcordTextModel.fromHTML(text);
-            expect(model.text).toBe(text);
+            expect(model.text).toBe('# Header with <tag>');
+        });
+    });
+
+    // ============================================================
+    // COPY-PASTE ROUNDTRIP TESTS
+    // ============================================================
+    describe('Copy-Paste Roundtrip', function () {
+        it('should roundtrip single styled row', function () {
+            var html = '<b>Hello</b> world';
+            var model = ConcordTextModel.fromHTML(html);
+            var pasted = ConcordTextModel.fromHTML(model.toHTML());
+
+            expect(pasted.text).toBe('Hello world');
+            expect(pasted.marks.length).toBe(1);
+            expect(pasted.marks[0]).toEqual(
+                jasmine.objectContaining({ start: 0, end: 5, type: 'bold' })
+            );
+            expect(pasted.toHTML()).toBe(html);
+        });
+
+        it('should roundtrip multiple styled rows independently', function () {
+            var rows = [
+                '<b>First</b> row',
+                'Plain row',
+                '<i>Third</i> <u>row</u>'
+            ];
+            var models = rows.map(function (html) {
+                return ConcordTextModel.fromHTML(ConcordTextModel.fromHTML(html).toHTML());
+            });
+
+            expect(models[0].text).toBe('First row');
+            expect(models[0].marks.length).toBe(1);
+            expect(models[0].marks[0].type).toBe('bold');
+
+            expect(models[1].text).toBe('Plain row');
+            expect(models[1].marks.length).toBe(0);
+
+            expect(models[2].text).toBe('Third row');
+            expect(models[2].marks.length).toBe(2);
+            expect(models[2].marks[0].type).toBe('italic');
+            expect(models[2].marks[1].type).toBe('underline');
+        });
+
+        it('should parse bold tags as formatting on reload', function () {
+            var stored = '<b>hello</b>';
+            var model = ConcordTextModel.fromHTML(stored);
+
+            expect(model.text).toBe('hello');
+            expect(model.marks.length).toBe(1);
+            expect(model.marks[0]).toEqual(
+                jasmine.objectContaining({ start: 0, end: 5, type: 'bold' })
+            );
+            expect(model.toHTML()).toBe('<b>hello</b>');
+        });
+    });
+
+    // ============================================================
+    // STYLE ROUNDTRIP: EVERY TYPE + PERMUTATION COMBINATIONS
+    // ============================================================
+    describe('Style Roundtrip Permutations', function () {
+        var rt = function (html, expectedText, expectedMarks) {
+            var model = ConcordTextModel.fromHTML(html);
+            expect(model.text).toBe(expectedText);
+            expect(model.marks.length).toBe(expectedMarks.length);
+            for (var i = 0; i < expectedMarks.length; i++) {
+                expect(model.marks[i]).toEqual(jasmine.objectContaining(expectedMarks[i]));
+            }
+            var rebuilt = ConcordTextModel.fromHTML(model.toHTML());
+            expect(rebuilt.text).toBe(expectedText);
+            expect(rebuilt.marks.length).toBe(expectedMarks.length);
+        };
+
+        // Singles
+        it('bold', function () {
+            rt('<b>text</b>', 'text', [{ start: 0, end: 4, type: 'bold' }]);
+        });
+        it('italic', function () {
+            rt('<i>text</i>', 'text', [{ start: 0, end: 4, type: 'italic' }]);
+        });
+        it('underline', function () {
+            rt('<u>text</u>', 'text', [{ start: 0, end: 4, type: 'underline' }]);
+        });
+        it('strike', function () {
+            rt('<strike>text</strike>', 'text', [{ start: 0, end: 4, type: 'strike' }]);
+        });
+
+        // Pairs
+        it('bold + italic', function () {
+            rt('<b><i>text</i></b>', 'text', [
+                { start: 0, end: 4, type: 'bold' },
+                { start: 0, end: 4, type: 'italic' }
+            ]);
+        });
+        it('bold + underline', function () {
+            rt('<b><u>text</u></b>', 'text', [
+                { start: 0, end: 4, type: 'bold' },
+                { start: 0, end: 4, type: 'underline' }
+            ]);
+        });
+        it('bold + strike', function () {
+            rt('<b><strike>text</strike></b>', 'text', [
+                { start: 0, end: 4, type: 'bold' },
+                { start: 0, end: 4, type: 'strike' }
+            ]);
+        });
+        it('italic + underline', function () {
+            rt('<i><u>text</u></i>', 'text', [
+                { start: 0, end: 4, type: 'italic' },
+                { start: 0, end: 4, type: 'underline' }
+            ]);
+        });
+        it('italic + strike', function () {
+            rt('<i><strike>text</strike></i>', 'text', [
+                { start: 0, end: 4, type: 'italic' },
+                { start: 0, end: 4, type: 'strike' }
+            ]);
+        });
+        it('underline + strike', function () {
+            rt('<u><strike>text</strike></u>', 'text', [
+                { start: 0, end: 4, type: 'strike' },
+                { start: 0, end: 4, type: 'underline' }
+            ]);
+        });
+
+        // Triples
+        it('bold + italic + underline', function () {
+            rt('<b><i><u>text</u></i></b>', 'text', [
+                { start: 0, end: 4, type: 'bold' },
+                { start: 0, end: 4, type: 'italic' },
+                { start: 0, end: 4, type: 'underline' }
+            ]);
+        });
+        it('bold + italic + strike', function () {
+            rt('<b><i><strike>text</strike></i></b>', 'text', [
+                { start: 0, end: 4, type: 'bold' },
+                { start: 0, end: 4, type: 'italic' },
+                { start: 0, end: 4, type: 'strike' }
+            ]);
+        });
+        it('bold + underline + strike', function () {
+            rt('<b><u><strike>text</strike></u></b>', 'text', [
+                { start: 0, end: 4, type: 'bold' },
+                { start: 0, end: 4, type: 'strike' },
+                { start: 0, end: 4, type: 'underline' }
+            ]);
+        });
+        it('italic + underline + strike', function () {
+            rt('<i><u><strike>text</strike></u></i>', 'text', [
+                { start: 0, end: 4, type: 'italic' },
+                { start: 0, end: 4, type: 'strike' },
+                { start: 0, end: 4, type: 'underline' }
+            ]);
+        });
+
+        // All four
+        it('bold + italic + underline + strike', function () {
+            rt('<b><i><u><strike>text</strike></u></i></b>', 'text', [
+                { start: 0, end: 4, type: 'bold' },
+                { start: 0, end: 4, type: 'italic' },
+                { start: 0, end: 4, type: 'strike' },
+                { start: 0, end: 4, type: 'underline' }
+            ]);
+        });
+
+        // Partial overlaps
+        it('bold on first word, italic on second', function () {
+            rt('<b>hello</b> <i>world</i>', 'hello world', [
+                { start: 0, end: 5, type: 'bold' },
+                { start: 6, end: 11, type: 'italic' }
+            ]);
+        });
+        it('bold full, italic partial', function () {
+            rt('<b>hello <i>world</i></b>', 'hello world', [
+                { start: 0, end: 11, type: 'bold' },
+                { start: 6, end: 11, type: 'italic' }
+            ]);
+        });
+        it('strike + bold partial + underline tail', function () {
+            rt('<strike><b>AB</b>CD<u>EF</u></strike>', 'ABCDEF', [
+                { start: 0, end: 2, type: 'bold' },
+                { start: 0, end: 6, type: 'strike' },
+                { start: 4, end: 6, type: 'underline' }
+            ]);
         });
     });
 });
