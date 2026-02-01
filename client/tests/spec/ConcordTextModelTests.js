@@ -1974,4 +1974,134 @@ describe('ConcordTextModel', function () {
             expect(model.toHTML()).toBe('<b>hello</b>');
         });
     });
+
+    // ============================================================
+    // STYLE ROUNDTRIP: EVERY TYPE + PERMUTATION COMBINATIONS
+    // ============================================================
+    describe('Style Roundtrip Permutations', function () {
+        var rt = function (html, expectedText, expectedMarks) {
+            var model = ConcordTextModel.fromHTML(html);
+            expect(model.text).toBe(expectedText);
+            expect(model.marks.length).toBe(expectedMarks.length);
+            for (var i = 0; i < expectedMarks.length; i++) {
+                expect(model.marks[i]).toEqual(jasmine.objectContaining(expectedMarks[i]));
+            }
+            var rebuilt = ConcordTextModel.fromHTML(model.toHTML());
+            expect(rebuilt.text).toBe(expectedText);
+            expect(rebuilt.marks.length).toBe(expectedMarks.length);
+        };
+
+        // Singles
+        it('bold', function () {
+            rt('<b>text</b>', 'text', [{ start: 0, end: 4, type: 'bold' }]);
+        });
+        it('italic', function () {
+            rt('<i>text</i>', 'text', [{ start: 0, end: 4, type: 'italic' }]);
+        });
+        it('underline', function () {
+            rt('<u>text</u>', 'text', [{ start: 0, end: 4, type: 'underline' }]);
+        });
+        it('strike', function () {
+            rt('<strike>text</strike>', 'text', [{ start: 0, end: 4, type: 'strike' }]);
+        });
+
+        // Pairs
+        it('bold + italic', function () {
+            rt('<b><i>text</i></b>', 'text', [
+                { start: 0, end: 4, type: 'bold' },
+                { start: 0, end: 4, type: 'italic' }
+            ]);
+        });
+        it('bold + underline', function () {
+            rt('<b><u>text</u></b>', 'text', [
+                { start: 0, end: 4, type: 'bold' },
+                { start: 0, end: 4, type: 'underline' }
+            ]);
+        });
+        it('bold + strike', function () {
+            rt('<b><strike>text</strike></b>', 'text', [
+                { start: 0, end: 4, type: 'bold' },
+                { start: 0, end: 4, type: 'strike' }
+            ]);
+        });
+        it('italic + underline', function () {
+            rt('<i><u>text</u></i>', 'text', [
+                { start: 0, end: 4, type: 'italic' },
+                { start: 0, end: 4, type: 'underline' }
+            ]);
+        });
+        it('italic + strike', function () {
+            rt('<i><strike>text</strike></i>', 'text', [
+                { start: 0, end: 4, type: 'italic' },
+                { start: 0, end: 4, type: 'strike' }
+            ]);
+        });
+        it('underline + strike', function () {
+            rt('<u><strike>text</strike></u>', 'text', [
+                { start: 0, end: 4, type: 'strike' },
+                { start: 0, end: 4, type: 'underline' }
+            ]);
+        });
+
+        // Triples
+        it('bold + italic + underline', function () {
+            rt('<b><i><u>text</u></i></b>', 'text', [
+                { start: 0, end: 4, type: 'bold' },
+                { start: 0, end: 4, type: 'italic' },
+                { start: 0, end: 4, type: 'underline' }
+            ]);
+        });
+        it('bold + italic + strike', function () {
+            rt('<b><i><strike>text</strike></i></b>', 'text', [
+                { start: 0, end: 4, type: 'bold' },
+                { start: 0, end: 4, type: 'italic' },
+                { start: 0, end: 4, type: 'strike' }
+            ]);
+        });
+        it('bold + underline + strike', function () {
+            rt('<b><u><strike>text</strike></u></b>', 'text', [
+                { start: 0, end: 4, type: 'bold' },
+                { start: 0, end: 4, type: 'strike' },
+                { start: 0, end: 4, type: 'underline' }
+            ]);
+        });
+        it('italic + underline + strike', function () {
+            rt('<i><u><strike>text</strike></u></i>', 'text', [
+                { start: 0, end: 4, type: 'italic' },
+                { start: 0, end: 4, type: 'strike' },
+                { start: 0, end: 4, type: 'underline' }
+            ]);
+        });
+
+        // All four
+        it('bold + italic + underline + strike', function () {
+            rt('<b><i><u><strike>text</strike></u></i></b>', 'text', [
+                { start: 0, end: 4, type: 'bold' },
+                { start: 0, end: 4, type: 'italic' },
+                { start: 0, end: 4, type: 'strike' },
+                { start: 0, end: 4, type: 'underline' }
+            ]);
+        });
+
+        // Partial overlaps
+        it('bold on first word, italic on second', function () {
+            rt('<b>hello</b> <i>world</i>', 'hello world', [
+                { start: 0, end: 5, type: 'bold' },
+                { start: 6, end: 11, type: 'italic' }
+            ]);
+        });
+        it('bold full, italic partial', function () {
+            rt('<b>hello <i>world</i></b>', 'hello world', [
+                { start: 0, end: 11, type: 'bold' },
+                { start: 6, end: 11, type: 'italic' }
+            ]);
+        });
+        it('strike + bold partial + underline tail', function () {
+            rt('<strike><b>AB</b>CD<u>EF</u></strike>', 'ABCDEF', [
+                { start: 0, end: 2, type: 'bold' },
+                { start: 0, end: 6, type: 'strike' },
+                { start: 4, end: 6, type: 'underline' }
+            ]);
+        });
+    });
 });

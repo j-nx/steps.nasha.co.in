@@ -633,7 +633,7 @@ function ConcordOutline(container, options) {
                 }
             }
             if (prefs.iconSize) {
-                css += 'font-size:' + (prefs.iconSize * 16) + 'px;';
+                css += 'font-size:' + prefs.iconSize * 16 + 'px;';
             }
             css += '}\n';
             var olPaddingLeft = prefs.paddingLeft;
@@ -1300,7 +1300,14 @@ function ConcordEditor(root, concordInstance) {
                 return;
             }
             // Use raw clipboard HTML if available (preserves whitespace/tabs)
-            var rawHtml = concordInstance.rawClipboardHtml || concordInstance.pasteBin.html();
+            var rawHtml =
+                concordInstance.rawClipboardHtml ||
+                concordInstance.pasteBin.html();
+            console.log(
+                '[paste] source:',
+                concordInstance.rawClipboardHtml ? 'rawClipboard' : 'pasteBin'
+            );
+            console.log('[paste] html:', rawHtml.substring(0, 500));
             concordInstance.rawClipboardHtml = null; // Clear for next paste
 
             // Strip document-level tags that browsers add to clipboard
@@ -1313,9 +1320,12 @@ function ConcordEditor(root, concordInstance) {
                 .trim();
 
             // Check if the pasted content has rich formatting (tags or CSS styles)
-            var hasRichFormatting = /<(b|strong|i|em|u|strike|del|s|a)[\s>]/i.test(rawHtml) ||
-                                    /<(ul|ol)[\s>]/i.test(rawHtml) ||
-                                    /style\s*=\s*"[^"]*(?:text-decoration|font-weight|font-style)[^"]*"/i.test(rawHtml);
+            var hasRichFormatting =
+                /<(b|strong|i|em|u|strike|del|s|a)[\s>]/i.test(rawHtml) ||
+                /<(ul|ol)[\s>]/i.test(rawHtml) ||
+                /style\s*=\s*"[^"]*(?:text-decoration|font-weight|font-style)[^"]*"/i.test(
+                    rawHtml
+                );
 
             // Convert block elements to newlines for plain text processing
             var h = rawHtml.replace(
@@ -1335,7 +1345,10 @@ function ConcordEditor(root, concordInstance) {
                     /^[\s\r\n]+|[\s\r\n]+$/g,
                     ''
                 );
-                var trimmedPasteText = plainText.replace(/^[\s\r\n]+|[\s\r\n]+$/g, '');
+                var trimmedPasteText = plainText.replace(
+                    /^[\s\r\n]+|[\s\r\n]+$/g,
+                    ''
+                );
                 if (trimmedClipboardText == trimmedPasteText) {
                     var clipboardNodes = concordClipboard.data;
                     if (clipboardNodes) {
@@ -1397,10 +1410,15 @@ function ConcordEditor(root, concordInstance) {
                         var model = concordInstance.op.getTextModel(node);
                         var pastedModel = ConcordTextModel.fromHTML(rawHtml);
                         // Get current caret position using selection range
-                        var selRange = ConcordUtil.getSelectionRange(concordText[0]);
+                        var selRange = ConcordUtil.getSelectionRange(
+                            concordText[0]
+                        );
                         var caretPos = selRange ? selRange.end : 0;
                         // Insert the pasted text at caret position
-                        var newModel = model.insertAt(caretPos, pastedModel.text);
+                        var newModel = model.insertAt(
+                            caretPos,
+                            pastedModel.text
+                        );
                         // Shift pasted marks to correct position and add them
                         for (var i = 0; i < pastedModel.marks.length; i++) {
                             var mark = pastedModel.marks[i];
@@ -1414,11 +1432,18 @@ function ConcordEditor(root, concordInstance) {
                         concordInstance.op.setTextModel(newModel, node);
                         // Set caret to end of pasted text
                         var newCaretPos = caretPos + pastedModel.text.length;
-                        ConcordUtil.setSelectionRange(concordText[0], newCaretPos, newCaretPos);
+                        ConcordUtil.setSelectionRange(
+                            concordText[0],
+                            newCaretPos,
+                            newCaretPos
+                        );
                         concordInstance.root.removeData('clipboard');
                         concordInstance.op.markChanged();
                     }
-                } else if (!concordInstance.op.inTextMode() || numberoflines > 1) {
+                } else if (
+                    !concordInstance.op.inTextMode() ||
+                    numberoflines > 1
+                ) {
                     concordInstance.op.insertText(plainText);
                 } else {
                     concordInstance.op.saveState();
@@ -1853,7 +1878,8 @@ function ConcordEvents(root, editor, op, concordInstance) {
             return;
         }
         // Try to get raw clipboard data before browser normalizes it
-        var clipboardData = event.originalEvent && event.originalEvent.clipboardData;
+        var clipboardData =
+            event.originalEvent && event.originalEvent.clipboardData;
         if (clipboardData) {
             var rawHtml = clipboardData.getData('text/html');
             if (rawHtml) {
@@ -1884,7 +1910,8 @@ function ConcordEvents(root, editor, op, concordInstance) {
                 text: copyText,
                 data: selected.clone(true, true)
             };
-            var clipData = event.originalEvent && event.originalEvent.clipboardData;
+            var clipData =
+                event.originalEvent && event.originalEvent.clipboardData;
             if (clipData) {
                 var copyHtml = '<ul>';
                 selected.each(function () {
@@ -1909,6 +1936,14 @@ function ConcordEvents(root, editor, op, concordInstance) {
         }
         if (concordInstance.prefs()['readonly'] == true) {
             return;
+        }
+        var clipboardData =
+            event.originalEvent && event.originalEvent.clipboardData;
+        if (clipboardData) {
+            var rawHtml = clipboardData.getData('text/html');
+            if (rawHtml) {
+                concordInstance.rawClipboardHtml = rawHtml;
+            }
         }
         var concordText = concordInstance.op
             .getCursor()
@@ -1939,7 +1974,8 @@ function ConcordEvents(root, editor, op, concordInstance) {
                 text: copyText,
                 data: selected.clone(true, true)
             };
-            var clipData = event.originalEvent && event.originalEvent.clipboardData;
+            var clipData =
+                event.originalEvent && event.originalEvent.clipboardData;
             if (clipData) {
                 var copyHtml = '<ul>';
                 selected.each(function () {
@@ -2261,7 +2297,7 @@ function ConcordOp(root, concordInstance, _cursor) {
             bold: 'bold',
             italic: 'italic',
             underline: 'underline',
-            strikeThrough: 'strike',
+            strikeThrough: 'strike'
         };
 
         const markType = styleMap[style];
@@ -2286,7 +2322,11 @@ function ConcordOp(root, concordInstance, _cursor) {
                 const selectedNode = $(this);
                 const model = self.getTextModel(selectedNode);
                 if (model.length > 0) {
-                    const newModel = model.toggleMark(0, model.length, markType);
+                    const newModel = model.toggleMark(
+                        0,
+                        model.length,
+                        markType
+                    );
                     self.invalidateTextModel(selectedNode);
                     self.setTextModel(newModel, selectedNode);
                 }
@@ -2305,14 +2345,22 @@ function ConcordOp(root, concordInstance, _cursor) {
 
             // Get current model and toggle the mark
             const model = this.getTextModel(node);
-            const newModel = model.toggleMark(selRange.start, selRange.end, markType);
+            const newModel = model.toggleMark(
+                selRange.start,
+                selRange.end,
+                markType
+            );
 
             // Invalidate cache and set the new model
             this.invalidateTextModel(node);
             this.setTextModel(newModel, node);
 
             // Restore selection
-            ConcordUtil.setSelectionRange(textElement, selRange.start, selRange.end);
+            ConcordUtil.setSelectionRange(
+                textElement,
+                selRange.start,
+                selRange.end
+            );
         } else {
             // Non-text mode with single node: style entire node
             const model = this.getTextModel(node);
@@ -2850,7 +2898,9 @@ function ConcordOp(root, concordInstance, _cursor) {
         wrapper.appendTo(node);
         outline.appendTo(node);
         if (insertText && insertText != '') {
-            var html = isRawHtml ? insertText : concordInstance.editor.escape(insertText);
+            var html = isRawHtml
+                ? insertText
+                : concordInstance.editor.escape(insertText);
             text.html(html);
         }
         var cursor = this.getCursor();
@@ -2884,7 +2934,7 @@ function ConcordOp(root, concordInstance, _cursor) {
         if (this.inTextMode()) {
             document.execCommand('insertImage', null, url);
         } else {
-            this.insert('<img src="' + url + '">', down, undefined, true);  // isRawHtml
+            this.insert('<img src="' + url + '">', down, undefined, true); // isRawHtml
         }
     };
     /**
@@ -2900,7 +2950,17 @@ function ConcordOp(root, concordInstance, _cursor) {
         var lineElements = [];
 
         // Formatting tags to preserve
-        var formattingTags = ['b', 'strong', 'i', 'em', 'u', 'strike', 'del', 's', 'a'];
+        var formattingTags = [
+            'b',
+            'strong',
+            'i',
+            'em',
+            'u',
+            'strike',
+            'del',
+            's',
+            'a'
+        ];
 
         // Helper: extract formatted HTML from a string (unwrap non-formatting tags)
         // Converts CSS-based styles (e.g. text-decoration: line-through) to semantic tags
@@ -2909,95 +2969,143 @@ function ConcordOp(root, concordInstance, _cursor) {
 
             // Map of CSS style patterns to formatting wrapper tags
             var styleToTag = [
-                { prop: 'text-decoration', match: /line-through/, tag: 'strike' },
+                {
+                    prop: 'text-decoration',
+                    match: /line-through/,
+                    tag: 'strike'
+                },
                 { prop: 'text-decoration', match: /underline/, tag: 'u' },
                 { prop: 'font-weight', match: /bold|[7-9]00/, tag: 'b' },
                 { prop: 'font-style', match: /italic/, tag: 'i' }
             ];
 
             var processNode = function (node) {
-                $(node).contents().each(function () {
-                    if (this.nodeType === 3) return; // text node - keep
-                    if (this.nodeType === 1) {
-                        var tagName = this.tagName.toLowerCase();
-                        processNode(this); // always process children first
-                        if (formattingTags.indexOf(tagName) === -1) {
-                            // Before unwrapping, check for CSS-based formatting
-                            var style = this.getAttribute('style') || '';
-                            var $el = $(this);
-                            var $contents = $el.contents();
-                            if (style) {
-                                for (var s = 0; s < styleToTag.length; s++) {
-                                    var rule = styleToTag[s];
-                                    if (rule.match.test(style)) {
-                                        $contents = $('<' + rule.tag + '>').append($contents);
+                $(node)
+                    .contents()
+                    .each(function () {
+                        if (this.nodeType === 3) return; // text node - keep
+                        if (this.nodeType === 1) {
+                            var tagName = this.tagName.toLowerCase();
+                            processNode(this); // always process children first
+                            if (formattingTags.indexOf(tagName) === -1) {
+                                // Before unwrapping, check for CSS-based formatting
+                                var style = this.getAttribute('style') || '';
+                                var $el = $(this);
+                                var $contents = $el.contents();
+                                if (style) {
+                                    for (
+                                        var s = 0;
+                                        s < styleToTag.length;
+                                        s++
+                                    ) {
+                                        var rule = styleToTag[s];
+                                        if (rule.match.test(style)) {
+                                            $contents = $(
+                                                '<' + rule.tag + '>'
+                                            ).append($contents);
+                                        }
                                     }
                                 }
+                                $el.replaceWith($contents);
                             }
-                            $el.replaceWith($contents);
                         }
-                    }
-                });
+                    });
             };
 
             processNode($temp[0]);
             return $temp.html();
         };
 
-        // Strategy: Parse string to find block elements with their leading whitespace
-        // This preserves indentation that browsers would otherwise normalize
-        var hasBlocks = false;
+        // Strip non-content elements injected by external sources (TextEdit, Word, etc.)
+        html = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+        html = html.replace(/<meta[^>]*\/?>/gi, '');
 
-        // First, check for list structure (ul/ol)
+        var hasBlocks = false;
         var $container = $('<div>').html(html);
         var hasLists = $container.find('ul, ol').length > 0;
 
         if (hasLists) {
-            // Use DOM-based extraction for proper list hierarchy
-            var walkList = function ($el, depth) {
-                $el.children().each(function () {
-                    var $this = $(this);
-                    var nodeName = this.nodeName.toLowerCase();
+            // Find root lists: <ul>/<ol> not nested inside another <ul>/<ol>
+            // Handles any wrapper depth (e.g. <div><ul>...</ul></div>)
+            var $rootLists = $container.find('ul, ol').filter(function () {
+                return $(this).parentsUntil($container, 'ul, ol').length === 0;
+            });
 
-                    if (nodeName === 'li') {
-                        // Get direct content of li (not nested lists)
-                        var $clone = $this.clone();
-                        $clone.find('ul, ol').remove();
-                        var content = cleanHtml($clone.html());
-                        // Preserve empty items as intentional empty nodes
-                        lineElements.push({ html: (content && content.trim()) ? content.trim() : '', indent: depth });
-                        // Process nested lists
-                        $this.children('ul, ol').each(function () {
-                            walkList($(this), depth + 1);
-                        });
-                    } else if (nodeName === 'ul' || nodeName === 'ol') {
-                        walkList($this, depth);
+            $rootLists.each(function () {
+                var $list = $(this);
+                $list.find('li').each(function () {
+                    var depth = 0;
+                    var el = this.parentNode;
+                    while (el && el !== $list[0]) {
+                        if (el.nodeName === 'UL' || el.nodeName === 'OL')
+                            depth++;
+                        el = el.parentNode;
                     }
+                    // Flat lists: check margin-left/padding-left for indentation
+                    if (depth === 0) {
+                        var style = this.getAttribute('style') || '';
+                        var indentMatch = style.match(
+                            /(?:margin|padding)-left:\s*([\d.]+)\s*(pt|px|em|in)/
+                        );
+                        if (indentMatch) {
+                            var val = parseFloat(indentMatch[1]);
+                            var unit = indentMatch[2];
+                            var px =
+                                unit === 'pt'
+                                    ? (val * 4) / 3
+                                    : unit === 'em'
+                                      ? val * 16
+                                      : unit === 'in'
+                                        ? val * 96
+                                        : val;
+                            depth = Math.round(px / 48);
+                        }
+                    }
+                    var $clone = $(this).clone();
+                    $clone.find('ul, ol').remove();
+                    var content = cleanHtml($clone.html());
+                    lineElements.push({
+                        html: content && content.trim() ? content.trim() : '',
+                        indent: depth
+                    });
                 });
-            };
-
-            // Process children in DOM order to maintain correct sequence
-            // This handles cases where parent text is in a span before the list
-            $container.children().each(function () {
-                var $this = $(this);
-                var nodeName = this.nodeName.toLowerCase();
-
-                if (nodeName === 'ul' || nodeName === 'ol') {
-                    walkList($this, 0);
-                } else {
-                    // Non-list content at top level
-                    var content = cleanHtml($this.html() || $this.text());
-                    if (content && content.trim()) {
-                        lineElements.push({ html: content.trim(), indent: 0 });
-                    }
+            });
+        } else if (
+            /<[^>]+style\s*=\s*"[^"]*(?:margin|padding)-left/i.test(html)
+        ) {
+            // Google Docs / Word: <p> or <div> with margin-left/padding-left
+            $container.find('p, div, li').each(function () {
+                var style = this.getAttribute('style') || '';
+                var match = style.match(
+                    /(?:margin|padding)-left:\s*([\d.]+)\s*(pt|px|em|in)/
+                );
+                var indent = 0;
+                if (match) {
+                    var val = parseFloat(match[1]);
+                    var unit = match[2];
+                    var px =
+                        unit === 'pt'
+                            ? (val * 4) / 3
+                            : unit === 'em'
+                              ? val * 16
+                              : unit === 'in'
+                                ? val * 96
+                                : val;
+                    indent = Math.round(px / 48);
+                }
+                var content = cleanHtml($(this).html());
+                if (content && content.trim()) {
+                    lineElements.push({ html: content.trim(), indent: indent });
                 }
             });
         } else {
             // No lists - use string-based extraction to preserve tab indentation
             // First, insert newlines before block opening tags to ensure proper splitting
             // Preserve leading whitespace (tabs) with block tags for hierarchy detection
-            var normalizedHtml = html
-                .replace(/([\t ]*)(<(?:div|p|blockquote|pre|section|article|header|footer|h[1-6]|tr|td|th|dt|dd)[\s>])/gi, '\n$1$2');
+            var normalizedHtml = html.replace(
+                /([\t ]*)(<(?:div|p|blockquote|pre|section|article|header|footer|h[1-6]|tr|td|th|dt|dd)[\s>])/gi,
+                '\n$1$2'
+            );
 
             // Split by newlines
             var lines = normalizedHtml.split(/\n/);
@@ -3013,13 +3121,19 @@ function ConcordOp(root, concordInstance, _cursor) {
                 // Remove block tags but keep content
                 var content = line
                     .replace(/^\t*/, '')
-                    .replace(/<\/?(?:div|p|li|blockquote|pre|section|article|header|footer|h[1-6]|tr|td|th|dt|dd|ul|ol)[^>]*>/gi, '');
+                    .replace(
+                        /<\/?(?:div|p|li|blockquote|pre|section|article|header|footer|h[1-6]|tr|td|th|dt|dd|ul|ol)[^>]*>/gi,
+                        ''
+                    );
 
                 // Clean the HTML
                 content = cleanHtml(content);
 
                 // Preserve empty items as intentional empty nodes
-                lineElements.push({ html: (content && content.trim()) ? content.trim() : '', indent: indent });
+                lineElements.push({
+                    html: content && content.trim() ? content.trim() : '',
+                    indent: indent
+                });
                 hasBlocks = true;
             }
 
@@ -3033,23 +3147,53 @@ function ConcordOp(root, concordInstance, _cursor) {
                         if (this.nodeType === 3) {
                             var text = this.textContent.trim();
                             if (text) {
-                                lineElements.push({ html: text, indent: depth });
+                                lineElements.push({
+                                    html: text,
+                                    indent: depth
+                                });
                             }
                         } else if (this.nodeType === 1) {
-                            var isBlock = ['div', 'p', 'blockquote', 'pre', 'section',
-                                           'article', 'header', 'footer', 'tr', 'td', 'th',
-                                           'dt', 'dd', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].indexOf(nodeName) >= 0;
+                            var isBlock =
+                                [
+                                    'div',
+                                    'p',
+                                    'blockquote',
+                                    'pre',
+                                    'section',
+                                    'article',
+                                    'header',
+                                    'footer',
+                                    'tr',
+                                    'td',
+                                    'th',
+                                    'dt',
+                                    'dd',
+                                    'h1',
+                                    'h2',
+                                    'h3',
+                                    'h4',
+                                    'h5',
+                                    'h6'
+                                ].indexOf(nodeName) >= 0;
 
                             if (isBlock) {
                                 var $clone = $this.clone();
-                                $clone.find('div, p, ul, ol, li, blockquote, pre').remove();
+                                $clone
+                                    .find('div, p, ul, ol, li, blockquote, pre')
+                                    .remove();
                                 var content = cleanHtml($clone.html());
                                 if (content && content.trim()) {
-                                    lineElements.push({ html: content.trim(), indent: depth });
+                                    lineElements.push({
+                                        html: content.trim(),
+                                        indent: depth
+                                    });
                                 }
                                 walkDOM($this, depth);
                             } else if (formattingTags.indexOf(nodeName) >= 0) {
-                                lineElements.push({ html: this.outerHTML, indent: depth });
+                                lineElements.push({
+                                    html: this.outerHTML,
+                                    indent: depth
+                                });
                             } else {
                                 walkDOM($this, depth);
                             }
@@ -3068,27 +3212,12 @@ function ConcordOp(root, concordInstance, _cursor) {
             }
         }
 
-        // Adjust indentation: when items have mixed indent levels but some
-        // match the first item, treat first as root and bump others.
-        // Skip when all items share the same indent (flat siblings).
-        if (lineElements.length > 1) {
-            var firstIndent = lineElements[0].indent;
-            var allSameIndent = true;
-            var hasChildrenAtSameIndent = false;
-
-            for (var i = 1; i < lineElements.length; i++) {
-                if (lineElements[i].indent !== firstIndent) {
-                    allSameIndent = false;
-                } else {
-                    hasChildrenAtSameIndent = true;
-                }
-            }
-
-            if (!allSameIndent && hasChildrenAtSameIndent) {
-                for (var i = 1; i < lineElements.length; i++) {
-                    lineElements[i].indent = lineElements[i].indent - firstIndent + 1;
-                }
-                lineElements[0].indent = 0;
+        // Normalize indent offset: if content starts at non-zero indent,
+        // shift all items so the first starts at 0.
+        if (lineElements.length > 1 && lineElements[0].indent > 0) {
+            var offset = lineElements[0].indent;
+            for (var i = 0; i < lineElements.length; i++) {
+                lineElements[i].indent -= offset;
             }
         }
 
@@ -3101,7 +3230,9 @@ function ConcordOp(root, concordInstance, _cursor) {
             var node = concordInstance.editor.makeNode();
 
             // Use ConcordTextModel.fromHTML to parse and preserve formatting
-            var model = lineHtml ? ConcordTextModel.fromHTML(lineHtml) : new ConcordTextModel('');
+            var model = lineHtml
+                ? ConcordTextModel.fromHTML(lineHtml)
+                : new ConcordTextModel('');
             node.data('textModel', model);
             node.children('.concord-wrapper')
                 .children('.concord-text')
@@ -3159,8 +3290,8 @@ function ConcordOp(root, concordInstance, _cursor) {
         var parent = null;
         var parents = {};
         var lines = text.split('\n');
-        var workflowy = true;
-        var workflowyParent = null;
+        var isBulletedText = true;
+        var bulletParent = null;
         var firstlinewithcontent = 0;
         for (var i = 0; i < lines.length; i++) {
             var line = lines[i];
@@ -3176,8 +3307,8 @@ function ConcordOp(root, concordInstance, _cursor) {
                 lines[firstlinewithcontent + 1] == ''
             ) {
                 startingline = firstlinewithcontent + 2;
-                var workflowyParent = concordInstance.editor.makeNode();
-                workflowyParent
+                var bulletParent = concordInstance.editor.makeNode();
+                bulletParent
                     .children('.concord-wrapper')
                     .children('.concord-text')
                     .html(lines[firstlinewithcontent]);
@@ -3190,13 +3321,13 @@ function ConcordOp(root, concordInstance, _cursor) {
                 !line.match(/^\s+$/) &&
                 line.match(/^([\t\s]*)\-.*$/) == null
             ) {
-                workflowy = false;
+                isBulletedText = false;
                 break;
             }
         }
-        if (!workflowy) {
+        if (!isBulletedText) {
             startingline = 0;
-            workflowyParent = null;
+            bulletParent = null;
         }
         for (var i = startingline; i < lines.length; i++) {
             var line = lines[i];
@@ -3204,7 +3335,7 @@ function ConcordOp(root, concordInstance, _cursor) {
                 var matches = line.match(/^([\t\s]*)(.+)$/);
                 var node = concordInstance.editor.makeNode();
                 var nodeText = concordInstance.editor.escape(matches[2]);
-                if (workflowy) {
+                if (isBulletedText) {
                     var nodeTextMatches =
                         nodeText.match(/^([\t\s]*)\-\s*(.+)$/);
                     if (nodeTextMatches !== null) {
@@ -3216,7 +3347,7 @@ function ConcordOp(root, concordInstance, _cursor) {
                     .html(nodeText);
                 var level = startinglevel;
                 if (matches[1]) {
-                    if (workflowy) {
+                    if (isBulletedText) {
                         level = matches[1].length / 2 + startinglevel;
                     } else {
                         level = matches[1].length + startinglevel;
@@ -3239,14 +3370,14 @@ function ConcordOp(root, concordInstance, _cursor) {
                 lastLevel = level;
             }
         }
-        if (workflowyParent) {
+        if (bulletParent) {
             if (nodes.children().length > 0) {
-                workflowyParent.addClass('collapsed');
+                bulletParent.addClass('collapsed');
             }
             var clonedNodes = nodes.clone();
-            clonedNodes.children().appendTo(workflowyParent.children('ol'));
+            clonedNodes.children().appendTo(bulletParent.children('ol'));
             nodes = $('<ol></ol>');
-            nodes.append(workflowyParent);
+            nodes.append(bulletParent);
         }
         if (nodes.children().length > 0) {
             this.saveState();
@@ -3366,14 +3497,23 @@ function ConcordOp(root, concordInstance, _cursor) {
 
             // Get current model and add the link mark
             const model = this.getTextModel(node);
-            const newModel = model.addMark(selRange.start, selRange.end, 'link', { href: url });
+            const newModel = model.addMark(
+                selRange.start,
+                selRange.end,
+                'link',
+                { href: url }
+            );
 
             // Invalidate cache and set the new model
             this.invalidateTextModel(node);
             this.setTextModel(newModel, node);
 
             // Restore selection
-            ConcordUtil.setSelectionRange(textElement, selRange.start, selRange.end);
+            ConcordUtil.setSelectionRange(
+                textElement,
+                selRange.start,
+                selRange.end
+            );
 
             this.markChanged();
         }
@@ -3698,7 +3838,11 @@ function ConcordOp(root, concordInstance, _cursor) {
                 const selectedNode = $(this);
                 const model = self.getTextModel(selectedNode);
                 if (model.length > 0) {
-                    const newModel = model.toggleMark(0, model.length, 'strike');
+                    const newModel = model.toggleMark(
+                        0,
+                        model.length,
+                        'strike'
+                    );
                     self.invalidateTextModel(selectedNode);
                     self.setTextModel(newModel, selectedNode);
                 }
@@ -4482,7 +4626,7 @@ window.currentInstance;
                                         ),
                                         text
                                     ),
-                                    true  // isRawHtml - consolidateTags returns HTML
+                                    true // isRawHtml - consolidateTags returns HTML
                                 );
                                 ConcordUtil.setCaret2(
                                     ConcordUtil.getTextNode(concordInstance.op),
@@ -4656,14 +4800,16 @@ window.currentInstance;
                             // This fixes the bug where Enter key would break HTML tags
                             // e.g., <strike>strike</strike> -> <strik\ne>strike</strike>
 
-                            const model = concordInstance.op.getTextModel(currentCursor);
+                            const model =
+                                concordInstance.op.getTextModel(currentCursor);
                             var isActionAllowed = true;
                             var isStrike = concordInstance.op.isStrikethrough();
 
                             // Split the model at the caret position
                             // beforeModel = text before caret
                             // afterModel = text after caret
-                            const [beforeModel, afterModel] = model.splitAt(caretPosition);
+                            const [beforeModel, afterModel] =
+                                model.splitAt(caretPosition);
 
                             // Original logic: when Enter is pressed in middle of line,
                             // text AFTER caret stays on current line (becomes "bottom")
@@ -4694,18 +4840,23 @@ window.currentInstance;
 
                             if (isActionAllowed) {
                                 // Invalidate cached model since we're changing the text
-                                concordInstance.op.invalidateTextModel(currentCursor);
+                                concordInstance.op.invalidateTextModel(
+                                    currentCursor
+                                );
 
                                 // Set current line to bottomLineText (text after caret, or full text at end)
                                 // Use isRawHtml=true because toHTML() already produces properly escaped HTML
-                                concordInstance.op.setLineText(bottomLineText, true);
+                                concordInstance.op.setLineText(
+                                    bottomLineText,
+                                    true
+                                );
 
                                 // Insert topLineText (text before caret, or empty at end) in direction
                                 var node = concordInstance.op.insert(
                                     topLineText,
                                     direction,
                                     undefined,
-                                    true  // isRawHtml
+                                    true // isRawHtml
                                 );
 
                                 if (
@@ -5018,7 +5169,7 @@ window.currentInstance;
                         const lineHtml = convertToHref(lastWord, html, caret);
                         // Invalidate cached model since we're changing the text
                         concordInstance.op.invalidateTextModel();
-                        concordInstance.op.setLineText(lineHtml, true);  // isRawHtml
+                        concordInstance.op.setLineText(lineHtml, true); // isRawHtml
                         ConcordUtil.setCaret2(
                             ConcordUtil.getTextNode(concordInstance.op),
                             caret
@@ -5059,7 +5210,7 @@ window.currentInstance;
                             lastWord,
                             lastWord.replaceAll('**', '')
                         );
-                        concordInstance.op.setLineText(html, true);  // isRawHtml
+                        concordInstance.op.setLineText(html, true); // isRawHtml
 
                         // Unselect text
                         window.getSelection().empty();

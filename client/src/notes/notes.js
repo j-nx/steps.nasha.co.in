@@ -1486,11 +1486,11 @@ function Note(v, k, ver, date) {
                 $scope.applyFontSize = function (em) {
                     em = Math.round(em * 100) / 100;
                     appPrefs.outlineFontSize = em;
-                    appPrefs.nodeLineHeight = em * 1.6;
+                    appPrefs.nodeLineHeight = em * LINE_HEIGHT_MULTIPLIER;
                     appPrefs.iconSize = em * 0.5;
                     $('#outliner').concord().prefs({
                         outlineFontSize: em,
-                        nodeLineHeight: em * 1.6,
+                        nodeLineHeight: em * LINE_HEIGHT_MULTIPLIER,
                         iconSize: em * 0.5
                     });
                     localStorage.fontSize = em;

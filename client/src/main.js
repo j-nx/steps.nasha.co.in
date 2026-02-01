@@ -8,6 +8,8 @@ var isOffline = navigator.onLine === false;
 var isMobile = isMobileFn();
 console.log('isMobile evaluated to', isMobile);
 
+var LINE_HEIGHT_MULTIPLIER = 1.6;
+
 var fontSizeSettings = {
     min: 0.9, // em
     max: 1.15, // em
@@ -27,7 +29,8 @@ var appPrefs = {
     outlineFontSize: savedFontSize || fontSizeSettings.default, // em
     iconSize: (savedFontSize || fontSizeSettings.default) * 0.5, // em
     paddingLeft: isMobile ? 8 : 30, // px
-    nodeLineHeight: (savedFontSize || fontSizeSettings.default) * 1.6, // em
+    nodeLineHeight:
+        (savedFontSize || fontSizeSettings.default) * LINE_HEIGHT_MULTIPLIER, // em
     authorName: 'DJ',
     authorEmail: 'jnx@nasha.co.in'
 };
