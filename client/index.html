@@ -83,6 +83,7 @@
     <!-- <script src="https://code.jquery.com/jquery-migrate-3.3.2.js"></script> -->
     <script src="src/lib/jquery.base64.min.js"></script>
     <script src="src/lib/gapi.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="src/lib/velocity/velocity.1.5.2.min.js"></script>
     <script src="src/lib/velocity/velocity.ui.5.0.4.min.js"></script>
     <script src="src/lib/velocity/velocity.ui.angular.min.js"></script>
@@ -96,7 +97,9 @@
     <!-- /build -->
 
     <!-- build:template
-        <script src="script.min.js?v=<%= version %>"></script>
+    <script src="src/lib/gapi.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="script.min.js?v=<%= version %>"></script>
     <script>
         var appVersionHash = '<%= version %>';
         console.log('Application VersionHash: ' + appVersionHash)

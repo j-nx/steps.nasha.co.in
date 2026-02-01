@@ -133,6 +133,21 @@
         });
     };
 
+    NoteProvider.prototype.initPolling = function (callback) {
+        api.initPolling(callback);
+    };
+
+    NoteProvider.prototype.getChanges = function (callback) {
+        api.getChanges({
+            success: function (changes) {
+                callback(changes);
+            },
+            error: function (code) {
+                console.error('Failed to poll changes: ' + code);
+            }
+        });
+    };
+
     NoteProvider.prototype.searchNotes = function (searchTerm, callback) {
         /* if (this.sn == null || this.sn == undefined) return; //log fatal
 
@@ -319,6 +334,60 @@ function NoteService(concord) {
         };
 
         this.np.deleteNote(store.note.key, onDelete, this.onNoteActionFailure);
+    }.bind(this);
+
+    this.pollChanges = function () {
+        if (!store || !this.isCookieValid() || this.ngScope.isAppDisabled)
+            return;
+        if (this.isModelReady() == false) return;
+        if (this.getPendingNotes() > 0) return;
+
+        this.np.getChanges(this.parseChanges);
+    }.bind(this);
+
+    this.parseChanges = function (changes) {
+        if (!changes || changes.length === 0) return;
+
+        console.debug('Processing ' + changes.length + ' change(s)');
+
+        changes.forEach((change) => {
+            if (change.removed) {
+                var removedNote = store.getNote(change.fileId);
+                if (removedNote) {
+                    store.removeNote(change.fileId);
+                    if (this.noteCacheManager)
+                        this.noteCacheManager.deleteNote(change.fileId);
+                }
+                return;
+            }
+
+            if (!change.file) return;
+
+            var file = change.file;
+            var existingNote = store.getNote(file.id);
+            var newModifydate = new Date(file.modifiedTime).getTime();
+
+            if (existingNote) {
+                if (existingNote.modifydate !== newModifydate) {
+                    this.loadNote(existingNote, {
+                        key: file.id,
+                        version: file.version,
+                        modifydate: newModifydate
+                    });
+                }
+            } else {
+                var n = new Note();
+                n.key = file.id;
+                store.addNote(n);
+                this.loadNote(n, {
+                    key: file.id,
+                    version: file.version,
+                    modifydate: newModifydate
+                });
+            }
+        });
+
+        store.save();
     }.bind(this);
 
     this.loadNotes = function (forceRefresh) {
@@ -582,6 +651,9 @@ function NoteService(concord) {
             this.ngScope.hideWorkingDialog();
             this.ngScope.finishMainRefresh();
             delay = 0;
+
+            // Initialize changes page token for delta polling
+            this.np.initPolling();
         }
     }.bind(this);
 

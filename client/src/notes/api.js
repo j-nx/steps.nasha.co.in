@@ -14,7 +14,7 @@ function API() {
     };
 
     this.signOut = () => {
-        this.api.signOut;
+        this.api.signOut();
     };
 
     // returns [{key, version, modifiedTime}]
@@ -42,11 +42,17 @@ function API() {
         console.debug('Deleting Note');
         this.api.deleteFile(obj.key, obj.success, obj.error);
     };
+
+    this.initPolling = (callback) => {
+        this.api.initPolling(callback);
+    };
+
+    this.getChanges = (obj) => {
+        this.api.getChanges(obj.success, obj.error);
+    };
 }
 // #region GDrive
 function gApi() {
-    this.PLUGIN_NAME = 'steps.nasha.co.in'
-
     this.CLIENT_ID = config.CLIENT_ID;
 
     this.API_KEY = config.API_KEY;
@@ -63,33 +69,52 @@ function gApi() {
 
     this.onInitComplete = undefined;
 
+    // Google Identity Services (GIS) token state
+    this.accessToken = null;
+    this.tokenExpiresAt = null;
+    this.tokenClient = null;
+    this._tokenPromise = null;
+
     this.initialize = (onInitComplete) => {
         this.onInitComplete = onInitComplete;
 
-        // Load the API client and auth2 library
-        const init = () => gapi.load('client:auth2', this.initClient);
+        // Load the API client library (auth handled by GIS)
+        const init = () => gapi.load('client', this.initClient);
 
         // Delay to allow wake up
         setTimeout(init, isOnWake() ? 500 : 0);
     };
 
     this.isLoggedIn = () => {
-        return gapi.auth2.getAuthInstance().isSignedIn.get();
+        return this.accessToken !== null && Date.now() < this.tokenExpiresAt;
     };
 
     this.refreshToken = () => {
-        return gapi.auth2
-            .getAuthInstance()
-            .currentUser.get()
-            .reloadAuthResponse();
+        return new Promise((resolve, reject) => {
+            if (!this.tokenClient) {
+                reject(new Error('Token client not initialized'));
+                return;
+            }
+            this._tokenPromise = { resolve, reject };
+            this.tokenClient.requestAccessToken({ prompt: '' });
+        });
     };
 
     this.signIn = () => {
-        gapi.auth2.getAuthInstance().signIn();
+        this.tokenClient.requestAccessToken();
     };
 
     this.signOut = () => {
-        gapi.auth2.getAuthInstance().signOut();
+        if (this.accessToken) {
+            google.accounts.oauth2.revoke(this.accessToken, () => {
+                console.log('Token revoked');
+            });
+        }
+        this.accessToken = null;
+        this.tokenExpiresAt = null;
+        gapi.client.setToken(null);
+        localStorage.removeItem('gis_access_token');
+        localStorage.removeItem('gis_token_expires_at');
     };
 
     this.retrieveIndex = (successCallback, failCallback) => {
@@ -144,7 +169,7 @@ function gApi() {
                 body: file
             };
 
-            var accessToken = gapi.auth.getToken().access_token;
+            var accessToken = this.accessToken;
             var form = new FormData();
             form.append(
                 'metadata',
@@ -189,7 +214,7 @@ function gApi() {
             body: file
         };
 
-        var accessToken = gapi.auth.getToken().access_token; // Here gapi is used for retrieving the access token.
+        var accessToken = this.accessToken;
         var form = new FormData();
         form.append(
             'metadata',
@@ -241,57 +266,161 @@ function gApi() {
     };
 
     // #region Private
-    // How make private?
     this.initClient = () => {
         const that = this;
-
-        const success = function () {
-            console.log('Initalized Google');
-            // Listen for sign-in state changes.
-            gapi.auth2
-                .getAuthInstance()
-                .isSignedIn.listen(that.updateSigninStatus);
-
-            this.updateSigninStatus();
-
-            console.log(
-                this.isLoggedIn() ? 'User Signed In' : 'User not signed in'
-            );
-        }.bind(this);
-
-        const error = function (e) {
-            console.error('Error Occured when initializing Google ', e.details);
-            this.onInitComplete(); 
-            // Todo signal failure to UI
-        };
 
         gapi.client
             .init({
                 apiKey: this.API_KEY,
-                clientId: this.CLIENT_ID,
-                discoveryDocs: this.DISCOVERY_DOCS,
-                scope: this.SCOPES,
-                plugin_name: this.PLUGIN_NAME
+                discoveryDocs: this.DISCOVERY_DOCS
             })
-            .then(success)
-            .catch(error);
+            .then(() => {
+                if (typeof google === 'undefined' || !google)
+                    throw Error('Failed to initialize GIS');
+                console.log('Initialized Google');
+
+                that.tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: that.CLIENT_ID,
+                    scope: that.SCOPES,
+                    callback: (resp) => that.handleTokenResponse(resp)
+                });
+
+                // Try to restore a stored token from a previous session
+                var storedToken = localStorage.getItem('gis_access_token');
+                var storedExpiry = parseInt(
+                    localStorage.getItem('gis_token_expires_at')
+                );
+
+                if (storedToken && storedExpiry && Date.now() < storedExpiry) {
+                    that.accessToken = storedToken;
+                    that.tokenExpiresAt = storedExpiry;
+                    gapi.client.setToken({ access_token: storedToken });
+                    console.log('Restored session from stored token');
+                    that.getRemoteFolderId().then((id) => {
+                        that.folderId = id;
+                        that.onInitComplete();
+                    });
+                } else if (storedToken) {
+                    // Token expired but user had a session — try silent refresh
+                    console.log(
+                        'Stored token expired, attempting silent refresh'
+                    );
+                    that.refreshToken()
+                        .then(() => {
+                            that.getRemoteFolderId().then((id) => {
+                                that.folderId = id;
+                                that.onInitComplete();
+                            });
+                        })
+                        .catch(() => {
+                            console.log('Silent refresh failed, showing login');
+                            that.onInitComplete();
+                        });
+                } else {
+                    that.onInitComplete();
+                }
+            })
+            .catch((e) => {
+                console.error(
+                    'Error Occured when initializing Google ',
+                    e.details || e
+                );
+                that.onInitComplete();
+            });
     };
 
-    this.updateSigninStatus = () => {
-        const isSignedIn = this.isLoggedIn();
+    this.handleTokenResponse = (tokenResponse) => {
+        // Handle pending refresh promise (from refreshToken())
+        if (this._tokenPromise) {
+            const { resolve, reject } = this._tokenPromise;
+            this._tokenPromise = null;
 
-        if (isSignedIn) {
-            this.refreshToken().then((authResponse) => {
-                console.log('Token updated');
-                this.getRemoteFolderId().then((id) => {
-                    this.folderId = id;
-                    this.onInitComplete();
+            if (tokenResponse.error) {
+                reject(tokenResponse);
+            } else {
+                this.accessToken = tokenResponse.access_token;
+                this.tokenExpiresAt =
+                    Date.now() + tokenResponse.expires_in * 1000;
+                gapi.client.setToken({
+                    access_token: tokenResponse.access_token
                 });
-            });
-        } else {
-            this.onInitComplete();
-            console.log('Needs Sign in');
+                localStorage.setItem(
+                    'gis_access_token',
+                    tokenResponse.access_token
+                );
+                localStorage.setItem(
+                    'gis_token_expires_at',
+                    String(this.tokenExpiresAt)
+                );
+                resolve(tokenResponse);
+            }
+            return;
         }
+
+        // Normal init/sign-in flow
+        if (tokenResponse.error) {
+            console.log('Needs Sign in');
+            this.accessToken = null;
+            this.tokenExpiresAt = null;
+            this.onInitComplete();
+            return;
+        }
+
+        this.accessToken = tokenResponse.access_token;
+        this.tokenExpiresAt = Date.now() + tokenResponse.expires_in * 1000;
+        gapi.client.setToken({ access_token: tokenResponse.access_token });
+        localStorage.setItem('gis_access_token', tokenResponse.access_token);
+        localStorage.setItem(
+            'gis_token_expires_at',
+            String(this.tokenExpiresAt)
+        );
+        console.log('User Signed In');
+
+        this.getRemoteFolderId().then((id) => {
+            this.folderId = id;
+            this.onInitComplete();
+        });
+    };
+
+    this.changesPageToken = null;
+
+    this.initPolling = (callback) => {
+        gapi.client.drive.changes.getStartPageToken().then(
+            (response) => {
+                this.changesPageToken = response.result.startPageToken;
+                console.debug('Changes page token initialized');
+                if (callback) callback(this.changesPageToken);
+            },
+            (error) => {
+                console.error('Failed to get start page token', error);
+            }
+        );
+    };
+
+    this.getChanges = (successCallback, failCallback) => {
+        if (!this.changesPageToken) {
+            if (failCallback) failCallback('No page token');
+            return;
+        }
+
+        gapi.client.drive.changes
+            .list({
+                pageToken: this.changesPageToken,
+                fields: 'newStartPageToken, changes(fileId, removed, file(id, version, modifiedTime))'
+            })
+            .then(
+                (response) => {
+                    var result = response.result;
+                    if (result.newStartPageToken) {
+                        this.changesPageToken = result.newStartPageToken;
+                    }
+                    successCallback(result.changes || []);
+                },
+                (error) => {
+                    console.error('Failed to get changes', error);
+                    if (failCallback) failCallback(error);
+                }
+            );
     };
 
     this.getRemoteFolderId = () => {
@@ -332,8 +461,7 @@ function gApi() {
             gapi.client.drive.files
                 .list({
                     pageSize: 1000,
-                    q:
-                        "mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+                    q: "mimeType = 'application/vnd.google-apps.folder' and trashed = false",
                     fields: 'nextPageToken, files(id, name)'
                 })
                 .then(getFoldersSuccess);

@@ -43,7 +43,7 @@ var idler;
 var api;
 
 var TIMEOUT = 20; // min
-var TIMEOUT_AUTO_REFRESH = 10; // min
+var TIMEOUT_AUTO_REFRESH = 10; // seconds
 var AUTOSAVE_DELAY = 5; // seconds
 const MOBILE = {
     TIMEOUT: 0.2, // min, 0.2 = 12 seconds
@@ -149,7 +149,7 @@ function saveOutlineNow() {
 }
 
 function backgroundProcess() {
-    if (opHasChanged()) {
+    if (opHasChanged() && ns.canPersist()) {
         if (secondsSince(whenLastKeystroke) >= AUTOSAVE_DELAY) {
             // This is being called every second while the state is in "saving mode"
             console.debug('Auto save triggered');
@@ -280,24 +280,22 @@ function startAutoRefreshTimer() {
     /** No Auto Refresh on Mobile since
      *  it is unlikely that the mobile view will remain open for a long time
      * */
-    if (isMobile) return;
+    // if (isMobile) return;
 
     // Polling for new notes (Poor man's push)
     interval_auto_refresh = setInterval(() => {
         if (isOnWake()) return;
 
         if (appPrefs.readonly === false && isAppDisabled() === false) {
-            console.debug('Auto-Refresh Triggered');
-            ns.loadNotes();
+            ns.pollChanges();
         }
-    }, TIMEOUT_AUTO_REFRESH * 60000);
+    }, TIMEOUT_AUTO_REFRESH * 1000);
 }
 
 //#endregion
 
 function isOnWake() {
     const isOnWake = Date.now() - lastSeen > TIMEOUT * 60000 + 120000;
-    console.debug('isOnWake: ' + isOnWake);
     if (isOnWake) console.debug('On Wake Detected');
 
     return isOnWake;
@@ -333,6 +331,11 @@ window.addEventListener('focus', onFocus);
 function onHidden() {
     console.debug('**** PAGE HIDDEN');
     lastSeen = Date.now();
+
+    if (isMobile && ns && !isAppDisabled()) {
+        saveOutlineNow();
+        if (idler) idler.away();
+    }
 }
 
 function onVisible() {
@@ -341,9 +344,9 @@ function onVisible() {
 
     // Only trigger away mode if we're not already in a disabled state
     // This prevents unnecessary wake triggers when the app wasn't in timeout mode
-    if (isOnWake() && !isAppDisabled()) {
-        if (idler) idler.away();
-    }
+    // if (isOnWake() && !isAppDisabled()) {
+    //     if (idler) idler.away();
+    // }
 
     // Reset lastSeen to prevent stale comparisons on subsequent visibility changes
     lastSeen = Date.now();
