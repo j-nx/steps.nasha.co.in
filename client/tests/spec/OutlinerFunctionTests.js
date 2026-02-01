@@ -192,8 +192,6 @@ describe('Outliner Functions', function () {
             let ans = convertToHref(word, html);
             expect(ans).toBe(expected);
         });
-
-        it('should convert a markdown b,i,u to a formatted tag', function () {});
     });
 
     describe('Copy-Paste', function () {

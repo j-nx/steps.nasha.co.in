@@ -1247,6 +1247,10 @@ function Note(v, k, ver, date) {
                 $scope.showShortcuts = false;
                 $scope.showBarMenu = false;
                 $scope.showFontSizeModal = false;
+                $scope.showExportModal = false;
+                $scope.exportTab = 'formatted';
+                $scope.exportContent = '';
+                $scope.exportContentHtml = '';
                 $scope.idleTimeout = false;
                 $scope.showWorking = false;
                 $scope.showSearch = false;
@@ -1268,6 +1272,7 @@ function Note(v, k, ver, date) {
                 $scope.showBarMenu = false;
                 $scope.showShortcuts = false;
                 $scope.showFontSizeModal = false;
+                $scope.showExportModal = false;
             };
 
             //Display force refresh gui
@@ -1526,6 +1531,7 @@ function Note(v, k, ver, date) {
                     $scope.hideShortcutDialog();
                     $scope.showNotesList = false;
                     $scope.showFontSizeModal = false;
+                    $scope.showExportModal = false;
                 };
                 $scope.hideDialogs = function ($event) {
                     if ($event.target.id != 'taskBarOptions') {
@@ -1545,14 +1551,24 @@ function Note(v, k, ver, date) {
                     $event.stopPropagation();
                     var current = appPrefs.outlineFontSize;
                     if (current >= fontSizeSettings.max) return;
-                    $scope.applyFontSize(Math.min(current + fontSizeSettings.step, fontSizeSettings.max));
+                    $scope.applyFontSize(
+                        Math.min(
+                            current + fontSizeSettings.step,
+                            fontSizeSettings.max
+                        )
+                    );
                 };
 
                 $scope.decreaseFontSize = function ($event) {
                     $event.stopPropagation();
                     var current = appPrefs.outlineFontSize;
                     if (current <= fontSizeSettings.min) return;
-                    $scope.applyFontSize(Math.max(current - fontSizeSettings.step, fontSizeSettings.min));
+                    $scope.applyFontSize(
+                        Math.max(
+                            current - fontSizeSettings.step,
+                            fontSizeSettings.min
+                        )
+                    );
                 };
 
                 $scope.applyFontSize = function (em) {
@@ -1560,17 +1576,101 @@ function Note(v, k, ver, date) {
                     appPrefs.outlineFontSize = em;
                     appPrefs.nodeLineHeight = em * LINE_HEIGHT_MULTIPLIER;
                     appPrefs.iconSize = em * 0.5;
-                    $('#outliner').concord().prefs({
-                        outlineFontSize: em,
-                        nodeLineHeight: em * LINE_HEIGHT_MULTIPLIER,
-                        iconSize: em * 0.5
-                    });
+                    $('#outliner')
+                        .concord()
+                        .prefs({
+                            outlineFontSize: em,
+                            nodeLineHeight: em * LINE_HEIGHT_MULTIPLIER,
+                            iconSize: em * 0.5
+                        });
                     localStorage.fontSize = em;
                 };
 
                 $scope.resetFontSize = function ($event) {
                     $event.stopPropagation();
                     $scope.applyFontSize(fontSizeSettings.default);
+                };
+
+                /* Export */
+                $scope.toggleExportModal = function () {
+                    $scope.showBarMenu = false;
+                    $scope.showExportModal = !$scope.showExportModal;
+                    if ($scope.showExportModal) {
+                        $scope.exportTab = 'formatted';
+                        $scope.generateExportContent();
+                    }
+                };
+
+                $scope.setExportTab = function (tab) {
+                    $scope.exportTab = tab;
+                    $scope.generateExportContent();
+                };
+
+                $scope.generateExportContent = function () {
+                    var root = ns.outliner.root;
+
+                    var cursor = ns.outliner.op.getCursor();
+                    var isSelection = cursor && cursor.length > 0;
+                    var nodes = isSelection
+                        ? cursor
+                        : root.children('.concord-node');
+
+                    switch ($scope.exportTab) {
+                        case 'formatted':
+                            var html = ExportUtils.toFormattedText(
+                                nodes,
+                                ns.outliner
+                            );
+                            $scope.exportContentHtml = $sce.trustAsHtml(html);
+                            $scope.exportContent = html;
+                            break;
+                        case 'plain':
+                            $scope.exportContent =
+                                ExportUtils.toPlainText(nodes);
+                            break;
+                        case 'opml':
+                            $scope.exportContent = ExportUtils.toOpml(
+                                nodes,
+                                ns.outliner,
+                                isSelection
+                            );
+                            break;
+                    }
+                };
+
+                $scope.copyExportContent = function ($event) {
+                    $event.stopPropagation();
+                    if ($scope.exportTab === 'formatted') {
+                        var rendered =
+                            document.getElementById('exportRendered');
+                        if (rendered) {
+                            var selection = window.getSelection();
+                            var range = document.createRange();
+                            range.selectNodeContents(rendered);
+                            selection.removeAllRanges();
+                            selection.addRange(range);
+                            document.execCommand('copy');
+                            selection.removeAllRanges();
+                        }
+                    } else {
+                        var textarea =
+                            document.getElementById('exportTextarea');
+                        if (textarea) {
+                            textarea.select();
+                            textarea.setSelectionRange(
+                                0,
+                                textarea.value.length
+                            );
+                        }
+                        if (
+                            navigator.clipboard &&
+                            navigator.clipboard.writeText
+                        ) {
+                            navigator.clipboard.writeText($scope.exportContent);
+                        } else {
+                            document.execCommand('copy');
+                        }
+                    }
                 };
 
                 $scope.toggleNotesDialog = function () {

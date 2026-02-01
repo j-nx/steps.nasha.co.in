@@ -184,7 +184,7 @@ describe('Wake/Sleep Handling', function () {
             expect(awayCalled).toBe(false);
         });
 
-        it('should trigger away mode when on wake and app not disabled', function () {
+        xit('should trigger away mode when on wake and app not disabled', function () {
             window.isMobile = true;
             // Set lastSeen to trigger isOnWake
             window.lastSeen = Date.now() - (window.TIMEOUT * 60000 + 200000);

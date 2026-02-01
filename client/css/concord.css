@@ -455,9 +455,6 @@ strike {
     color: #81786f;
 }
 
-.footer-left-edit {
-}
-
 .footer-extra .statusMessage {
     background-color: rgba(205, 194, 202, 0.8);
     margin-top: -28px;
@@ -1058,4 +1055,182 @@ input[type='color']:focus,
 .fontSizeModal {
     -webkit-transition: opacity 0.1s ease-out;
     transition: opacity 0.1s ease-out;
+}
+
+/* Export Modal */
+
+.exportOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.15);
+    z-index: 8999;
+}
+
+.exportModal {
+    position: fixed;
+    top: 10%;
+    bottom: 60px;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    width: 70%;
+    max-width: 700px;
+    background-color: #fff;
+    border-radius: 4px;
+    z-index: 9001;
+    overflow: hidden;
+    border: 1px solid #ccc;
+    display: flex;
+    flex-direction: column;
+}
+
+.exportModal-header {
+    text-align: center;
+    padding: 10px 0 6px 0;
+    font-weight: bold;
+    color: #333;
+    font-size: 0.9em;
+    border-bottom: 1px solid #eee;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.exportModal-close {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #999;
+    font-size: 0.9em;
+}
+
+.exportModal-tabs {
+    display: flex;
+    border-bottom: 1px solid #ccc;
+    flex-shrink: 0;
+}
+
+.exportModal-tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 0.8em;
+    color: #666;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    border-bottom: 2px solid transparent;
+}
+
+.exportModal-tab:active {
+    background-color: #eee;
+}
+
+.exportModal-tab-active {
+    color: #333;
+    font-weight: bold;
+    border-bottom: 2px solid #926e8a;
+}
+
+.exportModal-content {
+    padding: 8px;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.exportModal-rendered {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+    font-size: 0.85em;
+    color: #4c555a;
+    background-color: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    box-sizing: border-box;
+}
+
+.exportModal-rendered ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.exportModal-rendered li {
+    margin: 2px 0;
+}
+
+.exportModal-textarea {
+    flex: 1;
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    padding: 8px;
+    font-family: monospace;
+    font-size: 0.75em;
+    color: #4c555a;
+    resize: none;
+    outline: none;
+    background-color: #fafafa;
+    box-sizing: border-box;
+}
+
+.exportModal-actions {
+    padding: 8px;
+    border-top: 1px solid #eee;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.exportModal-btn-copy {
+    cursor: pointer;
+    display: inline-block;
+    padding: 8px 24px;
+    font-size: 0.8em;
+    color: #333;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.exportModal-btn-copy:active {
+    background-color: #ddd;
+}
+
+.exportOverlay.ng-hide,
+.exportModal.ng-hide {
+    opacity: 0;
+}
+
+.exportOverlay,
+.exportModal {
+    -webkit-transition: opacity 0.1s ease-out;
+    transition: opacity 0.1s ease-out;
+}
+
+.mobile-export-icon {
+    padding: 8px 15px;
+    color: #a4a4a4;
+    cursor: pointer;
+    margin-right: auto;
+}
+
+@media (max-width: 768px) {
+    .exportModal {
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-width: 100%;
+        border-radius: 0;
+        border: none;
+    }
 }

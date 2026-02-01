@@ -19,6 +19,7 @@ module.exports = function (grunt) {
                         'src/lib/gapi.js',
                         'src/main.js',
                         'src/concordTextModel.js',
+                        'src/exportUtils.js',
                         'src/concord.js',
                         'src/concordUtils.js',
                         'src/notes/notes.js',

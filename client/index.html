@@ -91,6 +91,7 @@
     <script src="src/concord.js"></script>
     <script src="src/concordUtils.js"></script>
     <script src="src/concordTextModel.js"></script>
+    <script src="src/exportUtils.js"></script>
     <script src="src/notes/notes.js"></script>
     <script src="src/notes/api.js"></script>
     <script src="src/notes/noteCache.js"></script>
@@ -335,6 +336,9 @@
             <div class="barMenu-item" ng-click="toggleFontSizeModal()">
                 <i class="icon-text-height barMenu-icon"></i> Adjust Font Size
             </div>
+            <div class="barMenu-item" ng-click="toggleExportModal()">
+                <i class="icon-share-alt barMenu-icon"></i> Export
+            </div>
             <div class="barMenu-item" style="border-bottom:0px;" onclick="ns.logOut()">
                 <i class="icon-power-off barMenu-icon"></i> Log out
             </div>
@@ -347,6 +351,35 @@
                 <div class="fontSizeModal-btn fontSizeModal-btn-increase" ng-click="increaseFontSize($event)">AA</div>
             </div>
             <div class="fontSizeModal-reset" ng-click="resetFontSize($event)">Reset</div>
+        </div>
+        <div class="exportOverlay" ng-show="showExportModal" ng-click="showExportModal = false">
+        </div>
+        <div class="exportModal" ng-show="showExportModal">
+            <div class="exportModal-header">Export
+                <i class="icon-remove exportModal-close" ng-click="showExportModal = false"></i>
+            </div>
+            <div class="exportModal-tabs">
+                <div class="exportModal-tab"
+                     ng-class="{'exportModal-tab-active': exportTab === 'formatted'}"
+                     ng-click="setExportTab('formatted')">Formatted</div>
+                <div class="exportModal-tab"
+                     ng-class="{'exportModal-tab-active': exportTab === 'plain'}"
+                     ng-click="setExportTab('plain')">Plain Text</div>
+                <div class="exportModal-tab"
+                     ng-class="{'exportModal-tab-active': exportTab === 'opml'}"
+                     ng-click="setExportTab('opml')">OPML</div>
+            </div>
+            <div class="exportModal-content">
+                <div class="exportModal-rendered" id="exportRendered"
+                     ng-show="exportTab === 'formatted'"
+                     ng-bind-html="exportContentHtml"></div>
+                <textarea class="exportModal-textarea" id="exportTextarea"
+                          ng-show="exportTab !== 'formatted'"
+                          readonly ng-model="exportContent"></textarea>
+            </div>
+            <div class="exportModal-actions">
+                <div class="exportModal-btn-copy" ng-click="copyExportContent($event)">Copy</div>
+            </div>
         </div>
         <div class="disabledpopup popup-drop-shadow" ng-show="isAppDisabled" ng-click="resetTimeout()">
             <img class="svg3336 logo" src="images/steps.svg" alt="Steps" />
@@ -385,10 +418,10 @@
                     <div class="footer-left-edit">
                         <div class="touchEditMove left">
                             <i class="icon-caret-left bar-icon" ng-click="move('left')"></i>
-                            
                             <i class="icon-caret-right bar-icon" ng-click="move('right')"></i>
                         </div>
                     </div>
+                    <i class="icon-share-alt mobile-export-icon" ng-click="toggleExportModal()"></i>
 
                     <div class="footer-right-edit">
                         <span class="taskbar-button style" ng-mousedown="makeBold($event, 'bold')"><b>B</b></span>
