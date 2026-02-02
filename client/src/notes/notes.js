@@ -615,10 +615,6 @@ function NoteService(concord) {
         if (this.isModelReady() == false) return false;
         if (this.ngScope.isAppDisabled) return false;
         if (this.ngScope.showWorking) return false;
-        if (isMobile && document.hidden) {
-            console.log('blocked save, on mobile');
-            return false;
-        }
         // Safety check: prevent saving empty content if note previously had content
         var nodeCount = opGetNodeCount();
         if (nodeCount === 0 && store.note && store.note.key) return false;

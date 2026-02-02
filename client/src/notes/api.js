@@ -239,7 +239,8 @@ function gApi() {
                     headers: new Headers({
                         Authorization: 'Bearer ' + accessToken
                     }),
-                    body: form
+                    body: form,
+                    keepalive: true
                 }
             )
                 .then((res) => {
@@ -287,7 +288,8 @@ function gApi() {
                     Authorization: 'Bearer ' + accessToken
                 }),
                 body: body,
-                fields: 'files(id, version, modifiedTime)'
+                fields: 'files(id, version, modifiedTime)',
+                keepalive: true
             }
         )
             .then((res) => {
