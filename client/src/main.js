@@ -42,7 +42,7 @@ var store;
 var idler;
 var api;
 
-var TIMEOUT = 20; // min
+var TIMEOUT = 5; // min
 var TIMEOUT_AUTO_REFRESH = 10; // seconds
 var AUTOSAVE_DELAY = 5; // seconds
 const MOBILE = {
@@ -284,22 +284,18 @@ function startAutoRefreshTimer() {
 
     // Polling for new notes (Poor man's push)
     interval_auto_refresh = setInterval(() => {
-        if (isOnWake()) return;
-
         if (appPrefs.readonly === false && isAppDisabled() === false) {
+            // Token expired while user was active — show lock screen
+            if (api && api.hasExpiredSession()) {
+                idler.away();
+                return;
+            }
             ns.pollChanges();
         }
     }, TIMEOUT_AUTO_REFRESH * 1000);
 }
 
 //#endregion
-
-function isOnWake() {
-    const isOnWake = Date.now() - lastSeen > TIMEOUT * 60000 + 120000;
-    if (isOnWake) console.debug('On Wake Detected');
-
-    return isOnWake;
-}
 
 function isAppDisabled() {
     if (!window.ns || !window.ns.ngScope) return false;
@@ -342,13 +338,6 @@ function onVisible() {
     console.debug('**** PAGE VISIBLE');
     if (!isMobile || !lastSeen) return;
 
-    // Only trigger away mode if we're not already in a disabled state
-    // This prevents unnecessary wake triggers when the app wasn't in timeout mode
-    // if (isOnWake() && !isAppDisabled()) {
-    //     if (idler) idler.away();
-    // }
-
-    // Reset lastSeen to prevent stale comparisons on subsequent visibility changes
     lastSeen = Date.now();
 }
 
