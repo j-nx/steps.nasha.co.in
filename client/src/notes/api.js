@@ -53,6 +53,8 @@ function API() {
 }
 // #region GDrive
 function gApi() {
+    this.PLUGIN_NAME = 'steps.nasha.co.in';
+
     this.CLIENT_ID = config.CLIENT_ID;
 
     this.API_KEY = config.API_KEY;
@@ -69,49 +71,30 @@ function gApi() {
 
     this.onInitComplete = undefined;
 
-    // Google Identity Services (GIS) token state
-    this.accessToken = null;
-    this.tokenExpiresAt = null;
-    this.tokenClient = null;
-    this._tokenPromise = null;
-
     this.initialize = (onInitComplete) => {
         this.onInitComplete = onInitComplete;
 
-        // Load the API client library (auth handled by GIS)
-        gapi.load('client', this.initClient);
+        // Load the API client and auth2 library
+        gapi.load('client:auth2', this.initClient);
     };
 
     this.isLoggedIn = () => {
-        return this.accessToken !== null && Date.now() < this.tokenExpiresAt;
+        return gapi.auth2.getAuthInstance().isSignedIn.get();
     };
 
     this.refreshToken = () => {
-        return new Promise((resolve, reject) => {
-            if (!this.tokenClient) {
-                reject(new Error('Token client not initialized'));
-                return;
-            }
-            this._tokenPromise = { resolve, reject };
-            this.tokenClient.requestAccessToken({ prompt: '' });
-        });
+        return gapi.auth2
+            .getAuthInstance()
+            .currentUser.get()
+            .reloadAuthResponse();
     };
 
     this.signIn = () => {
-        this.tokenClient.requestAccessToken();
+        gapi.auth2.getAuthInstance().signIn();
     };
 
     this.signOut = () => {
-        if (this.accessToken) {
-            google.accounts.oauth2.revoke(this.accessToken, () => {
-                console.log('Token revoked');
-            });
-        }
-        this.accessToken = null;
-        this.tokenExpiresAt = null;
-        gapi.client.setToken(null);
-        localStorage.removeItem('gis_access_token');
-        localStorage.removeItem('gis_token_expires_at');
+        gapi.auth2.getAuthInstance().signOut();
     };
 
     this.retrieveIndex = (successCallback, failCallback) => {
@@ -166,7 +149,7 @@ function gApi() {
                 body: file
             };
 
-            var accessToken = this.accessToken;
+            var accessToken = gapi.auth.getToken().access_token;
             var form = new FormData();
             form.append(
                 'metadata',
@@ -211,7 +194,7 @@ function gApi() {
             body: file
         };
 
-        var accessToken = this.accessToken;
+        var accessToken = gapi.auth.getToken().access_token;
         var form = new FormData();
         form.append(
             'metadata',
@@ -269,37 +252,17 @@ function gApi() {
         gapi.client
             .init({
                 apiKey: this.API_KEY,
-                discoveryDocs: this.DISCOVERY_DOCS
+                clientId: this.CLIENT_ID,
+                discoveryDocs: this.DISCOVERY_DOCS,
+                scope: this.SCOPES,
+                plugin_name: this.PLUGIN_NAME
             })
             .then(() => {
-                if (typeof google === 'undefined' || !google)
-                    throw Error('Failed to initialize GIS');
                 console.log('Initialized Google');
-
-                that.tokenClient = google.accounts.oauth2.initTokenClient({
-                    client_id: that.CLIENT_ID,
-                    scope: that.SCOPES,
-                    callback: (resp) => that.handleTokenResponse(resp)
-                });
-
-                // Try to restore a stored token from a previous session
-                var storedToken = localStorage.getItem('gis_access_token');
-                var storedExpiry = parseInt(
-                    localStorage.getItem('gis_token_expires_at')
-                );
-
-                if (storedToken) {
-                    that.accessToken = storedToken;
-                    that.tokenExpiresAt = storedExpiry;
-                    gapi.client.setToken({ access_token: storedToken });
-                    console.log('Restored session from stored token');
-                    that.getRemoteFolderId().then((id) => {
-                        that.folderId = id;
-                        that.onInitComplete();
-                    });
-                } else {
-                    that.onInitComplete();
-                }
+                gapi.auth2
+                    .getAuthInstance()
+                    .isSignedIn.listen(that.updateSigninStatus);
+                that.updateSigninStatus();
             })
             .catch((e) => {
                 console.error(
@@ -310,57 +273,19 @@ function gApi() {
             });
     };
 
-    this.handleTokenResponse = (tokenResponse) => {
-        // Handle pending refresh promise (from refreshToken())
-        if (this._tokenPromise) {
-            const { resolve, reject } = this._tokenPromise;
-            this._tokenPromise = null;
-
-            if (tokenResponse.error) {
-                reject(tokenResponse);
-            } else {
-                this.accessToken = tokenResponse.access_token;
-                this.tokenExpiresAt =
-                    Date.now() + tokenResponse.expires_in * 1000;
-                gapi.client.setToken({
-                    access_token: tokenResponse.access_token
+    this.updateSigninStatus = () => {
+        if (this.isLoggedIn()) {
+            this.refreshToken().then(() => {
+                console.log('Token updated');
+                this.getRemoteFolderId().then((id) => {
+                    this.folderId = id;
+                    this.onInitComplete();
                 });
-                localStorage.setItem(
-                    'gis_access_token',
-                    tokenResponse.access_token
-                );
-                localStorage.setItem(
-                    'gis_token_expires_at',
-                    String(this.tokenExpiresAt)
-                );
-                resolve(tokenResponse);
-            }
-            return;
-        }
-
-        // Normal init/sign-in flow
-        if (tokenResponse.error) {
+            });
+        } else {
+            this.onInitComplete();
             console.log('Needs Sign in');
-            this.accessToken = null;
-            this.tokenExpiresAt = null;
-            this.onInitComplete();
-            return;
         }
-
-        this.accessToken = tokenResponse.access_token;
-        this.tokenExpiresAt = Date.now() + tokenResponse.expires_in * 1000;
-        gapi.client.setToken({ access_token: tokenResponse.access_token });
-        localStorage.setItem('gis_access_token', tokenResponse.access_token);
-        localStorage.setItem(
-            'gis_token_expires_at',
-            String(this.tokenExpiresAt)
-        );
-        console.log('User Signed In');
-
-        this.getRemoteFolderId().then((id) => {
-            this.folderId = id;
-            this.onInitComplete();
-        });
     };
 
     this.changesPageToken = null;
