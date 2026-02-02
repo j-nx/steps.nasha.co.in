@@ -235,6 +235,11 @@ function NoteService(concord) {
             store = new NoteStore();
             store.save();
         } else if (this.isCookieValid()) {
+            if (api.isStoredTokenExpired()) {
+                hideSplash();
+                this.ngScope.showDisabledDialog('Click to continue', true);
+                return;
+            }
             try {
                 this.loadNotes(true);
                 hideSplash();
@@ -1401,11 +1406,18 @@ function Note(v, k, ver, date) {
 
                 if (appPrefs.readonly) return;
 
-                api.initialize(() => {
+                var onReady = () => {
                     clearTimers();
                     startTimers();
                     ns.loadNotes(true);
-                });
+                };
+
+                if (api.isStoredTokenExpired()) {
+                    // Token expired — use click gesture to re-auth via popup
+                    api.signInAndInitialize(onReady);
+                } else {
+                    api.initialize(onReady);
+                }
             };
 
             /* Working overlay */

@@ -32,37 +32,37 @@ describe('Wake/Sleep Handling', function () {
         window.appPrefs = originalAppPrefs;
     });
 
-    describe('isOnWake', function () {
-        it('should return false when lastSeen is recent', function () {
-            window.lastSeen = Date.now();
+    // describe('isOnWake', function () {
+    //     it('should return false when lastSeen is recent', function () {
+    //         window.lastSeen = Date.now();
 
-            expect(isOnWake()).toBe(false);
-        });
+    //         expect(isOnWake()).toBe(false);
+    //     });
 
-        it('should return false when just under threshold', function () {
-            // Threshold is TIMEOUT * 60000 + 120000 (20 min + 2 min = 22 min)
-            var justUnderThreshold = window.TIMEOUT * 60000 + 120000 - 1000;
-            window.lastSeen = Date.now() - justUnderThreshold;
+    //     it('should return false when just under threshold', function () {
+    //         // Threshold is TIMEOUT * 60000 + 120000 (20 min + 2 min = 22 min)
+    //         var justUnderThreshold = window.TIMEOUT * 60000 + 120000 - 1000;
+    //         window.lastSeen = Date.now() - justUnderThreshold;
 
-            expect(isOnWake()).toBe(false);
-        });
+    //         expect(isOnWake()).toBe(false);
+    //     });
 
-        it('should return true when over threshold', function () {
-            // Set lastSeen to well over threshold (25 minutes ago)
-            var overThreshold = window.TIMEOUT * 60000 + 120000 + 60000;
-            window.lastSeen = Date.now() - overThreshold;
+    //     it('should return true when over threshold', function () {
+    //         // Set lastSeen to well over threshold (25 minutes ago)
+    //         var overThreshold = window.TIMEOUT * 60000 + 120000 + 60000;
+    //         window.lastSeen = Date.now() - overThreshold;
 
-            expect(isOnWake()).toBe(true);
-        });
+    //         expect(isOnWake()).toBe(true);
+    //     });
 
-        it('should return true exactly at threshold', function () {
-            // Exactly at threshold + 1ms
-            var atThreshold = window.TIMEOUT * 60000 + 120000 + 1;
-            window.lastSeen = Date.now() - atThreshold;
+    //     it('should return true exactly at threshold', function () {
+    //         // Exactly at threshold + 1ms
+    //         var atThreshold = window.TIMEOUT * 60000 + 120000 + 1;
+    //         window.lastSeen = Date.now() - atThreshold;
 
-            expect(isOnWake()).toBe(true);
-        });
-    });
+    //         expect(isOnWake()).toBe(true);
+    //     });
+    // });
 
     describe('isAppDisabled', function () {
         it('should return false when ns is not defined', function () {

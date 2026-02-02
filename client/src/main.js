@@ -285,6 +285,11 @@ function startAutoRefreshTimer() {
     // Polling for new notes (Poor man's push)
     interval_auto_refresh = setInterval(() => {
         if (appPrefs.readonly === false && isAppDisabled() === false) {
+            // Token expired while user was active — show lock screen
+            if (api && api.hasExpiredSession()) {
+                idler.away();
+                return;
+            }
             ns.pollChanges();
         }
     }, TIMEOUT_AUTO_REFRESH * 1000);

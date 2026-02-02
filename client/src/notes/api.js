@@ -9,8 +9,21 @@ function API() {
         return this.api.isLoggedIn();
     };
 
+    this.hasExpiredSession = () => {
+        return this.api.hasExpiredSession();
+    };
+
+    this.isStoredTokenExpired = () => {
+        return this.api.isStoredTokenExpired();
+    };
+
     this.signIn = () => {
         this.api.signIn();
+    };
+
+    this.signInAndInitialize = (onInitComplete) => {
+        this.api.onInitComplete = onInitComplete;
+        this.api.signIn({ prompt: '' });
     };
 
     this.signOut = () => {
@@ -53,7 +66,12 @@ function API() {
 }
 // #region GDrive
 function gApi() {
-    this.PLUGIN_NAME = 'steps.nasha.co.in';
+    // Logging helper with [OAUTH] prefix
+    const log = {
+        info: (msg, ...args) => console.info('[OAUTH]', msg, ...args),
+        error: (msg, ...args) => console.error('[OAUTH]', msg, ...args),
+        debug: (msg, ...args) => console.debug('[OAUTH]', msg, ...args)
+    };
 
     this.CLIENT_ID = config.CLIENT_ID;
 
@@ -71,30 +89,85 @@ function gApi() {
 
     this.onInitComplete = undefined;
 
+    // Google Identity Services (GIS) token state
+    this.accessToken = null;
+    this.tokenExpiresAt = null;
+    this.tokenClient = null;
+    this._tokenPromise = null;
+
+    // LocalStorage keys
+    const TOKEN_KEY = 'gis_access_token';
+    const EXPIRY_KEY = 'gis_token_expires_at';
+
+    // Token storage helpers
+    this.getStoredToken = () => {
+        const token = localStorage.getItem(TOKEN_KEY);
+        const expiry = parseInt(localStorage.getItem(EXPIRY_KEY));
+        return { token, expiry: expiry || 0 };
+    };
+
+    this.saveToken = (token, expiry) => {
+        localStorage.setItem(TOKEN_KEY, token);
+        localStorage.setItem(EXPIRY_KEY, String(expiry));
+    };
+
+    this.clearStoredToken = () => {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(EXPIRY_KEY);
+    };
+
+    this.calculateTokenExpiry = (expiresInSeconds) => {
+        return Date.now() + expiresInSeconds * 1000;
+    };
+
+    this.isStoredTokenExpired = () => {
+        const { expiry } = this.getStoredToken();
+        return expiry > 0 && Date.now() >= expiry;
+    };
+
     this.initialize = (onInitComplete) => {
         this.onInitComplete = onInitComplete;
 
-        // Load the API client and auth2 library
-        gapi.load('client:auth2', this.initClient);
+        // Load the API client library (auth handled by GIS)
+        gapi.load('client', this.initClient);
     };
 
     this.isLoggedIn = () => {
-        return gapi.auth2.getAuthInstance().isSignedIn.get();
+        return this.accessToken !== null;
+    };
+
+    this.hasExpiredSession = () => {
+        return this.accessToken !== null && Date.now() >= this.tokenExpiresAt;
     };
 
     this.refreshToken = () => {
-        return gapi.auth2
-            .getAuthInstance()
-            .currentUser.get()
-            .reloadAuthResponse();
+        return new Promise((resolve, reject) => {
+            if (!this.tokenClient) {
+                reject(new Error('Token client not initialized'));
+                return;
+            }
+            this._tokenPromise = { resolve, reject };
+            this.tokenClient.requestAccessToken({ prompt: '' });
+        });
     };
 
-    this.signIn = () => {
-        gapi.auth2.getAuthInstance().signIn();
+    this.signIn = (options) => {
+        if (this.hasExpiredSession()) {
+            log.info('Token expired, requesting refresh from Google');
+        }
+        this.tokenClient.requestAccessToken(options);
     };
 
     this.signOut = () => {
-        gapi.auth2.getAuthInstance().signOut();
+        if (this.accessToken) {
+            google.accounts.oauth2.revoke(this.accessToken, () => {
+                log.info('Token revoked');
+            });
+        }
+        this.accessToken = null;
+        this.tokenExpiresAt = null;
+        gapi.client.setToken(null);
+        this.clearStoredToken();
     };
 
     this.retrieveIndex = (successCallback, failCallback) => {
@@ -131,7 +204,7 @@ function gApi() {
                 successCallback(response.body);
             },
             function (error) {
-                console.error(error);
+                log.error(error);
                 failCallback(error);
             }
         );
@@ -149,7 +222,7 @@ function gApi() {
                 body: file
             };
 
-            var accessToken = gapi.auth.getToken().access_token;
+            var accessToken = this.accessToken;
             var form = new FormData();
             form.append(
                 'metadata',
@@ -178,11 +251,11 @@ function gApi() {
                         .catch((e) => failCallback(e));
                 })
                 .catch((error) => {
-                    console.error('Error:', error);
+                    log.error('Error:', error);
                     failCallback(error);
                 });
         } catch (error) {
-            console.error(error);
+            log.error(error);
         }
     };
 
@@ -194,7 +267,7 @@ function gApi() {
             body: file
         };
 
-        var accessToken = gapi.auth.getToken().access_token;
+        var accessToken = this.accessToken;
         var form = new FormData();
         form.append(
             'metadata',
@@ -252,20 +325,48 @@ function gApi() {
         gapi.client
             .init({
                 apiKey: this.API_KEY,
-                clientId: this.CLIENT_ID,
-                discoveryDocs: this.DISCOVERY_DOCS,
-                scope: this.SCOPES,
-                plugin_name: this.PLUGIN_NAME
+                discoveryDocs: this.DISCOVERY_DOCS
             })
             .then(() => {
-                console.log('Initialized Google');
-                gapi.auth2
-                    .getAuthInstance()
-                    .isSignedIn.listen(that.updateSigninStatus);
-                that.updateSigninStatus();
+                if (typeof google === 'undefined' || !google)
+                    throw Error('Failed to initialize GIS');
+                log.info('Initialized Google');
+
+                that.tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: that.CLIENT_ID,
+                    scope: that.SCOPES,
+                    callback: (resp) => that.handleTokenResponse(resp)
+                });
+
+                // Try to restore a stored token from a previous session
+                let { token, expiry } = that.getStoredToken();
+
+                if (token && expiry > Date.now()) {
+                    that.accessToken = token;
+                    that.tokenExpiresAt = expiry;
+                    gapi.client.setToken({ access_token: token });
+                    log.info('Restored session from stored token');
+                    that.getRemoteFolderId()
+                        .then((id) => {
+                            that.folderId = id;
+                            that.onInitComplete();
+                        })
+                        .catch((e) => {
+                            log.error('Failed to get folder', e);
+                            that.onInitComplete();
+                        });
+                } else {
+                    if (token) {
+                        // Token expired - keep it to trigger lock screen, not login screen
+                        that.accessToken = token;
+                        that.tokenExpiresAt = expiry;
+                        log.info('Stored token expired, will show lock screen');
+                    }
+                    that.onInitComplete();
+                }
             })
             .catch((e) => {
-                console.error(
+                log.error(
                     'Error Occured when initializing Google ',
                     e.details || e
                 );
@@ -273,19 +374,55 @@ function gApi() {
             });
     };
 
-    this.updateSigninStatus = () => {
-        if (this.isLoggedIn()) {
-            this.refreshToken().then(() => {
-                console.log('Token updated');
-                this.getRemoteFolderId().then((id) => {
-                    this.folderId = id;
-                    this.onInitComplete();
+    this.handleTokenResponse = (tokenResponse) => {
+        // Handle pending refresh promise (from refreshToken())
+        if (this._tokenPromise) {
+            const { resolve, reject } = this._tokenPromise;
+            this._tokenPromise = null;
+
+            if (tokenResponse.error) {
+                reject(tokenResponse);
+            } else {
+                this.accessToken = tokenResponse.access_token;
+                this.tokenExpiresAt = this.calculateTokenExpiry(
+                    tokenResponse.expires_in
+                );
+                gapi.client.setToken({
+                    access_token: tokenResponse.access_token
                 });
-            });
-        } else {
-            this.onInitComplete();
-            console.log('Needs Sign in');
+                this.saveToken(this.accessToken, this.tokenExpiresAt);
+                log.info('Token refresh successful');
+                resolve(tokenResponse);
+            }
+            return;
         }
+
+        // Normal init/sign-in flow
+        if (tokenResponse.error) {
+            log.info('Needs Sign in');
+            this.accessToken = null;
+            this.tokenExpiresAt = null;
+            this.onInitComplete();
+            return;
+        }
+
+        this.accessToken = tokenResponse.access_token;
+        this.tokenExpiresAt = this.calculateTokenExpiry(
+            tokenResponse.expires_in
+        );
+        gapi.client.setToken({ access_token: tokenResponse.access_token });
+        this.saveToken(this.accessToken, this.tokenExpiresAt);
+        log.info('User Signed In');
+
+        this.getRemoteFolderId()
+            .then((id) => {
+                this.folderId = id;
+                this.onInitComplete();
+            })
+            .catch((e) => {
+                log.error('Failed to get folder after sign-in', e);
+                this.onInitComplete();
+            });
     };
 
     this.changesPageToken = null;
@@ -294,11 +431,11 @@ function gApi() {
         gapi.client.drive.changes.getStartPageToken().then(
             (response) => {
                 this.changesPageToken = response.result.startPageToken;
-                console.debug('Changes page token initialized');
+                log.debug('Changes page token initialized');
                 if (callback) callback(this.changesPageToken);
             },
             (error) => {
-                console.error('Failed to get start page token', error);
+                log.error('Failed to get start page token', error);
             }
         );
     };
@@ -323,7 +460,7 @@ function gApi() {
                     successCallback(result.changes || []);
                 },
                 (error) => {
-                    console.error('Failed to get changes', error);
+                    log.error('Failed to get changes', error);
                     if (failCallback) failCallback(error);
                 }
             );
@@ -344,7 +481,7 @@ function gApi() {
                         }
                     }
                 } else {
-                    console.info('No folders found.');
+                    log.info('No folders found.');
                 }
 
                 // If not found, create folder
@@ -358,7 +495,7 @@ function gApi() {
                         resolve(id);
                     }.bind(this),
                     function e(err) {
-                        console.error(err);
+                        log.error(err);
                         reject(id);
                     }
                 );
@@ -388,15 +525,15 @@ function gApi() {
                 })
                 .then(function (response) {
                     if (response.status != 200) {
-                        console.error('Error Creating folder');
+                        log.error('Error Creating folder');
                         reject(Error());
                     } else {
-                        console.debug('Created folder ' + response.result.id);
+                        log.debug('Created folder ' + response.result.id);
                         resolve(response.result.id);
                     }
                 })
                 .catch((e) => {
-                    console.error('Exception ' + e);
+                    log.error('Exception ' + e);
                     reject(Error());
                 });
         });
