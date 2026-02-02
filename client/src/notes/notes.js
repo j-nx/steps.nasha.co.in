@@ -643,8 +643,10 @@ function NoteService(concord) {
                 );
             });
 
-            // Rebuild cache after all notes are loaded
-            if (this.noteCacheManager) this.noteCacheManager.rebuildCache();
+            // Rebuild cache only on first load (when empty);
+            // incremental updates handle ongoing changes
+            if (this.noteCacheManager && !Object.keys(store.noteCache).length)
+                this.noteCacheManager.rebuildCache();
 
             if (!store.note && store.notes.length > 0)
                 this.launchNote(null, true);
@@ -1670,6 +1672,14 @@ function Note(v, k, ver, date) {
                         } else {
                             document.execCommand('copy');
                         }
+                    }
+
+                    // Close modal after copy
+                    $scope.showExportModal = false;
+
+                    // On mobile, exit edit mode
+                    if (isMobile && ns.outliner) {
+                        ns.outliner.op.setTextMode(false);
                     }
                 };
 

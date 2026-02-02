@@ -79,10 +79,7 @@ function gApi() {
         this.onInitComplete = onInitComplete;
 
         // Load the API client library (auth handled by GIS)
-        const init = () => gapi.load('client', this.initClient);
-
-        // Delay to allow wake up
-        setTimeout(init, isOnWake() ? 500 : 0);
+        gapi.load('client', this.initClient);
     };
 
     this.isLoggedIn = () => {
@@ -291,7 +288,7 @@ function gApi() {
                     localStorage.getItem('gis_token_expires_at')
                 );
 
-                if (storedToken && storedExpiry && Date.now() < storedExpiry) {
+                if (storedToken) {
                     that.accessToken = storedToken;
                     that.tokenExpiresAt = storedExpiry;
                     gapi.client.setToken({ access_token: storedToken });
@@ -300,24 +297,6 @@ function gApi() {
                         that.folderId = id;
                         that.onInitComplete();
                     });
-                } else if (storedToken) {
-                    // Token expired but user had a session — try silent refresh
-                    console.log(
-                        'Stored token expired, attempting silent refresh'
-                    );
-                    that.refreshToken()
-                        .then(() => {
-                            that.getRemoteFolderId().then((id) => {
-                                that.folderId = id;
-                                that.onInitComplete();
-                            });
-                        })
-                        .catch(() => {
-                            console.log(
-                                'Silent refresh failed, showing login'
-                            );
-                            that.onInitComplete();
-                        });
                 } else {
                     that.onInitComplete();
                 }

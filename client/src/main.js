@@ -284,8 +284,6 @@ function startAutoRefreshTimer() {
 
     // Polling for new notes (Poor man's push)
     interval_auto_refresh = setInterval(() => {
-        if (isOnWake()) return;
-
         if (appPrefs.readonly === false && isAppDisabled() === false) {
             ns.pollChanges();
         }
@@ -293,13 +291,6 @@ function startAutoRefreshTimer() {
 }
 
 //#endregion
-
-function isOnWake() {
-    const isOnWake = Date.now() - lastSeen > TIMEOUT * 60000 + 120000;
-    if (isOnWake) console.debug('On Wake Detected');
-
-    return isOnWake;
-}
 
 function isAppDisabled() {
     if (!window.ns || !window.ns.ngScope) return false;
@@ -342,13 +333,6 @@ function onVisible() {
     console.debug('**** PAGE VISIBLE');
     if (!isMobile || !lastSeen) return;
 
-    // Only trigger away mode if we're not already in a disabled state
-    // This prevents unnecessary wake triggers when the app wasn't in timeout mode
-    // if (isOnWake() && !isAppDisabled()) {
-    //     if (idler) idler.away();
-    // }
-
-    // Reset lastSeen to prevent stale comparisons on subsequent visibility changes
     lastSeen = Date.now();
 }
 
