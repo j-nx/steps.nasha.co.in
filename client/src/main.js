@@ -42,7 +42,7 @@ var store;
 var idler;
 var api;
 
-var TIMEOUT = 20; // min
+var TIMEOUT = 5; // min
 var TIMEOUT_AUTO_REFRESH = 10; // seconds
 var AUTOSAVE_DELAY = 5; // seconds
 const MOBILE = {
