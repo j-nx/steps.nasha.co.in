@@ -404,7 +404,9 @@ function NoteService(concord) {
 
         if (forceRefresh) {
             this.ngScope.startMainRefresh();
-            this.ngScope.showWorkingDialog();
+            if (store.notes.length === 0) {
+                this.ngScope.showWorkingDialog();
+            }
         }
         console.debug('Refreshing Notes');
         this.np.getNoteIndex(this.parseNoteIndex);
@@ -1397,12 +1399,12 @@ function Note(v, k, ver, date) {
             };
             $scope.resetTimeout = function () {
                 if ($scope.idleTimeout == false) return;
-                $scope.hideDisabledDialog();
-                $scope.startMainRefresh();
+                $scope.idleTimeout = false; // Prevent double-click during OAuth
 
                 if (appPrefs.readonly) return;
 
                 var onReady = () => {
+                    $scope.isAppDisabled = false;
                     clearTimers();
                     startTimers();
                     ns.loadNotes(true);
