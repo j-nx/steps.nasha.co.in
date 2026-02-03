@@ -330,6 +330,7 @@ function onHidden() {
 
     if (isMobile && ns && !isAppDisabled()) {
         saveOutlineNow();
+        if (idler) idler.away();
     }
 }
 
@@ -337,14 +338,7 @@ function onVisible() {
     console.debug('**** PAGE VISIBLE');
     if (!isMobile || !lastSeen) return;
 
-    var elapsed = Date.now() - lastSeen;
     lastSeen = Date.now();
-
-    // Only lock if user was away longer than the mobile timeout
-    // Brief page hides (e.g. OAuth popup) don't trigger the lock screen
-    if (elapsed > MOBILE.TIMEOUT * 60000 && idler) {
-        idler.away();
-    }
 }
 
 function onFocus() {
