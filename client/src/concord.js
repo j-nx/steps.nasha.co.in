@@ -5163,18 +5163,24 @@ window.currentInstance;
                     let caret = ConcordUtil.getCaret2(event.target);
                     const lastWord = getLastWord(text, caret);
 
-                    /** Apply formatting on space  */
-                    if (lastWord.startsWith('http')) {
-                        // Pass caret position for accurate link placement
-                        const lineHtml = convertToHref(lastWord, html, caret);
-                        // Invalidate cached model since we're changing the text
+                    /** Apply URL formatting on space */
+                    const detectedUrl = detectUrl(lastWord);
+                    if (detectedUrl) {
+                        const lineHtml = convertToHref(
+                            detectedUrl.display,
+                            html,
+                            caret,
+                            detectedUrl.href
+                        );
                         concordInstance.op.invalidateTextModel();
-                        concordInstance.op.setLineText(lineHtml, true); // isRawHtml
+                        concordInstance.op.setLineText(lineHtml, true);
                         ConcordUtil.setCaret2(
                             ConcordUtil.getTextNode(concordInstance.op),
                             caret
                         );
-                    } else if (
+                    }
+
+                    if (
                         false &&
                         lastWord.startsWith('**') &&
                         lastWord.endsWith('**')
