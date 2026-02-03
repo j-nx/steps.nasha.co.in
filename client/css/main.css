@@ -100,7 +100,7 @@ body {
 /* Search container modal */
 .searchContainer {
     position: fixed;
-    top: 66px;
+    top: 0px;
     left: 0;
     right: 0;
     bottom: 0;
