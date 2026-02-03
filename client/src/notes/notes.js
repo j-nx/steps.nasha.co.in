@@ -1619,10 +1619,10 @@ function Note(v, k, ver, date) {
                 $scope.generateExportContent = function () {
                     var root = ns.outliner.root;
 
-                    var cursor = ns.outliner.op.getCursor();
-                    var isSelection = cursor && cursor.length > 0;
+                    var selected = root.find('.concord-node.selected');
+                    var isSelection = selected.length > 0;
                     var nodes = isSelection
-                        ? cursor
+                        ? selected
                         : root.children('.concord-node');
 
                     switch ($scope.exportTab) {
