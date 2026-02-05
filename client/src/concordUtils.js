@@ -478,11 +478,6 @@ const SECOND_LEVEL_DOMAINS = new Set([
     'co', 'com', 'org', 'net', 'ac', 'gov', 'edu'
 ]);
 
-/** File extensions that overlap with ccTLDs — treat as file when single-dot, no path */
-const AMBIGUOUS_FILE_EXTS = new Set([
-    'py', 'rs', 'pl', 'pm', 'cc', 'ph', 'do', 'si', 'mk', 'am'
-]);
-
 /** Structural regex for bare domains: labels.tld[/path] */
 const BARE_DOMAIN_RE = /^([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+([a-zA-Z]{2,})(\/[^\s]*)?$/;
 
@@ -512,11 +507,6 @@ function detectUrl(word) {
 
     // Require 3+ labels for second-level domains (e.g. "co.uk" alone is not a URL)
     if (labels.length === 2 && SECOND_LEVEL_DOMAINS.has(labels[0].toLowerCase())) {
-        return null;
-    }
-
-    // Single-dot, no path, and TLD overlaps with a common file extension → treat as file
-    if (labels.length === 2 && !hasPath && AMBIGUOUS_FILE_EXTS.has(tld)) {
         return null;
     }
 
