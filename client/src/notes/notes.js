@@ -1237,6 +1237,10 @@ function Note(v, k, ver, date) {
                 {
                     function: 'Search',
                     code: 'Ctrl + F'
+                },
+                {
+                    function: 'Save',
+                    code: 'Ctrl + S'
                 }
             ];
 
@@ -1776,6 +1780,13 @@ function Note(v, k, ver, date) {
                                 $scope.toggleSearchDialog();
                             }
                         });
+                    }
+
+                    // Ctrl+S or Cmd+S to force save
+                    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        $scope.forceSync();
                     }
 
                     // Escape to close search
