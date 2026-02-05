@@ -439,6 +439,80 @@ function sliceHtmlText(str, index, allowedTags = ['<b>', '<i>', '<u>', '<a ']) {
     return [a, b];
 }
 
+/** Known TLDs for bare domain detection (gTLDs, ccTLDs, new gTLDs) */
+const KNOWN_TLDS = new Set([
+    // gTLDs
+    'com', 'org', 'net', 'edu', 'gov', 'mil', 'int',
+    // ccTLDs
+    'ac', 'ad', 'ae', 'af', 'ag', 'ai', 'al', 'am', 'ao', 'aq', 'ar', 'as',
+    'at', 'au', 'aw', 'ax', 'az', 'ba', 'bb', 'bd', 'be', 'bf', 'bg', 'bh',
+    'bi', 'bj', 'bm', 'bn', 'bo', 'br', 'bs', 'bt', 'bw', 'by', 'bz', 'ca',
+    'cc', 'cd', 'cf', 'cg', 'ch', 'ci', 'ck', 'cl', 'cm', 'cn', 'co', 'cr',
+    'cu', 'cv', 'cw', 'cx', 'cy', 'cz', 'de', 'dj', 'dk', 'dm', 'do', 'dz',
+    'ec', 'ee', 'eg', 'er', 'es', 'et', 'eu', 'fi', 'fj', 'fk', 'fm', 'fo',
+    'fr', 'ga', 'gd', 'ge', 'gf', 'gg', 'gh', 'gi', 'gl', 'gm', 'gn', 'gp',
+    'gq', 'gr', 'gs', 'gt', 'gu', 'gw', 'gy', 'hk', 'hm', 'hn', 'hr', 'ht',
+    'hu', 'id', 'ie', 'il', 'im', 'in', 'io', 'iq', 'ir', 'is', 'it', 'je',
+    'jm', 'jo', 'jp', 'ke', 'kg', 'kh', 'ki', 'km', 'kn', 'kp', 'kr', 'kw',
+    'ky', 'kz', 'la', 'lb', 'lc', 'li', 'lk', 'lr', 'ls', 'lt', 'lu', 'lv',
+    'ly', 'ma', 'mc', 'md', 'me', 'mg', 'mh', 'mk', 'ml', 'mm', 'mn', 'mo',
+    'mp', 'mq', 'mr', 'ms', 'mt', 'mu', 'mv', 'mw', 'mx', 'my', 'mz', 'na',
+    'nc', 'ne', 'nf', 'ng', 'ni', 'nl', 'no', 'np', 'nr', 'nu', 'nz', 'om',
+    'pa', 'pe', 'pf', 'pg', 'ph', 'pk', 'pl', 'pm', 'pn', 'pr', 'ps', 'pt',
+    'pw', 'py', 'qa', 're', 'ro', 'rs', 'ru', 'rw', 'sa', 'sb', 'sc', 'sd',
+    'se', 'sg', 'sh', 'si', 'sj', 'sk', 'sl', 'sm', 'sn', 'so', 'sr', 'ss',
+    'st', 'su', 'sv', 'sx', 'sy', 'sz', 'tc', 'td', 'tf', 'tg', 'th', 'tj',
+    'tk', 'tl', 'tm', 'tn', 'to', 'tr', 'tt', 'tv', 'tw', 'tz', 'ua', 'ug',
+    'uk', 'us', 'uy', 'uz', 'va', 'vc', 've', 'vg', 'vi', 'vn', 'vu', 'wf',
+    'ws', 'ye', 'yt', 'za', 'zm', 'zw',
+    // New gTLDs
+    'app', 'dev', 'xyz', 'tech', 'site', 'online', 'store', 'blog', 'cloud',
+    'design', 'digital', 'studio', 'agency', 'media', 'group', 'team', 'world',
+    'life', 'live', 'space', 'network', 'systems', 'tools', 'codes', 'run',
+    'link', 'page', 'info', 'biz', 'pro', 'name', 'mobi', 'travel', 'jobs',
+    'museum', 'aero', 'coop', 'asia', 'tel', 'gg'
+]);
+
+/** Second-level domain labels that require a third-level domain (e.g. co.uk needs bbc.co.uk) */
+const SECOND_LEVEL_DOMAINS = new Set([
+    'co', 'com', 'org', 'net', 'ac', 'gov', 'edu'
+]);
+
+/** Structural regex for bare domains: labels.tld[/path] */
+const BARE_DOMAIN_RE = /^([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+([a-zA-Z]{2,})(\/[^\s]*)?$/;
+
+/**
+ * Detect if a word is a URL (http/https or bare domain with known TLD).
+ * @param {string} word
+ * @returns {{ display: string, href: string } | null}
+ */
+function detectUrl(word) {
+    if (!word || word.length < 4) return null;
+
+    // http:// or https:// URLs
+    if (word.startsWith('http://') || word.startsWith('https://')) {
+        return { display: word, href: word };
+    }
+
+    // Bare domain detection (e.g. hoho.io, sub.hoho.sh, example.com/path)
+    const match = word.match(BARE_DOMAIN_RE);
+    if (!match) return null;
+
+    const tld = match[3].toLowerCase();
+    if (!KNOWN_TLDS.has(tld)) return null;
+
+    const hasPath = !!match[4];
+    const domainPart = hasPath ? word.slice(0, -match[4].length) : word;
+    const labels = domainPart.split('.');
+
+    // Require 3+ labels for second-level domains (e.g. "co.uk" alone is not a URL)
+    if (labels.length === 2 && SECOND_LEVEL_DOMAINS.has(labels[0].toLowerCase())) {
+        return null;
+    }
+
+    return { display: word, href: 'https://' + word };
+}
+
 /**
  * Get previous word from endIndex. e.g. str: 'hello moto', endIndex 5 ==> hello
  * @param {*} str
@@ -458,12 +532,14 @@ function getLastWord(str, endIndex) {
 
 /**
  * Convert a URL word to a hyperlink using ConcordTextModel
- * @param {string} word - The URL to convert to a link
+ * @param {string} word - The display text to convert to a link
  * @param {string} lineHtml - The current line HTML
  * @param {number} caretPosition - The caret position (after the word)
+ * @param {string} [href] - Optional explicit href (defaults to word)
  * @returns {string} The updated HTML with the link
  */
-function convertToHref(word, lineHtml, caretPosition) {
+function convertToHref(word, lineHtml, caretPosition, href) {
+    const linkHref = href || word;
     // Use ConcordTextModel for reliable link insertion
     // This fixes the bug where only the first occurrence was replaced
     const model = ConcordTextModel.fromHTML(lineHtml);
@@ -477,7 +553,7 @@ function convertToHref(word, lineHtml, caretPosition) {
     // Verify the word is at the expected position
     if (wordStart >= 0 && text.substring(wordStart, wordEnd) === word) {
         // Add link mark to this specific occurrence
-        const newModel = model.addMark(wordStart, wordEnd, 'link', { href: word });
+        const newModel = model.addMark(wordStart, wordEnd, 'link', { href: linkHref });
         return newModel.toHTML();
     }
 
@@ -498,14 +574,14 @@ function convertToHref(word, lineHtml, caretPosition) {
     }
 
     if (bestMatch !== -1) {
-        const newModel = model.addMark(bestMatch, bestMatch + word.length, 'link', { href: word });
+        const newModel = model.addMark(bestMatch, bestMatch + word.length, 'link', { href: linkHref });
         return newModel.toHTML();
     }
 
     // If no match found, fall back to original behavior
     const link = document.createElement('a');
     link.innerHTML = word;
-    link.setAttribute('href', word);
+    link.setAttribute('href', linkHref);
     return lineHtml.replace(word, link.outerHTML);
 }
 

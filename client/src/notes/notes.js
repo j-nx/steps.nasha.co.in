@@ -1622,10 +1622,10 @@ function Note(v, k, ver, date) {
                     var root = ns.outliner.root;
 
                     var selected = root.find('.concord-node.selected');
-                    var isSelection = selected.length > 0;
-                    var nodes = isSelection
+                    var nodes = selected.length > 0
                         ? selected
-                        : root.children('.concord-node');
+                        : root.find('.concord-cursor:first');
+                    var isSelection = nodes.length > 0;
 
                     switch ($scope.exportTab) {
                         case 'formatted':

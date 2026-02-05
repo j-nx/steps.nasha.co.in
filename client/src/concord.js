@@ -1033,6 +1033,20 @@ function ConcordEditor(root, concordInstance) {
             });
         return text;
     };
+    this.plainTextLine = function (node, indent) {
+        if (!indent) indent = 0;
+        var text = '';
+        for (var i = 0; i < indent; i++) text += '\t';
+        text += concordInstance.op.getTextModel(node).text;
+        text += '\n';
+        var self = this;
+        node.children('ol')
+            .children('.concord-node')
+            .each(function () {
+                text += self.plainTextLine($(this), indent + 1);
+            });
+        return text;
+    };
     this.styledLine = function (node) {
         var model = concordInstance.op.getTextModel(node);
         var html = '<li>' + model.toHTML();
@@ -1914,13 +1928,15 @@ function ConcordEvents(root, editor, op, concordInstance) {
                 event.originalEvent && event.originalEvent.clipboardData;
             if (clipData) {
                 var copyHtml = '<ul>';
+                var plainText = '';
                 selected.each(function () {
                     copyHtml += concordInstance.editor.styledLine($(this));
+                    plainText += concordInstance.editor.plainTextLine($(this));
                 });
                 copyHtml += '</ul>';
                 event.preventDefault();
                 clipData.setData('text/html', copyHtml);
-                clipData.setData('text/plain', copyText);
+                clipData.setData('text/plain', plainText);
             } else {
                 concordInstance.pasteBin.html(
                     '<pre>' + $('<div/>').text(copyText).html() + '</pre>'
@@ -1978,13 +1994,15 @@ function ConcordEvents(root, editor, op, concordInstance) {
                 event.originalEvent && event.originalEvent.clipboardData;
             if (clipData) {
                 var copyHtml = '<ul>';
+                var plainText = '';
                 selected.each(function () {
                     copyHtml += concordInstance.editor.styledLine($(this));
+                    plainText += concordInstance.editor.plainTextLine($(this));
                 });
                 copyHtml += '</ul>';
                 event.preventDefault();
                 clipData.setData('text/html', copyHtml);
-                clipData.setData('text/plain', copyText);
+                clipData.setData('text/plain', plainText);
             } else {
                 concordInstance.pasteBin.html(
                     '<pre>' + $('<div/>').text(copyText).html() + '</pre>'
@@ -2003,7 +2021,7 @@ function ConcordEvents(root, editor, op, concordInstance) {
         }
         var target = $(event.target);
         if (target.is('a')) {
-            if (target.attr('href')) {
+            if (target.attr('href') && event.which === 1) {
                 event.preventDefault();
                 window.open(target.attr('href'));
             }
@@ -5163,18 +5181,24 @@ window.currentInstance;
                     let caret = ConcordUtil.getCaret2(event.target);
                     const lastWord = getLastWord(text, caret);
 
-                    /** Apply formatting on space  */
-                    if (lastWord.startsWith('http')) {
-                        // Pass caret position for accurate link placement
-                        const lineHtml = convertToHref(lastWord, html, caret);
-                        // Invalidate cached model since we're changing the text
+                    /** Apply URL formatting on space */
+                    const detectedUrl = detectUrl(lastWord);
+                    if (detectedUrl) {
+                        const lineHtml = convertToHref(
+                            detectedUrl.display,
+                            html,
+                            caret,
+                            detectedUrl.href
+                        );
                         concordInstance.op.invalidateTextModel();
-                        concordInstance.op.setLineText(lineHtml, true); // isRawHtml
+                        concordInstance.op.setLineText(lineHtml, true);
                         ConcordUtil.setCaret2(
                             ConcordUtil.getTextNode(concordInstance.op),
                             caret
                         );
-                    } else if (
+                    }
+
+                    if (
                         false &&
                         lastWord.startsWith('**') &&
                         lastWord.endsWith('**')
