@@ -210,6 +210,13 @@ strike {
     color: #c7c7c7;
 }
 
+.concord .concord-node:has(> .concord-wrapper > .concord-text strike) > ol .concord-text {
+    color: #c7c7c7;
+}
+.concord .concord-node:has(> .concord-wrapper > .concord-text strike) > ol .node-icon {
+    color: #c7c7c7;
+}
+
 /* nsx */
 
 .mainContainer {
