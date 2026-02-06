@@ -404,9 +404,7 @@ function NoteService(concord) {
 
         if (forceRefresh) {
             this.ngScope.startMainRefresh();
-            if (store.notes.length === 0) {
-                this.ngScope.showWorkingDialog();
-            }
+            this.ngScope.showWorkingDialog();
         }
         console.debug('Refreshing Notes');
         this.np.getNoteIndex(this.parseNoteIndex);
@@ -1626,9 +1624,10 @@ function Note(v, k, ver, date) {
                     var root = ns.outliner.root;
 
                     var selected = root.find('.concord-node.selected');
-                    var nodes = selected.length > 0
-                        ? selected
-                        : root.find('.concord-cursor:first');
+                    var nodes =
+                        selected.length > 0
+                            ? selected
+                            : root.find('.concord-cursor:first');
                     var isSelection = nodes.length > 0;
 
                     switch ($scope.exportTab) {
