@@ -304,7 +304,7 @@ function isAppDisabled() {
 }
 
 document.addEventListener('touchstart', opKeystrokeCallback, false);
-document.addEventListener('input', opKeystrokeCallback);
+document.addEventListener('click', opKeystrokeCallback);
 
 /** Use the visbility change listener to check is on wake */
 document.addEventListener('visibilitychange', function () {
