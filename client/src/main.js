@@ -199,6 +199,8 @@ function startup(outliner, noInitialize) {
 
 function opKeystrokeCallback(event) {
     whenLastKeystroke = new Date();
+    if (idler) idler.resetTimer();
+
     if (
         event.srcElement != null &&
         event.srcElement.className.indexOf('concord-wrapper') == -1 &&
@@ -214,8 +216,6 @@ function opKeystrokeCallback(event) {
     if (ns) ns.setNoteState(saveStates.modified);
 
     opMarkChanged();
-
-    if (idler) idler.resetTimer();
 }
 
 function hideSplash() {
@@ -228,8 +228,6 @@ function hideSplash() {
 
 function detectIdle() {
     if (appPrefs.readonly) return;
-
-    document.onkeypress = this.resetTimer;
 
     this.away = function () {
         if (!ns) return;
