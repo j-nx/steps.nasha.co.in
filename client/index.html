@@ -276,7 +276,7 @@
                 <div class="workingpopup" ng-show="showWorking">
                     <img class="logo" src="images/spin.svg" alt="Loading..." />
                       <div class="loading-countdown">Loading</div>
-                      <div class="loading-countdown-message" ng-show="getPendingNotes() > 0"">{{getPendingNotes()}} remaining</div>
+                      <div class="loading-countdown-message" ng-show="getPendingNotes() > 0">{{getPendingNotes()}} remaining</div>
                 </div>
                 <div ng-repeat="note in notes() | orderBy:'modifydate' : true">
                     <div ng-class="{'notesList-note': true, 'notesList-note-selected':  isSelectedNote(note)}"
@@ -422,9 +422,9 @@
                             <i class="icon-caret-right bar-icon" ng-click="move('right')"></i>
                         </div>
                     </div>
-                    <i class="icon-share-alt mobile-export-icon" ng-click="toggleExportModal()"></i>
-
+                    
                     <div class="footer-right-edit">
+                        <i class="icon-share-alt mobile-export-icon" ng-click="toggleExportModal()"></i>
                         <span class="taskbar-button style" ng-mousedown="makeBold($event, 'bold')"><b>B</b></span>
                         <span class="taskbar-button style" ng-mousedown="makeBold($event, 'italic')"><i> I </i></span>
                         <span class="taskbar-button style" ng-mousedown="makeBold($event, 'underline')"><u>U</u></span>
