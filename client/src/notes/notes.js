@@ -203,10 +203,7 @@ function NoteService(concord) {
 
     this.decrementPendingNotes = function () {
         --pendingNotes;
-        this.ngScope.setLoadingCountdown(
-            store.notes.length - pendingNotes,
-            store.notes.length
-        );
+
         console.debug(
             '------- Decrementing Pending Notes, new count ' + pendingNotes
         );
@@ -234,7 +231,7 @@ function NoteService(concord) {
         if (store.requiresUpdate()) {
             store = new NoteStore();
             store.save();
-        } else if (this.isCookieValid()) {
+        } else if (this.isLoggedIn()) {
             if (api.isStoredTokenExpired()) {
                 hideSplash();
                 this.ngScope.showDisabledDialog('Click to continue', true);
@@ -342,8 +339,7 @@ function NoteService(concord) {
     }.bind(this);
 
     this.pollChanges = function () {
-        if (!store || !this.isCookieValid() || this.ngScope.isAppDisabled)
-            return;
+        if (!store || !this.isLoggedIn() || this.ngScope.isAppDisabled) return;
         if (this.isModelReady() == false) return;
         if (this.getPendingNotes() > 0) return;
 
@@ -396,15 +392,14 @@ function NoteService(concord) {
     }.bind(this);
 
     this.loadNotes = function (forceRefresh) {
-        if (!store || !this.isCookieValid() || this.ngScope.isAppDisabled)
-            return;
+        if (!store || !this.isLoggedIn() || this.ngScope.isAppDisabled) return;
 
         if (this.isModelReady() == false) return;
         if (!forceRefresh) forceRefresh = false;
 
         if (forceRefresh) {
-            this.ngScope.startMainRefresh();
-            this.ngScope.showWorkingDialog();
+            this.ngScope.showEditorLoading();
+            this.ngScope.showListLoading();
         }
         console.debug('Refreshing Notes');
         this.np.getNoteIndex(this.parseNoteIndex);
@@ -452,7 +447,7 @@ function NoteService(concord) {
             store.addNote(n);
 
             this.launchNote(n, true);
-            this.ngScope.finishMainRefresh();
+            this.ngScope.hideEditorLoading();
             this.tryFinishLoading();
             return;
         }
@@ -499,7 +494,7 @@ function NoteService(concord) {
                 store.note,
                 this.ngScope.saveState != saveStates.saving
             );
-            this.ngScope.finishMainRefresh();
+            this.ngScope.hideEditorLoading();
         }
 
         this.tryFinishLoading();
@@ -603,7 +598,7 @@ function NoteService(concord) {
                 saveNote,
                 forceLaunch && this.ngScope.saveState != saveStates.saving
             );
-            this.ngScope.finishMainRefresh();
+            this.ngScope.hideEditorLoading();
         }
 
         this.ngScope.setSaveState(saveStates.saved);
@@ -622,7 +617,7 @@ function NoteService(concord) {
         return true;
     }.bind(this);
 
-    this.isCookieValid = function () {
+    this.isLoggedIn = function () {
         return this.np.isLoggedIn();
     }.bind(this);
 
@@ -651,8 +646,8 @@ function NoteService(concord) {
 
             if (!store.note && store.notes.length > 0)
                 this.launchNote(null, true);
-            this.ngScope.hideWorkingDialog();
-            this.ngScope.finishMainRefresh();
+            this.ngScope.hideListLoading();
+            this.ngScope.hideEditorLoading();
             delay = 0;
 
             // Initialize changes page token for delta polling
@@ -1181,7 +1176,6 @@ function Note(v, k, ver, date) {
                 failed: 'Login Failed, Retry',
                 loggedIn: 'Logged in! Fetching data...'
             };
-            var defaultloadingSuffix = '...';
 
             $scope.shortcuts = [
                 {
@@ -1251,6 +1245,7 @@ function Note(v, k, ver, date) {
                 $scope.isAppDisabled = false;
                 $scope.isDebug = isDebug;
                 $scope.appDisabledMessage = '';
+                $scope.getPendingNotes = () => ns && ns.getPendingNotes();
                 $scope.showShortcuts = false;
                 $scope.showBarMenu = false;
                 $scope.showFontSizeModal = false;
@@ -1266,7 +1261,6 @@ function Note(v, k, ver, date) {
                 $scope.searchInputFocused = false;
                 $scope.showMainRefresh = false;
                 $scope.statusMessage = '';
-                $scope.loadingCountdownMessage = defaultloadingSuffix;
                 $scope.user = {
                     email: '',
                     password: ''
@@ -1283,13 +1277,14 @@ function Note(v, k, ver, date) {
             };
 
             //Display force refresh gui
-            $scope.startMainRefresh = function () {
+            // Loading overlay for note editor
+            $scope.showEditorLoading = function () {
                 $scope.showMainRefresh = true;
                 $scope.showOverlay = true;
                 $scope.update();
             };
 
-            $scope.finishMainRefresh = function () {
+            $scope.hideEditorLoading = function () {
                 $scope.showMainRefresh = false;
                 $scope.hideOverlay();
                 $scope.update();
@@ -1390,24 +1385,34 @@ function Note(v, k, ver, date) {
                 $scope.update();
                 if (doTimeout) $scope.idleTimeout = true;
             };
+
+            // Loading overlay for noteslist
+            $scope.showAllLoading = function () {
+                $scope.showEditorLoading();
+                $scope.showListLoading();
+                $scope.isAppDisabled = false;
+                clearTimers();
+                $scope.update();
+            };
+
             $scope.hideDisabledDialog = function () {
                 $scope.hideOverlay();
                 $scope.isAppDisabled = false;
                 $scope.idleTimeout = false;
                 $scope.showOverlay = false;
                 $scope.appDisabledMessage = '';
-                $scope.loadingCountdownMessage = defaultloadingSuffix;
                 $scope.update();
             };
             $scope.resetTimeout = function () {
                 if ($scope.idleTimeout == false) return;
+                if (appPrefs.readonly) return;
                 $scope.idleTimeout = false; // Prevent double-click during OAuth
 
-                if (appPrefs.readonly) return;
+                // Switch to loading mode immediately
+
+                $scope.showAllLoading();
 
                 var onReady = () => {
-                    $scope.isAppDisabled = false;
-                    clearTimers();
                     startTimers();
                     ns.loadNotes(true);
                 };
@@ -1422,20 +1427,15 @@ function Note(v, k, ver, date) {
 
             /* Working overlay */
             {
-                $scope.showWorkingDialog = function () {
+                // Show Loading overlay over the noteslist
+                $scope.showListLoading = function () {
                     if ($scope.showWorking) return;
                     $scope.showWorking = true;
                     $scope.update();
                 };
-                $scope.hideWorkingDialog = function () {
+                $scope.hideListLoading = function () {
                     if ($scope.showWorking == false) return;
                     $scope.showWorking = false;
-                    $scope.update();
-                };
-                $scope.setLoadingCountdown = function (loaded, total) {
-                    if ($scope.showWorking == false) return;
-                    $scope.loadingCountdownMessage =
-                        ' ' + loaded + ' of ' + total;
                     $scope.update();
                 };
             }
