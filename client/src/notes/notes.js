@@ -203,10 +203,7 @@ function NoteService(concord) {
 
     this.decrementPendingNotes = function () {
         --pendingNotes;
-        this.ngScope.setLoadingCountdown(
-            store.notes.length - pendingNotes,
-            store.notes.length
-        );
+
         console.debug(
             '------- Decrementing Pending Notes, new count ' + pendingNotes
         );
@@ -1181,7 +1178,6 @@ function Note(v, k, ver, date) {
                 failed: 'Login Failed, Retry',
                 loggedIn: 'Logged in! Fetching data...'
             };
-            var defaultloadingSuffix = '...';
 
             $scope.shortcuts = [
                 {
@@ -1251,6 +1247,7 @@ function Note(v, k, ver, date) {
                 $scope.isAppDisabled = false;
                 $scope.isDebug = isDebug;
                 $scope.appDisabledMessage = '';
+                $scope.getPendingNotes = () => ns && ns.getPendingNotes();
                 $scope.showShortcuts = false;
                 $scope.showBarMenu = false;
                 $scope.showFontSizeModal = false;
@@ -1266,7 +1263,7 @@ function Note(v, k, ver, date) {
                 $scope.searchInputFocused = false;
                 $scope.showMainRefresh = false;
                 $scope.statusMessage = '';
-                $scope.loadingCountdownMessage = defaultloadingSuffix;
+                $scope.loadingCountdownMessage = '';
                 $scope.user = {
                     email: '',
                     password: ''
@@ -1396,27 +1393,24 @@ function Note(v, k, ver, date) {
                 $scope.idleTimeout = false;
                 $scope.showOverlay = false;
                 $scope.appDisabledMessage = '';
-                $scope.loadingCountdownMessage = defaultloadingSuffix;
+                $scope.loadingCountdownMessage = '';
                 $scope.update();
             };
             $scope.resetTimeout = function () {
                 if ($scope.idleTimeout == false) return;
+                if (appPrefs.readonly) return;
                 $scope.idleTimeout = false; // Prevent double-click during OAuth
 
-                if (appPrefs.readonly) return;
-
-                var onReady = () => {
-                    $scope.isAppDisabled = false;
-                    clearTimers();
-                    startTimers();
-                    ns.loadNotes(true);
-                };
+                $scope.isAppDisabled = false;
+                clearTimers();
+                startTimers();
+                ns.loadNotes(true);
 
                 if (api.isStoredTokenExpired()) {
                     // Token expired — use click gesture to re-auth via popup
-                    api.signInAndInitialize(onReady);
+                    api.signInAndInitialize();
                 } else {
-                    api.initialize(onReady);
+                    api.initialize();
                 }
             };
 
@@ -1430,12 +1424,6 @@ function Note(v, k, ver, date) {
                 $scope.hideWorkingDialog = function () {
                     if ($scope.showWorking == false) return;
                     $scope.showWorking = false;
-                    $scope.update();
-                };
-                $scope.setLoadingCountdown = function (loaded, total) {
-                    if ($scope.showWorking == false) return;
-                    $scope.loadingCountdownMessage =
-                        ' ' + loaded + ' of ' + total;
                     $scope.update();
                 };
             }
