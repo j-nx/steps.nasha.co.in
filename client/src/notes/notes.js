@@ -1406,11 +1406,13 @@ function Note(v, k, ver, date) {
                 startTimers();
                 ns.loadNotes(true);
 
+                const noop = () => {};
+
                 if (api.isStoredTokenExpired()) {
                     // Token expired — use click gesture to re-auth via popup
-                    api.signInAndInitialize();
+                    api.signInAndInitialize(noop);
                 } else {
-                    api.initialize();
+                    api.initialize(noop);
                 }
             };
 
