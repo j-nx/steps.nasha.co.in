@@ -322,15 +322,17 @@ document.addEventListener('visibilitychange', function () {
  * */
 window.addEventListener('focus', onFocus);
 
+var isPageUnloading = false;
+window.addEventListener('beforeunload', function () {
+    isPageUnloading = true;
+});
 function onHidden() {
     console.debug('**** PAGE HIDDEN');
     lastSeen = Date.now();
     if (isMobile && ns && !isAppDisabled()) {
-        // Disabled save onHidden as it was forcing a remote save on refresh page
-        // and not updating the local db.
-        // Issue: This was causing a reload of the current node on refresh.
+        // To avoid reload of the current node on refresh
+        if (isPageUnloading == false) saveOutlineNow();
 
-        // saveOutlineNow();
         if (idler) idler.away();
     }
 }
