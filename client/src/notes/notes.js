@@ -231,7 +231,7 @@ function NoteService(concord) {
         if (store.requiresUpdate()) {
             store = new NoteStore();
             store.save();
-        } else if (this.isLoggedIn()) {
+        } else if (this.isCookieValid()) {
             if (api.isStoredTokenExpired()) {
                 hideSplash();
                 this.ngScope.showDisabledDialog('Click to continue', true);
@@ -339,7 +339,8 @@ function NoteService(concord) {
     }.bind(this);
 
     this.pollChanges = function () {
-        if (!store || !this.isLoggedIn() || this.ngScope.isAppDisabled) return;
+        if (!store || !this.isCookieValid() || this.ngScope.isAppDisabled)
+            return;
         if (this.isModelReady() == false) return;
         if (this.getPendingNotes() > 0) return;
 
@@ -392,7 +393,8 @@ function NoteService(concord) {
     }.bind(this);
 
     this.loadNotes = function (forceRefresh) {
-        if (!store || !this.isLoggedIn() || this.ngScope.isAppDisabled) return;
+        if (!store || !this.isCookieValid() || this.ngScope.isAppDisabled)
+            return;
 
         if (this.isModelReady() == false) return;
         if (!forceRefresh) forceRefresh = false;
@@ -617,7 +619,7 @@ function NoteService(concord) {
         return true;
     }.bind(this);
 
-    this.isLoggedIn = function () {
+    this.isCookieValid = function () {
         return this.np.isLoggedIn();
     }.bind(this);
 

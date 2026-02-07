@@ -152,10 +152,7 @@ describe('Wake/Sleep Handling', function () {
                         showWorking: false
                     },
                     isModelReady: function () {
-                        return (
-                            this.np !== undefined &&
-                            this.np.isLoggedIn() === true
-                        );
+                        return this.np !== undefined && this.np.isLoggedIn() === true;
                     },
                     canPersist: function () {
                         if (window.appPrefs.readonly) return false;
@@ -194,7 +191,7 @@ describe('Wake/Sleep Handling', function () {
                     canPersist: function () {
                         return true;
                     },
-                    isLoggedIn: function () {
+                    isCookieValid: function () {
                         return true;
                     },
                     saveNote: function () {
@@ -287,7 +284,7 @@ describe('Wake/Sleep Handling', function () {
             });
 
             it('should not save when session is invalid', function () {
-                mockNs.isLoggedIn = function () {
+                mockNs.isCookieValid = function () {
                     return false;
                 };
 
@@ -432,7 +429,7 @@ describe('Wake/Sleep Handling', function () {
                 canPersist: function () {
                     return true;
                 },
-                isLoggedIn: function () {
+                isCookieValid: function () {
                     return true;
                 },
                 saveNote: function () {
@@ -472,8 +469,8 @@ describe('Wake/Sleep Handling', function () {
             expect(saveNoteCalled).toBe(false);
         });
 
-        it('should not save when isLoggedIn returns false', function () {
-            mockNs.isLoggedIn = function () {
+        it('should not save when isCookieValid returns false', function () {
+            mockNs.isCookieValid = function () {
                 return false;
             };
             opHasChangedResult = true;
