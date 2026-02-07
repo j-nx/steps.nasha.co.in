@@ -17,6 +17,10 @@ function API() {
         return this.api.isStoredTokenExpired();
     };
 
+    this.isAuthInProgress = () => {
+        return this.api._tokenPromise != null;
+    };
+
     this.signIn = () => {
         this.api.signIn();
     };
@@ -140,6 +144,9 @@ function gApi() {
         return this.accessToken !== null && Date.now() >= this.tokenExpiresAt;
     };
 
+    // Legacy from gapi.auth2 migration — GIS has no silent refresh, so
+    // token renewal goes through signIn() → requestAccessToken() again.
+    // Kept for potential future use with prompt:'' (no popup if session valid).
     this.refreshToken = () => {
         return new Promise((resolve, reject) => {
             if (!this.tokenClient) {
@@ -155,6 +162,7 @@ function gApi() {
         if (this.hasExpiredSession()) {
             log.info('Token expired, requesting refresh from Google');
         }
+        this._tokenPromise = {};
         this.tokenClient.requestAccessToken(options);
     };
 
@@ -375,11 +383,11 @@ function gApi() {
     };
 
     this.handleTokenResponse = (tokenResponse) => {
-        // Handle pending refresh promise (from refreshToken())
-        if (this._tokenPromise) {
-            const { resolve, reject } = this._tokenPromise;
-            this._tokenPromise = null;
+        const { resolve, reject } = this._tokenPromise || {};
+        this._tokenPromise = null;
 
+        // Handle pending refresh promise (from refreshToken())
+        if (resolve) {
             if (tokenResponse.error) {
                 reject(tokenResponse);
             } else {

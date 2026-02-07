@@ -327,6 +327,7 @@ window.addEventListener('beforeunload', function () {
     isPageUnloading = true;
 });
 function onHidden() {
+    if (api && api.isAuthInProgress()) return;
     console.debug('**** PAGE HIDDEN');
     lastSeen = Date.now();
     if (isMobile && ns && !isAppDisabled()) {
@@ -340,6 +341,11 @@ function onHidden() {
 function onVisible() {
     console.debug('**** PAGE VISIBLE');
     if (!isMobile || !lastSeen) return;
+
+    if (!isAppDisabled() && idler) {
+        if (api && api.isAuthInProgress()) return;
+        idler.away();
+    }
 
     lastSeen = Date.now();
 }
