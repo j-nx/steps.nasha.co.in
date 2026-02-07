@@ -142,7 +142,7 @@ class NSXStorage {
 var storage = new NSXStorage();
 
 function saveOutlineNow() {
-    if (ns.canPersist() == false || ns.isCookieValid() === false) return;
+    if (ns.canPersist() == false || ns.isLoggedIn() === false) return;
     if (!opHasChanged()) return; // Skip save if note hasn't been modified
 
     ns.saveNote(); // Note: opClearChanged is called in saveNote, optimistically
