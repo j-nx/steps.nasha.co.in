@@ -17,8 +17,10 @@ function API() {
         return this.api.isStoredTokenExpired();
     };
 
+    this._authInProgress = false;
+
     this.isAuthInProgress = () => {
-        return this.api._tokenPromise != null;
+        return this._authInProgress;
     };
 
     this.signIn = () => {
@@ -26,7 +28,11 @@ function API() {
     };
 
     this.signInAndInitialize = (onInitComplete) => {
-        this.api.onInitComplete = onInitComplete;
+        this._authInProgress = true;
+        this.api.onInitComplete = () => {
+            this._authInProgress = false;
+            onInitComplete();
+        };
         this.api.signIn({ prompt: '' });
     };
 
