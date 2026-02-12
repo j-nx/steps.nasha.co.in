@@ -142,7 +142,7 @@ class NSXStorage {
 var storage = new NSXStorage();
 
 function saveOutlineNow() {
-    if (ns.canPersist() == false || ns.isCookieValid() === false) return;
+    if (ns.canPersist() == false || ns.isLoggedIn() === false) return;
     if (!opHasChanged()) return; // Skip save if note hasn't been modified
 
     ns.saveNote(); // Note: opClearChanged is called in saveNote, optimistically
@@ -322,12 +322,18 @@ document.addEventListener('visibilitychange', function () {
  * */
 window.addEventListener('focus', onFocus);
 
+var isPageUnloading = false;
+window.addEventListener('beforeunload', function () {
+    isPageUnloading = true;
+});
 function onHidden() {
+    if (api && api.isAuthInProgress()) return;
     console.debug('**** PAGE HIDDEN');
     lastSeen = Date.now();
-
     if (isMobile && ns && !isAppDisabled()) {
-        saveOutlineNow();
+        // To avoid reload of the current node on refresh
+        if (isPageUnloading == false) saveOutlineNow();
+
         if (idler) idler.away();
     }
 }
@@ -335,6 +341,11 @@ function onHidden() {
 function onVisible() {
     console.debug('**** PAGE VISIBLE');
     if (!isMobile || !lastSeen) return;
+
+    if (!isAppDisabled() && idler) {
+        if (api && api.isAuthInProgress()) return;
+        idler.away();
+    }
 
     lastSeen = Date.now();
 }

@@ -253,6 +253,7 @@ strike {
     font-size: 0.6em;
     white-space: pre-line; /* For new line */
     overflow-y: scroll;
+    z-index: 9999;
 }
 
 .loginpopup,
@@ -297,6 +298,7 @@ strike {
     width: 100%;
     top: 0px;
     z-index: 9001;
+    border-radius: 4px;
 }
 
 .disabledpopup .logo {
@@ -334,6 +336,10 @@ strike {
 
 .loading-countdown {
     padding-top: 10px;
+}
+
+.loading-countdown-message {
+    font-size: 0.75em;
 }
 
 .popup-drop-shadow {
