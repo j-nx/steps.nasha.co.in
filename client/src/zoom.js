@@ -29,6 +29,15 @@ function ZoomManager(concordInstance) {
         cbs.zoomIn = function (node) { self.zoomIn(node); };
         cbs.zoomOut = function () { self.zoomOut(); };
         cbs.onBeforeNavigate = function () { self.zoomToHome(); };
+        cbs.opKeystroke = function () {
+            if (self.zoomStack.length) self.updateBreadcrumb();
+        };
+        cbs.opInsert = function () {
+            if (self.zoomStack.length) {
+                var top = self.zoomStack[self.zoomStack.length - 1];
+                self.injectZoomIcons(self.getNodeAtPath(top.pathIndices));
+            }
+        };
         concordInstance.callbacks(cbs);
 
         // Delegated click handler for zoom icons (desktop + mobile)
@@ -164,10 +173,7 @@ function ZoomManager(concordInstance) {
 
         var topPath = this.zoomStack[this.zoomStack.length - 1].pathIndices;
         var target = this.getNodeAtPath(topPath);
-        console.log('[ZOOM] applyZoom: stack=' + this.zoomStack.length + ' path=' + JSON.stringify(topPath) + ' found=' + !!(target && target.length));
         if (!target || !target.length) {
-            // Target node no longer exists — zoom out
-            console.log('[ZOOM] target gone, popping stack');
             this.zoomStack.pop();
             if (this.zoomStack.length) {
                 this.applyZoom();
@@ -262,7 +268,9 @@ function ZoomManager(concordInstance) {
         html += '<span class="zoom-trail">';
         for (var i = 0; i < this.zoomStack.length; i++) {
             html += ' <span class="zoom-sep"><i class="icon-angle-right"></i></span> ';
-            var text = this.zoomStack[i].text || '(untitled)';
+            var stackNode = this.getNodeAtPath(this.zoomStack[i].pathIndices);
+            var nodeText = stackNode ? this.concordInstance.op.getLineText(stackNode) || '' : '';
+            var text = nodeText.length > 25 ? nodeText.substring(0, 22) + '\u2026' : (nodeText || '(untitled)');
             text = $('<span>').text(text).html();
             var isLast = i === this.zoomStack.length - 1;
             if (isLast) {
