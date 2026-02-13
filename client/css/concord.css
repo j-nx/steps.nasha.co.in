@@ -142,7 +142,8 @@
 }
 
 .concord-wrapper {
-    width: 95%;
+    width: 94%;
+    border-radius: 2px;
 }
 
 .concord.dragging .concord-node .concord-wrapper .concord-text {
@@ -1282,6 +1283,7 @@ input[type='color']:focus,
     color: #999;
     white-space: nowrap;
     overflow: hidden;
+    height: 28px;
     border-bottom: 1px solid #eee;
     display: flex;
     align-items: center;
