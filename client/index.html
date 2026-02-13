@@ -95,6 +95,7 @@
     <script src="src/notes/notes.js"></script>
     <script src="src/notes/api.js"></script>
     <script src="src/notes/noteCache.js"></script>
+    <script src="src/zoom.js"></script>
     <!-- /build -->
 
     <!-- build:template
@@ -185,6 +186,7 @@
                     style="height: auto; width:240px;opacity: 0.2;padding-bottom: 5px;">
                 <i class="icon-search search-button" ng-click="toggleSearchDialog()" title="Search notes (Ctrl+F)"></i>
             </div>
+            <div class="zoom-breadcrumb"></div>
             <div class="divOutlinerContainer word-break">
                 <div id="outliner">
                 </div>
@@ -481,7 +483,7 @@
 	<script>
 		if ('serviceWorker' in navigator) {
 			const register = () => navigator.serviceWorker
-				.register('/init.min.js?v=<%= version %>')
+				.register('init.min.js?v=<%= version %>')
 				.then(function () {
 					console.debug("Service Worker Registered");
                 });
