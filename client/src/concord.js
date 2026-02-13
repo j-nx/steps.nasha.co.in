@@ -3791,6 +3791,26 @@ function ConcordOp(root, concordInstance, _cursor) {
         );
         concordInstance.editor.hideContextMenu();
     };
+    this.navigateToPath = function (pathIndices) {
+        if (!pathIndices || !pathIndices.length) return null;
+        concordInstance.fireCallback('onBeforeNavigate');
+        var currentNode = null;
+        for (var i = 0; i < pathIndices.length; i++) {
+            if (i === 0) {
+                currentNode = root.children('li.concord-node').eq(pathIndices[i]);
+            } else {
+                if (currentNode.hasClass('collapsed')) {
+                    this.setCursor(currentNode);
+                    this.expand();
+                }
+                currentNode = currentNode.children('ol').children('li.concord-node').eq(pathIndices[i]);
+            }
+            if (!currentNode.length) return null;
+        }
+        this.setCursor(currentNode);
+        this.setTextMode(false);
+        return currentNode;
+    };
     this.setCursorContext = function (cursor) {
         return new ConcordOp(root, concordInstance, cursor);
     };

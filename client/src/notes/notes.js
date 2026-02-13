@@ -684,87 +684,19 @@ function NoteService(concord) {
     this.scrollToElement = function (pathIndices) {
         if (!pathIndices || pathIndices.length === 0) return;
 
+        var outliner = this.outliner;
         // Wait for the outline to render
-        setTimeout(
-            function () {
-                try {
-                    // .concord-root is the <ul> element itself
-                    var root = $('.concord-root');
-                    var currentNode = null;
+        setTimeout(function () {
+            var node = outliner.op.navigateToPath(pathIndices);
+            if (!node) return;
 
-                    // Navigate down the path
-                    for (var i = 0; i < pathIndices.length; i++) {
-                        var index = pathIndices[i];
-
-                        if (i === 0) {
-                            // First level: direct children of root (the ul.concord-root)
-                            var topLevel = root.children('li.concord-node');
-                            if (index < topLevel.length) {
-                                currentNode = topLevel.eq(index);
-                            } else {
-                                console.warn(
-                                    'Path index out of bounds at level 0:',
-                                    index,
-                                    'max:',
-                                    topLevel.length
-                                );
-                                return;
-                            }
-                        } else {
-                            // Expand if collapsed before accessing children
-                            if (currentNode.hasClass('collapsed')) {
-                                this.outliner.op.setCursor(currentNode);
-                                this.outliner.op.expand();
-                            }
-
-                            // Get child at this index from the <ol> inside current node
-                            var children = currentNode
-                                .children('ol')
-                                .children('li.concord-node');
-                            if (index < children.length) {
-                                currentNode = children.eq(index);
-                            } else {
-                                console.warn(
-                                    'Path index out of bounds at level ' +
-                                        i +
-                                        ':',
-                                    index,
-                                    'max:',
-                                    children.length
-                                );
-                                break;
-                            }
-                        }
-                    }
-
-                    if (currentNode && currentNode.length) {
-                        // Set cursor on the found node (but don't enter edit mode)
-                        this.outliner.op.setCursor(currentNode);
-                        this.outliner.op.setTextMode(false);
-
-                        // Scroll element into view
-                        var wrapper = currentNode
-                            .children('.concord-wrapper')
-                            .first();
-                        if (wrapper.length) {
-                            wrapper[0].scrollIntoView({
-                                behavior: 'smooth',
-                                block: 'center'
-                            });
-
-                            // Flash highlight effect
-                            wrapper.addClass('search-highlight');
-                            setTimeout(function () {
-                                wrapper.removeClass('search-highlight');
-                            }, 2000);
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error scrolling to element:', error);
-                }
-            }.bind(this),
-            150
-        );
+            var wrapper = node.children('.concord-wrapper').first();
+            if (wrapper.length) {
+                wrapper[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                wrapper.addClass('search-highlight');
+                setTimeout(function () { wrapper.removeClass('search-highlight'); }, 2000);
+            }
+        }, 150);
     }.bind(this);
 
     this.launchNote = function (note, useDefault) {

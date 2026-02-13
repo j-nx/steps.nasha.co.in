@@ -28,6 +28,7 @@ function ZoomManager(concordInstance) {
         cbs.onNodeDeleted = function () { self.onNodeDeleted(); };
         cbs.zoomIn = function (node) { self.zoomIn(node); };
         cbs.zoomOut = function () { self.zoomOut(); };
+        cbs.onBeforeNavigate = function () { self.zoomToHome(); };
         concordInstance.callbacks(cbs);
 
         // Delegated click handler for zoom icons (desktop + mobile)
