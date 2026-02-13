@@ -188,7 +188,7 @@ function startup(outliner, noInitialize) {
                     ns.tryFinishLoading();
                 }
             })
-            .catch((err) => {});
+            .catch((err) => { console.error('Startup error:', err); });
     };
 
     if (isAppDisabled()) return;
