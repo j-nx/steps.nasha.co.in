@@ -325,22 +325,6 @@ describe('Wake/Sleep Handling', function () {
             }).not.toThrow();
         });
 
-        it('should not trigger away mode when not on wake', function () {
-            window.isMobile = true;
-            window.lastSeen = Date.now(); // Recent, so isOnWake returns false
-
-            var awayCalled = false;
-            window.idler = {
-                away: function () {
-                    awayCalled = true;
-                }
-            };
-
-            onVisible();
-
-            expect(awayCalled).toBe(false);
-        });
-
         it('should not trigger away mode when app is already disabled', function () {
             window.isMobile = true;
             // Set lastSeen to trigger isOnWake

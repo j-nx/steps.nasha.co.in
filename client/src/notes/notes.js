@@ -188,6 +188,9 @@ function NoteService(concord) {
     this.ngScope = null; //MainScope
     this.noteCacheManager = null;
 
+    // Initialize zoom manager
+    window.zoomManager = new ZoomManager(concord);
+
     this.m = {
         sessionExpired: 'Session expired.',
         unauthorized: 'Authorization failed.'
@@ -842,6 +845,12 @@ function NoteService(concord) {
                     );
                     return;
                 }
+
+                // Reset zoom on note switch and inject zoom icons after render
+                if (window.zoomManager) {
+                    window.zoomManager.reset();
+                    setTimeout(function () { window.zoomManager.injectZoomIcons(null); }, 200);
+                }
             }
 
             this.ngScope.hideLoginDialog();
@@ -1233,6 +1242,14 @@ function Note(v, k, ver, date) {
                 {
                     function: 'Save',
                     code: 'Ctrl + S'
+                },
+                {
+                    function: 'Zoom In',
+                    code: 'Ctrl + .'
+                },
+                {
+                    function: 'Zoom Out',
+                    code: 'Ctrl + ,'
                 }
             ];
 
@@ -1266,6 +1283,14 @@ function Note(v, k, ver, date) {
                     password: ''
                 };
                 $scope.log = `Version: ${appVersionHash} \r\nLog Messages --------------`;
+
+                // Zoom helpers
+                $scope.isZoomed = function () {
+                    return window.zoomManager && window.zoomManager.zoomStack.length > 0;
+                };
+                $scope.zoomOut = function () {
+                    if (window.zoomManager) window.zoomManager.zoomOut();
+                };
             };
 
             $scope.hidePopUps = function () {

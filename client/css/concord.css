@@ -1247,3 +1247,163 @@ input[type='color']:focus,
         border: none;
     }
 }
+
+/* ── Zoom Feature ── */
+
+.zoom-hidden {
+    display: none !important;
+}
+
+.zoom-ancestor > .concord-wrapper {
+    display: none !important;
+}
+
+/* Collapse indentation on zoom ancestors so zoomed node uses full width */
+.zoom-ancestor > ol {
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+    border-left: none !important;
+}
+
+/* Zoom transition — fade in when zooming */
+@keyframes zoom-fade-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.zoom-enter {
+    animation: zoom-fade-in 0.2s ease-out;
+}
+
+/* Breadcrumb bar  */
+.zoom-breadcrumb {
+    padding: 5px 10px 0px 2px;
+    font-size: 0.8em;
+    color: #999;
+    white-space: nowrap;
+    overflow: hidden;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    min-height: 18px;
+}
+
+/* Scrollable breadcrumb trail */
+.zoom-trail {
+    overflow-x: auto;
+    overflow-y: hidden;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.zoom-trail::-webkit-scrollbar {
+    display: none;
+}
+
+/* Nav arrow */
+.zoom-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    margin-right: 2px;
+}
+
+.zoom-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    font-size: 1.1em;
+    color: #999;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.zoom-arrow:hover {
+    color: #555;
+}
+
+.zoom-nav-disabled .zoom-arrow {
+    color: #ddd;
+    cursor: default;
+    pointer-events: none;
+}
+
+.zoom-breadcrumb a {
+    color: #aaa;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.zoom-breadcrumb a[data-zoom-level] {
+    /* text-decoration: underline; */ 
+    text-underline-offset: 2px;
+}
+
+.zoom-breadcrumb a:hover {
+    color: #666;
+}
+
+.zoom-breadcrumb .zoom-home {
+    font-size: 1.4em;
+    color: #bbb;
+    display: inline-flex;
+    align-items: center;
+    margin-right: 5px;
+}
+
+.zoom-breadcrumb .zoom-home:hover {
+    color: #888;
+}
+.zoom-home-disabled {
+    color: #ddd !important;
+    cursor: default;
+    pointer-events: none;
+}
+
+.zoom-breadcrumb .zoom-sep {
+    color: #ccc;
+    margin: 0 4px;
+    font-size: 1em;
+    display: inline-flex;
+    align-items: center;
+}
+
+.zoom-breadcrumb .zoom-current {
+    color: #555;
+    font-weight: 500;
+}
+
+.zoom-breadcrumb [class^='icon-'],
+.zoom-breadcrumb [class*=' icon-'] {
+    width: auto;
+    display: inline;
+}
+
+/* Zoom-in icon — absolute on node <li>, right edge of row */
+.concord-node:has(> .zoom-in-icon) {
+    position: relative;
+}
+
+.zoom-in-icon {
+    position: absolute;
+    right: 0;
+    top: 0;
+    line-height: 20px;
+    font-size: 1em;
+    color: #e3e3e3;
+    cursor: pointer;
+    transition: color 0.15s ease;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.zoom-in-icon:hover {
+    color: #555;
+}
+
