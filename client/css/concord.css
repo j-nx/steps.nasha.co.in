@@ -1255,12 +1255,14 @@ input[type='color']:focus,
     display: none !important;
 }
 
-.zoom-ancestor > .concord-wrapper {
+.zoom-ancestor > .concord-wrapper,
+.zoom-target > .concord-wrapper {
     display: none !important;
 }
 
-/* Collapse indentation on zoom ancestors so zoomed node uses full width */
-.zoom-ancestor > ol {
+/* Collapse indentation on zoom ancestors/target so zoomed content uses full width */
+.zoom-ancestor > ol,
+.zoom-target > ol {
     padding-left: 0 !important;
     margin-left: 0 !important;
     border-left: none !important;
