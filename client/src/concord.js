@@ -555,6 +555,11 @@ function ConcordOutline(container, options) {
             }
         }
     };
+    this.zoomHelper = { // no-op defaults; zoom.js overrides in init()
+        isHidden: function () { return false; },
+        isRoot: function () { return false; },
+        skipHidden: function (node) { return node; }
+    };
     this.callbacks = function (callbacks) {
         if (callbacks) {
             this.root.data('callbacks', callbacks);
@@ -570,7 +575,7 @@ function ConcordOutline(container, options) {
     this.fireCallback = function (name, value) {
         var cb = this.callbacks()[name];
         if (cb) {
-            cb(value);
+            return cb(value);
         }
     };
     this.prefs = function (newprefs) {
@@ -2258,26 +2263,39 @@ function ConcordEvents(root, editor, op, concordInstance) {
 }
 
 function ConcordOp(root, concordInstance, _cursor) {
+    var zh = concordInstance.zoomHelper;
     this._walk_up = function (context) {
         var prev = context.prev();
         if (prev.length == 0) {
             var parent = context.parents('.concord-node:first');
-            if (parent.length == 1) {
+            if (parent.length == 1 && !zh.isRoot(parent)) {
                 return parent;
             } else {
                 return null;
             }
         } else {
+            // Skip hidden siblings (e.g. nodes hidden by zoom).
+            prev = zh.skipHidden(prev, 'prev');
+            // If no visible sibling remains, walk up to parent — unless
+            // the parent is a view boundary (zoom root), in which case stop.
+            if (prev.length == 0) {
+                var parent = context.parents('.concord-node:first');
+                if (parent.length == 1 && !zh.isRoot(parent)) {
+                    return parent;
+                }
+                return null;
+            }
             return this._last_child(prev);
         }
     };
     this._walk_down = function (context) {
         var next = context.next();
+        next = zh.skipHidden(next, 'next');
         if (next.length == 1) {
             return next;
         } else {
             var parent = context.parents('.concord-node:first');
-            if (parent.length == 1) {
+            if (parent.length == 1 && !zh.isRoot(parent)) {
                 return this._walk_down(parent);
             } else {
                 return null;
@@ -2520,6 +2538,7 @@ function ConcordOp(root, concordInstance, _cursor) {
             this.setCursor(node);
         }
         this.markChanged();
+        concordInstance.fireCallback('onNodeDeleted');
     };
     this.deleteSubs = function () {
         var node = this.getCursor();
@@ -2788,6 +2807,7 @@ function ConcordOp(root, concordInstance, _cursor) {
             case up:
                 for (var i = 0; i < count; i++) {
                     var prev = cursor.prev();
+                    prev = zh.skipHidden(prev, 'prev');
                     if (prev.length == 1) {
                         cursor = prev;
                         ableToMoveInDirection = true;
@@ -2800,6 +2820,7 @@ function ConcordOp(root, concordInstance, _cursor) {
             case down:
                 for (var i = 0; i < count; i++) {
                     var next = cursor.next();
+                    next = zh.skipHidden(next, 'next');
                     if (next.length == 1) {
                         cursor = next;
                         ableToMoveInDirection = true;
@@ -2812,7 +2833,7 @@ function ConcordOp(root, concordInstance, _cursor) {
             case left:
                 for (var i = 0; i < count; i++) {
                     var parent = cursor.parents('.concord-node:first');
-                    if (parent.length == 1) {
+                    if (parent.length == 1 && !zh.isRoot(parent)) {
                         cursor = parent;
                         ableToMoveInDirection = true;
                     } else {
@@ -3770,6 +3791,26 @@ function ConcordOp(root, concordInstance, _cursor) {
         );
         concordInstance.editor.hideContextMenu();
     };
+    this.navigateToPath = function (pathIndices) {
+        if (!pathIndices || !pathIndices.length) return null;
+        concordInstance.fireCallback('onBeforeNavigate');
+        var currentNode = null;
+        for (var i = 0; i < pathIndices.length; i++) {
+            if (i === 0) {
+                currentNode = root.children('li.concord-node').eq(pathIndices[i]);
+            } else {
+                if (currentNode.hasClass('collapsed')) {
+                    this.setCursor(currentNode);
+                    this.expand();
+                }
+                currentNode = currentNode.children('ol').children('li.concord-node').eq(pathIndices[i]);
+            }
+            if (!currentNode.length) return null;
+        }
+        this.setCursor(currentNode);
+        this.setTextMode(false);
+        return currentNode;
+    };
     this.setCursorContext = function (cursor) {
         return new ConcordOp(root, concordInstance, cursor);
     };
@@ -4511,7 +4552,7 @@ window.currentInstance;
         if (readonly) {
             if (event.which >= 37 && event.which <= 40) {
                 readonly = false;
-            } else if ((event.metaKey || event.ctrlKey) && event.which == 188) {
+            } else if ((event.metaKey || event.ctrlKey) && (event.which == 188 || event.which == 190)) {
                 readonly = false;
             }
         }
@@ -5270,6 +5311,22 @@ window.currentInstance;
                         keyCaptured = true;
                         event.preventDefault();
                         concordInstance.op.runSelection();
+                    }
+                    break;
+                case 190:
+                    // CMD+. → Zoom in
+                    if (commandKey) {
+                        keyCaptured = true;
+                        event.preventDefault();
+                        concordInstance.fireCallback('zoomIn', concordInstance.op.getCursor());
+                    }
+                    break;
+                case 188:
+                    // CMD+, → Zoom out
+                    if (commandKey) {
+                        keyCaptured = true;
+                        event.preventDefault();
+                        concordInstance.fireCallback('zoomOut');
                     }
                     break;
                 default:
