@@ -161,6 +161,62 @@ describe('Zoom', function () {
         });
     });
 
+    it('should save L4 expansion state when expanded while zoomed into L3', function () {
+        // Node IDs (depth-first, collapsed children skipped):
+        // L1=1 (leaf), L2=2 (expanded), L3=3 (collapsed), L4=4 (inside L3), L5=5 (inside L4)
+        var DEEP_OPML =
+            '<opml version="2.0">' +
+            '<head><expansionState>2</expansionState></head>' +
+            '<body>' +
+            '<outline text="L1"/>' +
+            '<outline text="L2">' +
+                '<outline text="L3"><outline text="L4"><outline text="L5"/></outline></outline>' +
+            '</outline>' +
+            '</body></opml>';
+
+        op.xmlToOutline(DEEP_OPML, false);
+
+        // Zoom into L3
+        var l3 = findNodeByText(concord.root, 'L3');
+        expect(l3).not.toBeNull();
+        zm.zoomIn(l3);
+
+        // Expand L4 while zoomed
+        var l4 = findNodeByText(concord.root, 'L4');
+        expect(l4).not.toBeNull();
+        op.setCursor(l4);
+        op.expand();
+        expect(l4.hasClass('collapsed')).toBe(false);
+
+        // Serialize while zoomed — L4 must appear in expansionState
+        var xml = op.outlineToXml();
+        var match = xml.match(/<expansionState>(.*?)<\/expansionState>/);
+        console.error(match.join(','))
+
+        expect(match).not.toBeNull();
+        var states = match[1].split(',').map(Number);
+
+        // Depth-first node IDs (collapsed children skipped):
+        // NL1=1 (collapsed, Hello skipped), NL2=2 (expanded), L3=3 (zoom-expanded), L4=4, L5=5
+        // L4 expanded by user — so 4 must be in the list
+        expect(states).toContain(4);
+    });
+
+    it('should include zoom-expanded node in expansionState', function () {
+        var rootNode = findNodeByText(concord.root, 'Root');
+        op.setCursor(rootNode);
+        op.expand();
+
+        var l1 = findNodeByText(concord.root, 'L1');
+        expect(l1.hasClass('collapsed')).toBe(true);
+        zm.zoomIn(l1);
+
+        var zoomedXml = op.outlineToXml();
+        var zoomedState = zoomedXml.match(/<expansionState>(.*?)<\/expansionState>/)[1];
+
+        expect(zoomedState).toBe('1,2');
+    });
+
     describe('traversal blocking', function () {
         it('should not navigate to zoom-hidden siblings via go()', function () {
             var root = findNodeByText(concord.root, 'Root');

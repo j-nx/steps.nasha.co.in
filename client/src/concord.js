@@ -2288,15 +2288,16 @@ function ConcordOp(root, concordInstance, _cursor) {
             return this._last_child(prev);
         }
     };
-    this._walk_down = function (context) {
-        var next = context.next();
-        next = zh.skipHidden(next, 'next');
+    this._walk_down = function (context, skipZoom) {
+        var skipHidden = skipZoom ? (n) => n : (n) => zh.skipHidden(n, 'next');
+        var isRoot = skipZoom ? () => false : (p) => zh.isRoot(p);
+        var next = skipHidden(context.next());
         if (next.length == 1) {
             return next;
         } else {
             var parent = context.parents('.concord-node:first');
-            if (parent.length == 1 && !zh.isRoot(parent)) {
-                return this._walk_down(parent);
+            if (parent.length == 1 && !isRoot(parent)) {
+                return this._walk_down(parent, skipZoom);
             } else {
                 return null;
             }
@@ -3988,7 +3989,7 @@ function ConcordOp(root, concordInstance, _cursor) {
                 }
             }
             if (!next) {
-                next = this._walk_down(cursor);
+                next = this._walk_down(cursor, true);
             }
             cursor = next;
         } while (cursor !== null);
