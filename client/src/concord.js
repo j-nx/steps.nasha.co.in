@@ -1648,11 +1648,8 @@ function ConcordEvents(root, editor, op, concordInstance) {
                 wrapper = wrapper.parent();
                 event.preventDefault();
                 op.setTextMode(false);
-                if (op.subsExpanded()) {
-                    op.collapse();
-                } else {
-                    op.expand();
-                }
+                var node = wrapper.parents('.concord-node:first');
+                concordInstance.fireCallback('zoomIn', node);
             }
         }
         concordInstance.fireCallback('opIconClicked', event);

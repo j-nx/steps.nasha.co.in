@@ -32,6 +32,8 @@ function ZoomManager(concordInstance) {
         cbs.opKeystroke = function () {
             if (self.zoomStack.length) self.updateBreadcrumb();
         };
+        cbs.opExpand = function () { self.updateToggleIcon(concordInstance.op.getCursor(), false); };
+        cbs.opCollapse = function () { self.updateToggleIcon(concordInstance.op.getCursor(), true); };
         cbs.opInsert = function () {
             if (self.zoomStack.length) {
                 var top = self.zoomStack[self.zoomStack.length - 1];
@@ -45,7 +47,14 @@ function ZoomManager(concordInstance) {
             e.preventDefault();
             e.stopPropagation();
             var node = $(this).closest('.concord-node');
-            if (node.length) self.zoomIn(node);
+            if (node.length) {
+                concordInstance.op.setCursor(node);
+                if (concordInstance.op.subsExpanded()) {
+                    concordInstance.op.collapse();
+                } else {
+                    concordInstance.op.expand();
+                }
+            }
         });
     };
 
@@ -333,9 +342,18 @@ function ZoomManager(concordInstance) {
             var hasChildren = $(this).children('ol').children('li.concord-node').length > 0;
             if (!hasChildren) return;
             if (!$(this).children('.zoom-in-icon').length) {
-                $(this).append('<span class="zoom-in-icon" title="Zoom in">&#x25B8;</span>');
+                var isCollapsed = $(this).hasClass('collapsed');
+                var arrow = isCollapsed ? '&#x25B8;' : '&#x25BE;';
+                $(this).append('<span class="zoom-in-icon" title="Toggle">' + arrow + '</span>');
             }
         });
+    };
+
+    this.updateToggleIcon = function (node, isCollapsed) {
+        var icon = node.children('.zoom-in-icon');
+        if (icon.length) {
+            icon.html(isCollapsed ? '&#x25B8;' : '&#x25BE;');
+        }
     };
 
     this.init();

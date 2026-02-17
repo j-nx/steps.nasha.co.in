@@ -142,7 +142,7 @@
 }
 
 .concord-wrapper {
-    width: 94%;
+    width: calc(100% - 2em);
     border-radius: 2px;
 }
 
