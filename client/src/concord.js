@@ -3988,7 +3988,15 @@ function ConcordOp(root, concordInstance, _cursor) {
                 }
             }
             if (!next) {
-                next = this._walk_down(cursor);
+                // Plain DOM walk for serialization — must visit all nodes
+                // regardless of any view filtering (unlike _walk_down which
+                // is used for navigation and may skip nodes).
+                var walk = cursor;
+                while (walk.length) {
+                    var sib = walk.next('li.concord-node');
+                    if (sib.length) { next = sib; break; }
+                    walk = walk.parent('ol').parent('li.concord-node');
+                }
             }
             cursor = next;
         } while (cursor !== null);

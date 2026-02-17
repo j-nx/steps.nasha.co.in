@@ -1266,6 +1266,12 @@ input[type='color']:focus,
     border-left: none !important;
 }
 
+/* Override collapsed display for nodes in the zoom path */
+.concord-node.collapsed.zoom-ancestor > ol,
+.concord-node.collapsed.zoom-target > ol {
+    display: block !important;
+}
+
 /* Zoom transition — fade in when zooming */
 @keyframes zoom-fade-in {
     from { opacity: 0; transform: translateY(-4px); }

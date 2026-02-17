@@ -7,7 +7,7 @@ function ZoomManager(concordInstance) {
     this.concordInstance = concordInstance;
     this.zoomStack = []; // [{pathIndices: [0,2,1], text: "Node text"}, ...]
     this.$breadcrumb = null;
-    this._collapsedNodes = []; // paths of nodes collapsed before zoom (to restore on zoom-out)
+    this._$zoomTarget = null; // current zoom target node (for cleanup)
 
     this.init = function () {
         this.$breadcrumb = $('.zoom-breadcrumb');
@@ -163,11 +163,10 @@ function ZoomManager(concordInstance) {
     /** Core: clear all zoom classes, then reapply for current stack top */
     this.applyZoom = function () {
         var root = this.concordInstance.root;
-        // Restore previously collapsed node before clearing zoom state
-        this._restoreCollapsed();
 
         root.find('.zoom-hidden').removeClass('zoom-hidden');
         root.find('.zoom-ancestor').removeClass('zoom-ancestor');
+        if (this._$zoomTarget) this._$zoomTarget.removeClass('zoom-target');
 
         if (!this.zoomStack.length) return;
 
@@ -183,6 +182,10 @@ function ZoomManager(concordInstance) {
             return;
         }
 
+        // Mark target so CSS can override collapsed display
+        target.addClass('zoom-target');
+        this._$zoomTarget = target;
+
         // Hide siblings of target
         target.siblings('li.concord-node').addClass('zoom-hidden');
 
@@ -194,21 +197,6 @@ function ZoomManager(concordInstance) {
             current = current.parent('ol').parent('li.concord-node');
         }
 
-        // Temporarily expand any collapsed nodes in the zoom path (target + ancestors)
-        // so their children are visible during zoom
-        this._collapsedNodes = [];
-        var self = this;
-        root.find('.zoom-ancestor').each(function () {
-            if ($(this).hasClass('collapsed')) {
-                self._collapsedNodes.push(self.getPathIndices($(this)));
-                $(this).removeClass('collapsed');
-            }
-        });
-        if (target.hasClass('collapsed')) {
-            this._collapsedNodes.push(this.getPathIndices(target));
-            target.removeClass('collapsed');
-        }
-
         this.concordInstance.op.setCursor(target);
         this.injectZoomIcons(target);
 
@@ -216,25 +204,15 @@ function ZoomManager(concordInstance) {
         this._animateIn(target);
     };
 
-    /** Restore collapsed state on all nodes that were expanded for zoom */
-    this._restoreCollapsed = function () {
-        for (var i = 0; i < this._collapsedNodes.length; i++) {
-            var node = this.getNodeAtPath(this._collapsedNodes[i]);
-            if (node && node.length && !node.hasClass('collapsed')) {
-                node.addClass('collapsed');
-                // Clear any inline display style left by jQuery animations (slideDown etc.)
-                node.children('ol').css('display', '');
-            }
-        }
-        this._collapsedNodes = [];
-    };
-
     /** Remove all zoom classes */
     this.clearZoom = function () {
-        this._restoreCollapsed();
         var root = this.concordInstance.root;
         root.find('.zoom-hidden').removeClass('zoom-hidden');
         root.find('.zoom-ancestor').removeClass('zoom-ancestor');
+        if (this._$zoomTarget) {
+            this._$zoomTarget.removeClass('zoom-target');
+            this._$zoomTarget = null;
+        }
         this.injectZoomIcons(null);
 
         // Animate all top-level nodes back in

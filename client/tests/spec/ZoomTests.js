@@ -47,7 +47,7 @@ describe('Zoom', function () {
     });
 
     describe('collapsed state preservation', function () {
-        it('should NOT remove collapsed class when zooming into a collapsed node', function () {
+        it('should keep collapsed class on node during and after zoom', function () {
             var l1 = findNodeByText(concord.root, 'L1');
             expect(l1).not.toBeNull();
 
@@ -56,18 +56,15 @@ describe('Zoom', function () {
             op.collapse();
             expect(l1.hasClass('collapsed')).toBe(true);
 
-            // Zoom into L1
+            // Zoom into L1 — collapsed class stays, CSS override shows children
             zm.zoomIn(l1);
-
-            // After zoom, L1 children should be visible (for the zoom view)
-            // but the collapsed class should be tracked for restoration
-            var l2 = findNodeByText(concord.root, 'L2');
-            expect(l2).not.toBeNull();
+            expect(l1.hasClass('collapsed')).toBe(true);
+            expect(l1.hasClass('zoom-target')).toBe(true);
 
             // Zoom out
             zm.zoomOut();
 
-            // L1 must be collapsed again
+            // L1 still collapsed
             l1 = findNodeByText(concord.root, 'L1');
             expect(l1.hasClass('collapsed')).toBe(true);
         });
