@@ -28,7 +28,7 @@ var appPrefs = {
     readonly: isOffline,
     outlineFontSize: savedFontSize || fontSizeSettings.default, // em
     iconSize: (savedFontSize || fontSizeSettings.default) * 0.5, // em
-    paddingLeft: isMobile ? 8 : 30, // px
+    paddingLeft: isMobile ? 8 : 18, // px
     nodeLineHeight:
         (savedFontSize || fontSizeSettings.default) * LINE_HEIGHT_MULTIPLIER, // em
     authorName: 'DJ',
