@@ -795,53 +795,12 @@ function NoteService(concord) {
     }.bind(this);
 
     this.outlineToXml = function () {
-        var zm = window.zoomManager;
-        var isZoomed = zm && zm.zoomStack.length > 0;
-        var restoredNodes = [];
-
-        if (isZoomed) {
-            // Restore collapsed state on nodes that zoom temporarily expanded,
-            // so the saved expansionState reflects the full tree, not just the zoom view.
-            for (var i = 0; i < zm._collapsedNodes.length; i++) {
-                var node = zm.getNodeAtPath(zm._collapsedNodes[i]);
-                if (node && node.length && !node.hasClass('collapsed')) {
-                    node.addClass('collapsed');
-                    node.children('ol').css('display', '');
-                    restoredNodes.push(node);
-                }
-            }
-
-            // Temporarily neutralize zoom-aware traversal so outlineToXml
-            // walks the entire tree (not just the zoomed-in subtree).
-            var zh = this.outliner.zoomHelper;
-            var origIsHidden = zh.isHidden;
-            var origIsRoot = zh.isRoot;
-            var origSkipHidden = zh.skipHidden;
-            zh.isHidden = function () { return false; };
-            zh.isRoot = function () { return false; };
-            zh.skipHidden = function (node) { return node; };
-        }
-
-        var xml = this.outliner.op.outlineToXml(
+        return this.outliner.op.outlineToXml(
             null,
             store.email,
             null,
             store.note ? store.note.title : null
         );
-
-        if (isZoomed) {
-            // Restore zoom-aware traversal
-            zh.isHidden = origIsHidden;
-            zh.isRoot = origIsRoot;
-            zh.skipHidden = origSkipHidden;
-
-            // Re-expand nodes that zoom had temporarily expanded
-            for (var i = 0; i < restoredNodes.length; i++) {
-                restoredNodes[i].removeClass('collapsed');
-            }
-        }
-
-        return xml;
     }.bind(this);
 
     this.killSession = function (msg) {
